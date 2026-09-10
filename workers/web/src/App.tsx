@@ -1,12 +1,12 @@
-function App() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-red-500">OneNav</h1>
-        <p className="mt-2 text-sm text-slate-600">前端骨架已就绪</p>
-      </div>
-    </div>
-  )
-}
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Home } from './routes/Home';
 
-export default App
+const qc = new QueryClient();
+
+export default function App() {
+  return (
+    <QueryClientProvider client={qc}>
+      <Home />
+    </QueryClientProvider>
+  );
+}
