@@ -11,6 +11,7 @@ import type { DB } from '../db/client';
  * - X-Token = md5(username + SecretKey)（SecretKey 需已生成，插件用）
  * - cookie key = md5(username + passwordHash + 'onenav' + User-Agent)（绑定 UA）
  * 成功返回 username，失败返回 null。
+ * 已知非恒时比较（===），经评估接受：32 位 hex + 网络噪声掩盖时序差分不可行。
  */
 export async function authenticate(
   db: DB,
@@ -39,7 +40,8 @@ export async function authenticate(
   return null;
 }
 
-/** 强制鉴权：写操作用，失败 401 + code -1002（对齐 PHP err_msg） */
+/** 强制鉴权：写操作用，失败 401 + code -1002（对齐 PHP err_msg）。
+ * 前置条件：全局 db 注入中间件必须先注册（c.get('db')）。 */
 export const authMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   const username = await authenticate(
     c.get('db'),
@@ -56,7 +58,8 @@ export const authMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   await next();
 };
 
-/** 可选鉴权：列表查询用，失败不拒绝，游客只看公开数据（对齐 PHP link_list 游客分支） */
+/** 可选鉴权：列表查询用，失败不拒绝，游客只看公开数据（对齐 PHP link_list 游客分支）。
+ * 前置条件：全局 db 注入中间件必须先注册（c.get('db')）。 */
 export const optionalAuthMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   const username = await authenticate(
     c.get('db'),

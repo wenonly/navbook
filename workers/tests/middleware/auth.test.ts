@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { env } from 'cloudflare:test';
 import { authMiddleware, optionalAuthMiddleware, authenticate } from '../../src/middleware/auth';
 import { getDb } from '../../src/db/client';
+import { md5 } from '../../src/lib/md5';
 import type { AppEnv } from '../../src/types';
 import { resetTables, seedUser, validToken, validCookie } from '../helpers';
 
@@ -61,6 +62,25 @@ describe('authenticate', () => {
     const name = await authenticate(getDb(env.DB), 'admin', undefined, undefined, 'ua');
     expect(name).toBeNull();
   });
+
+  it('SecretKey 未生成时退化 token md5(username) 被拒', async () => {
+    await resetTables();
+    // 只插 user，不插 SecretKey：PHP 版此时 md5(USER + null) = md5(USER)，
+    // 退化 token 可通过校验；本实现要求 SecretKey 存在才开放 X-Token 通道。
+    await env.DB.prepare(
+      'INSERT INTO on_users (username, password_hash, created_at) VALUES (?, ?, ?)'
+    )
+      .bind('admin', md5('test123'), 1710000000)
+      .run();
+    const name = await authenticate(getDb(env.DB), 'admin', md5('admin'), undefined, 'ua');
+    expect(name).toBeNull();
+  });
+
+  it('users 表为空（init 之前）返回 null', async () => {
+    await resetTables(); // 不 seedUser
+    const name = await authenticate(getDb(env.DB), 'admin', validToken(), undefined, 'ua');
+    expect(name).toBeNull();
+  });
 });
 
 describe('authMiddleware', () => {
@@ -83,6 +103,7 @@ describe('authMiddleware', () => {
       headers: { 'X-Token': 'bad' },
     });
     expect(res.status).toBe(401);
+    expect((await json(res)).code).toBe(-1002);
   });
 
   it('非法 X-Token 但合法 cookie 放行（回落逻辑）', async () => {
