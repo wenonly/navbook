@@ -15,7 +15,11 @@ export function AdminLayout() {
       if (res?.data?.username) setUsername(res.data.username);
       else clear();
       setChecked(true);
-    }).catch(() => setChecked(true));
+    }).catch(() => {
+      // 网络错误时不能带着过期的持久化 username 进后台
+      clear();
+      setChecked(true);
+    });
   }, [setUsername, clear]);
 
   if (!checked) return null; // 等待会话探测，避免闪烁跳转

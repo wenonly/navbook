@@ -8,7 +8,7 @@ export function AdminCategories() {
   const del = useDelCategory();
 
   const [name, setName] = useState('');
-  const [editId, setEditId] = useState<number | null>(null);
+  const [editRow, setEditRow] = useState<Record<string, any> | null>(null);
   const [error, setError] = useState('');
 
   if (isLoading) return <div>加载中...</div>;
@@ -19,10 +19,19 @@ export function AdminCategories() {
     setError('');
     if (!name.trim()) return;
     try {
-      const payload = { name, property: 0, weight: 0, description: '', font_icon: '', fid: 0 };
-      if (editId) await edit.mutateAsync({ ...payload, id: editId });
+      // 编辑携带整行数据（category_list 返回 camelCase，fontIcon 提交时映射回 font_icon），
+      // 只带 name 会把 property 等硬编码重置——property:0 会让私有分类对游客泄露其下链接
+      const payload = editRow
+        ? {
+            id: editRow.id, name,
+            property: editRow.property, weight: editRow.weight,
+            description: editRow.description ?? '', font_icon: editRow.fontIcon ?? '',
+            fid: editRow.fid,
+          }
+        : { name, property: 0, weight: 0, description: '', font_icon: '', fid: 0 };
+      if (editRow) await edit.mutateAsync(payload);
       else await add.mutateAsync(payload);
-      setEditId(null);
+      setEditRow(null);
       setName('');
     } catch (err) {
       setError(err instanceof Error ? err.message : '操作失败');
@@ -46,12 +55,12 @@ export function AdminCategories() {
           className="px-4 py-1 rounded text-white disabled:opacity-50"
           style={{ background: 'var(--color-primary)' }}
         >
-          {editId ? '更新' : '新增'}
+          {editRow ? '更新' : '新增'}
         </button>
-        {editId && (
+        {editRow && (
           <button
             type="button"
-            onClick={() => { setEditId(null); setName(''); }}
+            onClick={() => { setEditRow(null); setName(''); }}
             className="px-4 py-1 border rounded"
             style={{ borderColor: 'var(--color-border)' }}
           >
@@ -78,7 +87,7 @@ export function AdminCategories() {
               <td className="py-2">{c.property === 1 ? '私有' : '公开'}</td>
               <td className="py-2">{c.weight}</td>
               <td className="py-2 space-x-2">
-                <button className="text-blue-500" onClick={() => { setEditId(c.id); setName(c.name); }}>
+                <button className="text-blue-500" onClick={() => { setEditRow(c); setName(c.name); }}>
                   编辑
                 </button>
                 <button

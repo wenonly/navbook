@@ -29,15 +29,16 @@ function useInvalidatingMutation<TVars>(
   });
 }
 
+// 分类写操作同时失效 ['links']：Links 表格缓存了 categoryName，分类改名/删除后会过期
 export const useAddCategory = () =>
   useInvalidatingMutation((data: Record<string, unknown>) => api.addCategory(data),
-    [['categories'], ['publicNav']]);
+    [['categories'], ['publicNav'], ['links']]);
 export const useEditCategory = () =>
   useInvalidatingMutation((data: Record<string, unknown>) => api.editCategory(data),
-    [['categories'], ['publicNav']]);
+    [['categories'], ['publicNav'], ['links']]);
 export const useDelCategory = () =>
   useInvalidatingMutation((id: number) => api.delCategory(id),
-    [['categories'], ['publicNav']]);
+    [['categories'], ['publicNav'], ['links']]);
 export const useAddLink = () =>
   useInvalidatingMutation((data: Record<string, unknown>) => api.addLink(data),
     [['links'], ['publicNav']]);

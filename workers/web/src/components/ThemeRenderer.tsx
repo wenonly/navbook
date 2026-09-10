@@ -8,12 +8,17 @@ export function ThemeRenderer({ themeId, data }: { themeId: string; data: NavDat
 
   useEffect(() => {
     let cancelled = false;
-    loadTheme(themeId).then(t => {
+    const apply = (id: string, mod: { Component: ComponentType<{ data: NavData }> }) => {
       if (cancelled) return;
-      setComponent(() => t.Component);
-      document.documentElement.dataset.theme = themeId;
-      try { localStorage.setItem('onenav.theme', themeId); } catch { /* 忽略 */ }
-    }).catch(console.error);
+      setComponent(() => mod.Component);
+      document.documentElement.dataset.theme = id;
+      try { localStorage.setItem('onenav.theme', id); } catch { /* 忽略 */ }
+    };
+    loadTheme(themeId).then(t => apply(themeId, t)).catch(err => {
+      console.error(err);
+      // localStorage 残留已删主题 id 时不永久白屏，回落 default2
+      if (themeId !== 'default2') loadTheme('default2').then(t => apply('default2', t)).catch(console.error);
+    });
     return () => { cancelled = true; };
   }, [themeId]);
 

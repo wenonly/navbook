@@ -16,15 +16,11 @@ export function Login() {
     setError('');
     try {
       const res = await api.login(password);
-      if (res.code === 0) {
-        // cookie 已由服务端 Set-Cookie 下发（HttpOnly）
-        setUsername(res.data.username);
-        navigate('/admin');
-      } else {
-        setError(res.msg ?? '登录失败');
-      }
-    } catch {
-      setError('网络错误');
+      // code!==0 已在 client 层抛错，走到这里即成功；cookie 由服务端 Set-Cookie 下发（HttpOnly）
+      setUsername(res.data.username);
+      navigate('/admin');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '操作失败');
     } finally {
       setBusy(false);
     }

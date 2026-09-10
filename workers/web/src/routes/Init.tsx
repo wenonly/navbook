@@ -14,14 +14,11 @@ export function Init() {
     setBusy(true);
     setError('');
     try {
-      const res = await api.init(username, password);
-      if (res.code === 0) {
-        navigate('/login'); // 初始化只建账号；登录（下发 cookie）走 /login
-      } else {
-        setError(res.msg ?? '初始化失败');
-      }
-    } catch {
-      setError('网络错误');
+      // code!==0 已在 client 层抛错，走到这里即成功
+      await api.init(username, password);
+      navigate('/login'); // 初始化只建账号；登录（下发 cookie）走 /login
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '操作失败');
     } finally {
       setBusy(false);
     }

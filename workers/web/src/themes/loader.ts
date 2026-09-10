@@ -9,11 +9,9 @@ export const themeIds = Object.keys(components)
 
 export async function loadTheme(id: string) {
   const compLoader = components[`./${id}/index.tsx`];
-  if (!compLoader) throw new Error(`Theme not found: ${id}`);
-  const [compMod, tokensStr] = await Promise.all([
-    compLoader(),
-    tokens[`./${id}/tokens.css`](),
-  ]);
+  const tokenLoader = tokens[`./${id}/tokens.css`];
+  if (!compLoader || !tokenLoader) throw new Error(`Theme not found: ${id}`);
+  const [compMod, tokensStr] = await Promise.all([compLoader(), tokenLoader()]);
   return { Component: compMod.default, tokens: tokensStr };
 }
 
