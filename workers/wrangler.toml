@@ -9,5 +9,6 @@ USERNAME = "admin"
 [[d1_databases]]
 binding = "DB"
 database_name = "onenav-db"
+# placeholder for local dev — replace with real ID from 'wrangler d1 create onenav-db' (Task 19)
 database_id = "00000000-0000-4000-8000-000000000000"
 migrations_dir = "src/db/migrations"
