@@ -303,30 +303,38 @@ export function getIconStore(env: Env): IconStore {
 
 ## 6. API 端点（仅插件所需）
 
-| Method | Path | PHP 原方法 | 说明 |
-|---|---|---|---|
-| POST | `/api/check_login` | `check_login` | token 校验 |
-| POST | `/api/app_info` | `app_info` | 应用元信息 |
-| POST | `/api/create_sk` | `create_sk` | 生成 SecretKey |
-| POST | `/api/category_list` | `category_list` | 分页查分类 |
-| POST | `/api/add_category` | `add_category` | 新增分类 |
-| POST | `/api/edit_category` | `edit_category` | 修改分类 |
-| POST | `/api/del_category` | `del_category` | 删除分类 |
-| POST | `/api/get_a_category` | `get_a_category` | 取单个分类 |
-| POST | `/api/link_list` | `link_list` | 分页查链接 |
-| POST | `/api/add_link` | `add_link` | 新增链接 |
-| POST | `/api/edit_link` | `edit_link` | 修改链接 |
-| POST | `/api/del_link` | `del_link` | 删除链接 |
-| POST | `/api/q_category_link` | `q_category_link` | 按分类查链接 |
-| POST | `/api/get_a_link` | `get_a_link` | 取单个链接 |
-| POST | `/api/get_link_info` | `get_link_info` | 抓取 URL 标题/描述 |
-| GET | `/click/:id` | `click.php` | 点击统计 + 302 跳转（顶级路径，便于扩展插件中转） |
-| GET | `/api/icon/:id` | `ico.php` | 输出图标 |
-| POST | `/api/import_json` | `import_link` | 导入 JSON |
-| POST | `/api/export_json` | `export_json` | 导出 JSON |
-| GET | `/api/manifest.json` | — | PWA manifest |
+| Method | Path | PHP 原方法 | 鉴权 | 说明 |
+|---|---|---|---|---|
+| POST | `/api/check_login` | `check_login` | 无 | token 校验 |
+| POST | `/api/app_info` | `app_info` | 无 | 应用元信息 |
+| POST | `/api/init` | `controller/init.php` | 无（仅首用户） | 首登引导 |
+| POST | `/api/login` | `controller/login.php` | 无 | 登录，成功由服务端 Set-Cookie（HttpOnly） |
+| GET | `/api/session` | — | 可选 | 探测当前登录态（SPA 恢复会话用） |
+| GET | `/api/public_nav` | — | 无 | 公开导航数据（两级分类 + 公开链接，SPA 首页用） |
+| POST | `/api/create_sk` | `create_sk` | 必须 | 生成 SecretKey |
+| POST | `/api/category_list` | `category_list` | 可选 | 分页查分类；游客只见公开分类（对齐 PHP 行为） |
+| POST | `/api/add_category` | `add_category` | 必须 | 新增分类 |
+| POST | `/api/edit_category` | `edit_category` | 必须 | 修改分类 |
+| POST | `/api/del_category` | `del_category` | 必须 | 删除分类 |
+| POST | `/api/get_a_category` | `get_a_category` | 可选 | 取单个分类 |
+| POST | `/api/link_list` | `link_list` | 可选 | 分页查链接；游客只见公开分类下的公开链接 |
+| POST | `/api/add_link` | `add_link` | 必须 | 新增链接 |
+| POST | `/api/edit_link` | `edit_link` | 必须 | 修改链接 |
+| POST | `/api/del_link` | `del_link` | 必须 | 删除链接 |
+| POST | `/api/q_category_link` | `q_category_link` | 可选 | 按分类查链接 |
+| POST | `/api/get_a_link` | `get_a_link` | 可选 | 取单个链接（私有数据游客拒绝） |
+| POST | `/api/get_link_info` | `get_link_info` | 必须 | 抓取 URL 标题/描述 |
+| GET | `/click/:id` | `click.php` | 无 | 点击统计 + 302 跳转（顶级路径，便于扩展插件中转） |
+| GET | `/api/icon/:id` | `ico.php` | 无 | 输出图标 |
+| POST | `/api/import_json` | `import_link` | 必须 | 导入 JSON |
+| POST | `/api/export_json` | `export_json` | 必须 | 导出 JSON |
+| GET | `/api/manifest.json` | — | 无 | PWA manifest |
 
-**未迁移的端点**（PHP 后台专用）：订阅检查、在线升级、SQL 升级、备份/恢复、订阅密钥验证、第三方主题下载。新 Workers 版 admin SPA 直接调用 D1，绕过这些。
+鉴权三档：**无**（公开）、**可选**（optionalAuth：游客降级为只见公开数据，对齐 PHP 插件兼容行为）、**必须**（401）。
+
+`/api/*` 未知方法返回 JSON `{ code: -404, msg: 'method not found!' }`（不落入 SPA fallback）。
+
+**未迁移的端点**（PHP 后台专用）：订阅检查、在线升级、SQL 升级、备份/恢复、订阅密钥验证、第三方主题下载。新 Workers 版 admin SPA 直接操作上述核心端点，绕过这些。
 
 **响应格式（与 PHP 版兼容）：**
 
@@ -471,25 +479,26 @@ export const displayName = (id: string) =>
 
 ```tsx
 // web/src/types/nav.ts
-export interface NavCategory {
-  id: number;
-  name: string;
-  font_icon?: string;
-  property: number;
-  children: NavLink[];
-}
 export interface NavLink {
   id: number;
   fid: number;
   title: string;
   url: string;
-  description?: string;
-  font_icon?: string;
-  url_standby?: string;
+  description: string | null;
+  font_icon: string | null;
+  url_standby: string | null;
+}
+export interface NavCategory {
+  id: number;
+  name: string;
+  font_icon: string | null;
+  description: string | null;
+  children: NavCategory[];   // 二级分类
+  links: NavLink[];          // 直挂本分类的公开链接
 }
 export interface NavData {
   site_title: string;
-  site_subtitle?: string;
+  site_subtitle: string;
   categories: NavCategory[];
 }
 ```
