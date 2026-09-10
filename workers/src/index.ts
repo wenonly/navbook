@@ -1,9 +1,4 @@
-import { Hono } from 'hono'
+import { createApp } from './router';
 
-const app = new Hono<{ Bindings: CloudflareBindings }>()
-
-app.get('/', (c) => {
-  return c.json({ hello: 'onenav-workers', hasDb: !!c.env.DB })
-})
-
-export default app
+// Hono app 是合法的 Worker 导出（带 fetch/request 等处理器的对象）
+export default createApp();

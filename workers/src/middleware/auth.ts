@@ -1,5 +1,5 @@
 import { getCookie } from 'hono/cookie';
-import type { MiddlewareHandler } from 'hono';
+import type { Context, MiddlewareHandler } from 'hono';
 import type { AppEnv } from '../types';
 import { md5 } from '../lib/md5';
 import { eq } from 'drizzle-orm';
@@ -40,16 +40,21 @@ export async function authenticate(
   return null;
 }
 
-/** 强制鉴权：写操作用，失败 401 + code -1002（对齐 PHP err_msg）。
- * 前置条件：全局 db 注入中间件必须先注册（c.get('db')）。 */
-export const authMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
-  const username = await authenticate(
+/** 从请求上下文收集鉴权参数并调用 authenticate（中间件与 /api/session 共用） */
+export async function authenticateRequest(c: Context<AppEnv>): Promise<string | null> {
+  return authenticate(
     c.get('db'),
     c.env.USERNAME,
     c.req.header('X-Token'),
     getCookie(c, 'key'),
     c.req.header('User-Agent') ?? '',
   );
+}
+
+/** 强制鉴权：写操作用，失败 401 + code -1002（对齐 PHP err_msg）。
+ * 前置条件：全局 db 注入中间件必须先注册（c.get('db')）。 */
+export const authMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const username = await authenticateRequest(c);
   if (!username) {
     return c.json({ code: -1002, msg: 'Authorization failure!' }, 401);
   }
@@ -61,13 +66,7 @@ export const authMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
 /** 可选鉴权：列表查询用，失败不拒绝，游客只看公开数据（对齐 PHP link_list 游客分支）。
  * 前置条件：全局 db 注入中间件必须先注册（c.get('db')）。 */
 export const optionalAuthMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
-  const username = await authenticate(
-    c.get('db'),
-    c.env.USERNAME,
-    c.req.header('X-Token'),
-    getCookie(c, 'key'),
-    c.req.header('User-Agent') ?? '',
-  );
+  const username = await authenticateRequest(c);
   c.set('isAuthed', username !== null);
   c.set('username', username);
   await next();

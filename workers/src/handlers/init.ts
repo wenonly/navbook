@@ -30,6 +30,8 @@ export async function loginHandler(
   const user = await db.select().from(schema.users).limit(1).get();
   if (!user) return { code: -2000, msg: '用户未初始化' };
   // 兼容明文（旧数据）与 md5 两种存储
+  // 注意：PHP 旧库存的是 md5(username+password)，与本实现 md5(password) 不兼容——
+  // Phase 1 仅支持全新部署，旧数据迁移走 JSON 导入（分类/链接），账号需重新 init
   if (user.passwordHash !== md5(password) && user.passwordHash !== password) {
     return { code: -1002, msg: '密码错误' };
   }
