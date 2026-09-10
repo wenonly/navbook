@@ -5,6 +5,7 @@ import {
   addCategoryHandler, editCategoryHandler, delCategoryHandler,
   categoryListHandler, getACategoryHandler,
 } from '../../src/handlers/category';
+import { addLinkHandler } from '../../src/handlers/link';
 import { categorys } from '../../src/db/schema';
 import { resetTables } from '../helpers';
 
@@ -43,15 +44,15 @@ describe('add_category', () => {
 
 describe('edit_category', () => {
   it('父分类不存在时报错', async () => {
-    await addCategoryHandler(db(), catInput('一级'));
-    await expect(editCategoryHandler(db(), 1, { ...catInput('x', 99999) }))
+    const top = await addCategoryHandler(db(), catInput('一级'));
+    await expect(editCategoryHandler(db(), top.id, { ...catInput('x', 99999) }))
       .rejects.toThrow('父级ID不存在');
   });
 
   it('父分类不能是二级分类', async () => {
     const top = await addCategoryHandler(db(), catInput('一级'));
     const sub = await addCategoryHandler(db(), catInput('二级', top.id));
-    await expect(editCategoryHandler(db(), 1, { ...catInput('x', sub.id) }))
+    await expect(editCategoryHandler(db(), top.id, { ...catInput('x', sub.id) }))
       .rejects.toThrow('父分类不能是二级分类');
   });
 
@@ -71,6 +72,13 @@ describe('edit_category', () => {
     expect(row!.name).toBe('改名');
     expect(row!.property).toBe(1);
   });
+
+  it('edit 重名返回 PHP 原文', async () => {
+    await addCategoryHandler(db(), catInput('工具'));
+    const second = await addCategoryHandler(db(), catInput('工具2'));
+    await expect(editCategoryHandler(db(), second.id, catInput('工具')))
+      .rejects.toThrow('already exists');
+  });
 });
 
 describe('del_category', () => {
@@ -88,6 +96,15 @@ describe('del_category', () => {
 
   it('分类不存在时报错', async () => {
     await expect(delCategoryHandler(db(), 999)).rejects.toThrow('does not exist');
+  });
+
+  it('有链接时拒绝删除', async () => {
+    const cat = await addCategoryHandler(db(), catInput('工具'));
+    await addLinkHandler(db(), {
+      fid: cat.id, title: 'GitHub', url: 'https://github.com',
+      description: '', weight: 0, property: 0, url_standby: '', font_icon: '',
+    });
+    await expect(delCategoryHandler(db(), cat.id)).rejects.toThrow('存在链接');
   });
 });
 
@@ -108,13 +125,21 @@ describe('category_list', () => {
 describe('get_a_category', () => {
   it('按 ID 返回分类', async () => {
     const cat = await addCategoryHandler(db(), catInput('工具'));
-    const res = await getACategoryHandler(db(), cat.id);
+    const res = await getACategoryHandler(db(), cat.id, true);
     expect(res.code).toBe(0);
     expect(res.data!.name).toBe('工具');
   });
 
   it('不存在返回 -2000', async () => {
-    const res = await getACategoryHandler(db(), 999);
+    const res = await getACategoryHandler(db(), 999, true);
     expect(res.code).toBe(-2000);
+  });
+
+  it('游客请求私有分类被拒', async () => {
+    const priv = await addCategoryHandler(db(), { ...catInput('私有'), property: 1 });
+    const guest = await getACategoryHandler(db(), priv.id, false);
+    expect(guest.code).toBe(-1002);
+    const admin = await getACategoryHandler(db(), priv.id, true);
+    expect(admin.code).toBe(0);
   });
 });

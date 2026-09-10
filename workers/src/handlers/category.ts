@@ -1,7 +1,9 @@
+// 错误文案与 PHP 原版逐字对齐（含中英混杂与拼写错误，如 'Categorie already exist!'），勿"修正"
 import { eq, sql, desc } from 'drizzle-orm';
 import type { DB } from '../db/client';
 import * as schema from '../db/schema';
 import { escapeHtml } from '../lib/escape';
+import { isUniqueViolation } from '../lib/d1-errors';
 
 export interface CategoryInput {
   name: string;
@@ -18,43 +20,24 @@ export interface CategoryRow {
   fontIcon: string | null; fid: number;
 }
 
-/**
- * drizzle 0.45 把 D1 底层错误包成 DrizzleQueryError（message 只有 "Failed query: ..."），
- * 真实的 UNIQUE 约束信息在 cause 链上（实测：
- *   cause[0] "D1_ERROR: UNIQUE constraint failed: on_categorys.name: SQLITE_CONSTRAINT ..."
- *   cause[1] "UNIQUE constraint failed: on_categorys.name: SQLITE_CONSTRAINT ..."），
- * 故沿 cause 链匹配而非只看顶层 message。
- */
-function isUniqueViolation(e: unknown): boolean {
-  let cur: unknown = e;
-  for (let i = 0; i < 5 && cur instanceof Error; i++) {
-    if (cur.message.includes('UNIQUE')) return true;
-    cur = (cur as { cause?: unknown }).cause;
-  }
-  return false;
-}
-
 export async function addCategoryHandler(db: DB, input: CategoryInput): Promise<{ code: 0; id: number }> {
   if (!input.name.trim()) throw new Error('分类名称不能为空！');
   try {
-    await db.insert(schema.categorys).values({
+    const row = await db.insert(schema.categorys).values({
       name: escapeHtml(input.name),
       addTime: Math.floor(Date.now() / 1000),
       weight: input.weight,
       property: input.property,
       description: escapeHtml(input.description),
+      // font_icon 刻意不转义（PHP 原版裸存，见 Api.php:56，前台直接拼 class）
       fontIcon: input.font_icon || null,
       fid: input.fid,
-    });
+    }).returning({ id: schema.categorys.id }).get();
+    return { code: 0, id: row.id };
   } catch (e) {
-    if (isUniqueViolation(e)) {
-      throw new Error('Categorie already exist!');  // PHP 原始文案（含拼写），保持兼容
-    }
+    if (isUniqueViolation(e)) throw new Error('Categorie already exist!');
     throw e;
   }
-  const row = await db.select({ id: schema.categorys.id }).from(schema.categorys)
-    .where(eq(schema.categorys.name, escapeHtml(input.name))).get();
-  return { code: 0, id: row!.id };
 }
 
 export async function editCategoryHandler(db: DB, id: number, input: CategoryInput): Promise<{ code: 0; msg: string }> {
@@ -72,15 +55,20 @@ export async function editCategoryHandler(db: DB, id: number, input: CategoryInp
     throw new Error('修改失败，该分类下已存在子分类！');
   }
 
-  await db.update(schema.categorys).set({
-    name: escapeHtml(input.name),
-    upTime: Math.floor(Date.now() / 1000),
-    weight: input.weight,
-    property: input.property,
-    description: escapeHtml(input.description),
-    fontIcon: input.font_icon || null,
-    fid: input.fid,
-  }).where(eq(schema.categorys.id, id));
+  try {
+    await db.update(schema.categorys).set({
+      name: escapeHtml(input.name),
+      upTime: Math.floor(Date.now() / 1000),
+      weight: input.weight,
+      property: input.property,
+      description: escapeHtml(input.description),
+      fontIcon: input.font_icon || null,
+      fid: input.fid,
+    }).where(eq(schema.categorys.id, id));
+  } catch (e) {
+    if (isUniqueViolation(e)) throw new Error('The category name already exists!');  // PHP -1005 原文
+    throw e;
+  }
   return { code: 0, msg: 'successful' };
 }
 
@@ -114,8 +102,13 @@ export async function categoryListHandler(
   return { code: 0, msg: '', count: countRow?.c ?? 0, data: rows as CategoryRow[] };
 }
 
-export async function getACategoryHandler(db: DB, id: number): Promise<{ code: number; data: CategoryRow | null; msg?: string }> {
+export async function getACategoryHandler(
+  db: DB, id: number, isAuthed: boolean,
+): Promise<{ code: number; data: CategoryRow | null; msg?: string }> {
   const row = await db.select().from(schema.categorys).where(eq(schema.categorys.id, id)).get();
   if (!row) return { code: -2000, msg: 'The category does not exist!', data: null };
+  if (row.property === 1 && !isAuthed) {
+    return { code: -1002, msg: 'Authorization failure!', data: null };
+  }
   return { code: 0, data: row as CategoryRow };
 }
