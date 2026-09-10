@@ -31,7 +31,7 @@ export const addLinkSchema = z.object({
   url: z.url().max(256),
   description: z.string().max(256).optional().default(''),
   weight: z.coerce.number().int().min(0).optional().default(0),
-  property: z.coerce.number().min(0).max(1).optional().default(0),
+  property: z.coerce.number().int().min(0).max(1).optional().default(0),
   url_standby: z.string().max(256).optional().default(''),
   font_icon: z.string().max(512).optional().default(''),
 });
