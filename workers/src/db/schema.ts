@@ -1,3 +1,7 @@
+// 注意：本文件与 src/db/migrations/0000_init.sql 必须同 commit 修改。
+// SQL 是 D1 结构的唯一事实源；本文件的 {length} 标注仅作文档，SQLite/D1 不强制长度。
+// 唯一运行时约束来自 STRICT 表 + handlers 层的 Zod 校验。
+
 import { sqliteTable, integer, text, blob, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('on_users', {
@@ -37,6 +41,7 @@ export const links = sqliteTable('on_links', {
   topping: integer('topping').notNull().default(0),
   urlStandby: text('url_standby', { length: 256 }),
   fontIcon: text('font_icon', { length: 512 }),
+  // icon_blob IS NULL 即无图标；icon_source 仅在 icon_blob 非空时有意义（Phase 3 图标上传启用）
   iconSource: text('icon_source', { length: 16 }).notNull().default('blob'),
   iconBlob: blob('icon_blob', { mode: 'buffer' }),
   iconMime: text('icon_mime', { length: 32 }),

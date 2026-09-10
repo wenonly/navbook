@@ -6,6 +6,7 @@
     "predev": "pnpm cf-typegen",
     "dev": "wrangler dev",
     "deploy": "pnpm --filter web build && wrangler deploy",
+    "pretest": "pnpm typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:migrate:local": "wrangler d1 migrations apply onenav-db --local",
