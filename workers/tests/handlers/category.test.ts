@@ -49,6 +49,12 @@ describe('edit_category', () => {
       .rejects.toThrow('父级ID不存在');
   });
 
+  it('父分类不能是自己（自引用防护）', async () => {
+    const top = await addCategoryHandler(db(), catInput('一级'));
+    await expect(editCategoryHandler(db(), top.id, { ...catInput('一级', top.id) }))
+      .rejects.toThrow('父分类不能是自己');
+  });
+
   it('父分类不能是二级分类', async () => {
     const top = await addCategoryHandler(db(), catInput('一级'));
     const sub = await addCategoryHandler(db(), catInput('二级', top.id));

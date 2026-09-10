@@ -1,0 +1,93 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { env } from 'cloudflare:test';
+import { getDb } from '../../src/db/client';
+import { checkLoginHandler, createSkHandler, appInfoHandler } from '../../src/handlers/auth';
+import { initHandler, loginHandler } from '../../src/handlers/init';
+import { md5 } from '../../src/lib/md5';
+import { resetTables, seedUser, validToken } from '../helpers';
+
+beforeEach(async () => {
+  await resetTables();
+});
+
+const db = () => getDb(env.DB);
+
+describe('check_login', () => {
+  it('合法 token 返回 username', async () => {
+    await seedUser();
+    const res = await checkLoginHandler(db(), validToken());
+    expect(res.code).toBe(0);
+    expect(res.data!.username).toBe('admin');
+  });
+
+  it('SecretKey 未生成时退化 token 被拒（不走 ?? 退化路径）', async () => {
+    await env.DB.prepare('INSERT INTO on_users (username, password_hash, created_at) VALUES (?, ?, ?)')
+      .bind('admin', md5('test123'), 1710000000).run();
+    const res = await checkLoginHandler(db(), md5('admin'));
+    expect(res.code).toBe(-1002);
+  });
+
+  it('非法 token 被拒', async () => {
+    await seedUser();
+    expect((await checkLoginHandler(db(), 'bad')).code).toBe(-1002);
+  });
+});
+
+describe('init / login', () => {
+  it('init 建用户 + 生成 SecretKey', async () => {
+    const res = await initHandler(db(), 'admin', 'test123');
+    expect(res.code).toBe(0);
+    expect(res.data.secret_key).toMatch(/^[0-9a-f]{32}$/);
+    // secret_key 存在 on_options 且 init 后 token 可用
+    const { authenticate } = await import('../../src/middleware/auth');
+    expect(await authenticate(db(), '', md5('admin' + res.data.secret_key), undefined, '')).toBe('admin');
+  });
+
+  it('重复 init 被拒', async () => {
+    await initHandler(db(), 'admin', 'test123');
+    await expect(initHandler(db(), 'hacker', 'pass123')).rejects.toThrow('已经初始化');
+  });
+
+  it('login 正确密码返回 cookie（与 authenticate cookie 通道一致）', async () => {
+    await initHandler(db(), 'admin', 'test123');
+    const res = await loginHandler(db(), 'test123', 'my-ua');
+    expect(res.code).toBe(0);
+    expect(res.data!.cookie).toBe(md5('admin' + md5('test123') + 'onenav' + 'my-ua'));
+  });
+
+  it('login 错误密码 -1002', async () => {
+    await initHandler(db(), 'admin', 'test123');
+    expect((await loginHandler(db(), 'wrong', 'ua')).code).toBe(-1002);
+  });
+
+  it('login 用户未初始化 -2000', async () => {
+    expect((await loginHandler(db(), 'x', 'ua')).code).toBe(-2000);
+  });
+});
+
+describe('create_sk / app_info', () => {
+  it('create_sk 覆盖旧 SecretKey', async () => {
+    await seedUser();
+    const res = await createSkHandler(db());
+    expect(res.data.secret_key).toMatch(/^[0-9a-f]{32}$/);
+    expect(res.data.secret_key).not.toBe('sk_test');
+    // 新 token 立即可用
+    expect((await checkLoginHandler(db(), md5('admin' + res.data.secret_key))).code).toBe(0);
+    // 旧 token 失效
+    expect((await checkLoginHandler(db(), validToken())).code).toBe(-1002);
+  });
+
+  it('create_sk 未初始化时 throw', async () => {
+    await expect(createSkHandler(db())).rejects.toThrow('请先初始化');
+  });
+
+  it('app_info 返回元信息', async () => {
+    const empty = await appInfoHandler(db(), '0.5.0');
+    expect(empty.data.has_user).toBe(false);
+    await seedUser();
+    const res = await appInfoHandler(db(), '0.5.0');
+    expect(res.data.has_user).toBe(true);
+    expect(res.data.username).toBe('admin');
+    expect(res.data.client_version).toBe('0.5.0');
+  });
+});

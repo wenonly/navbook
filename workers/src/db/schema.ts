@@ -8,6 +8,7 @@ export const users = sqliteTable('on_users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   username: text('username').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
+  // 保留列（当前无人写入）：实际 SecretKey 存 on_options（对齐 PHP 原版），见 middleware/auth.ts
   secretKey: text('secret_key'),
   createdAt: integer('created_at').notNull(),
 });

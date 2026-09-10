@@ -44,6 +44,7 @@ export async function editCategoryHandler(db: DB, id: number, input: CategoryInp
   if (!input.name.trim()) throw new Error('The category name cannot be empty!');
 
   if (input.fid !== 0) {
+    if (input.fid === id) throw new Error('父分类不能是自己！');
     const parent = await db.select().from(schema.categorys).where(eq(schema.categorys.id, input.fid)).get();
     if (!parent) throw new Error('父级ID不存在！');
     if (parent.fid !== 0) throw new Error('父分类不能是二级分类!');
