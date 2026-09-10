@@ -2,6 +2,33 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
+    <style id="theme-tokens">
+/* src/themes/default2/tokens.css */
+:root[data-theme="default2"] {
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-bg: #ffffff;
+  --color-bg-subtle: #f9fafb;
+  --color-text: #111827;
+  --color-text-subtle: #6b7280;
+  --color-border: #e5e7eb;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+:root[data-theme="default2"][data-mode="dark"] {
+  --color-bg: #1a1a1a;
+  --color-bg-subtle: #222222;
+  --color-text: #e5e5e5;
+  --color-text-subtle: #9ca3af;
+  --color-border: #333333;
+}
+</style>
+    <script>
+      try {
+        var t = localStorage.getItem('onenav.theme') || 'default2';
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OneNav</title>
