@@ -84,7 +84,7 @@ export async function publicNavHandler(db: DB, isAuthed: boolean): Promise<Publi
   return {
     code: 0,
     data: {
-      site_title: titleRow?.value || 'OneNav',
+      site_title: titleRow?.value || 'NavBook',
       site_subtitle: '',
       categories: tops,
     },

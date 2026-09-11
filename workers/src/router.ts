@@ -74,6 +74,12 @@ export function createApp() {
     return c.json(result);
   });
 
+  app.post('/api/logout', async c => {
+    // 清除会话 cookie（Max-Age=0 立即过期）；无需鉴权——登出一个已死的会话也是幂等的
+    c.header('Set-Cookie', 'key=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
+    return c.json({ code: 0, data: null });
+  });
+
   app.get('/api/session', async c => {
     const username = await authenticateRequest(c);
     return c.json({ code: 0, data: { username } });

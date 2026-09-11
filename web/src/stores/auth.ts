@@ -14,6 +14,6 @@ export const useAuth = create<AuthState>()(
       setUsername: username => set({ username }),
       clear: () => set({ username: null }),
     }),
-    { name: 'onenav-auth' },
+    { name: 'navbook-auth' },
   ),
 );

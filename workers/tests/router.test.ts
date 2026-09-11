@@ -156,6 +156,16 @@ describe('router 集成', () => {
     expect((await json(session)).data.username).toBeNull();
   });
 
+  it('logout 清除会话 cookie', async () => {
+    await seedUser();
+    await req('/api/login', form({ password: 'test123' }));
+
+    const out = await req('/api/logout', { method: 'POST' });
+    const setCookie = out.headers.get('Set-Cookie') ?? '';
+    expect(setCookie).toContain('key=');
+    expect(setCookie).toContain('Max-Age=0');
+  });
+
   it('token_info 需要鉴权，带 X-Token 返回 token', async () => {
     await seedUser();
     const noAuth = await req('/api/token_info');

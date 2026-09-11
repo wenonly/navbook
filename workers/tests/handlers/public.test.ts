@@ -24,7 +24,7 @@ describe('public_nav', () => {
 
     const res = await publicNavHandler(db(), false);
     expect(res.code).toBe(0);
-    expect(res.data.site_title).toBe('OneNav');
+    expect(res.data.site_title).toBe('NavBook');
     expect(res.data.categories.length).toBe(1);
     const topCat = res.data.categories[0];
     expect(topCat.name).toBe('一级');

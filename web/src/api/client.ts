@@ -37,6 +37,7 @@ async function postJson<T = any>(path: string, body: unknown): Promise<T> {
 export const api = {
   init: (username: string, password: string) => post('init', { username, password }),
   login: (password: string) => post('login', { password }),
+  logout: () => post('logout'),
   session: () => get<{ code: number; data: { username: string | null } }>('/api/session'),
 
   // 后端从 URL query 读 page/limit（上限 100）、从 body 读 category_id

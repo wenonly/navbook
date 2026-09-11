@@ -28,7 +28,7 @@ export function AdminLayout() {
   return (
     <div className="min-h-screen flex">
       <aside className="w-48 border-r p-4" style={{ borderColor: 'var(--color-border)' }}>
-        <h1 className="font-bold mb-4" style={{ color: 'var(--color-text)' }}>OneNav 后台</h1>
+        <h1 className="font-bold mb-4" style={{ color: 'var(--color-text)' }}>NavBook 后台</h1>
         <nav className="space-y-2 text-sm">
           <NavLink
             to="/admin/categories"
@@ -73,9 +73,11 @@ export function AdminLayout() {
           <button
             className="text-red-500"
             onClick={() => {
-              // cookie 由服务端管理，过期自动失效；此处仅清前端状态
-              clear();
-              navigate('/');
+              // 服务端清 cookie（Max-Age=0）+ 前端清状态
+              void api.logout().finally(() => {
+                clear();
+                navigate('/');
+              });
             }}
           >
             退出
