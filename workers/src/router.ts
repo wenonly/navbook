@@ -77,8 +77,8 @@ export function createApp() {
     return c.json({ code: 0, data: { username } });
   });
 
-  app.get('/api/public_nav', async c => {
-    return c.json(await publicNavHandler(c.get('db')));
+  app.get('/api/public_nav', optionalAuthMiddleware, async c => {
+    return c.json(await publicNavHandler(c.get('db'), c.get('isAuthed')));
   });
 
   // ---------- 列表端点（可选鉴权：游客只见公开数据） ----------

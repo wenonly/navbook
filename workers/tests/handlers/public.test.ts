@@ -22,7 +22,7 @@ describe('public_nav', () => {
     await addLinkHandler(db(), { fid: top.id, title: 'TopLink', url: 'https://top.com', description: '', weight: 0, property: 0, url_standby: '', font_icon: '' });
     await addLinkHandler(db(), { fid: priv.id, title: 'PrivLink', url: 'https://priv.com', description: '', weight: 0, property: 0, url_standby: '', font_icon: '' });
 
-    const res = await publicNavHandler(db());
+    const res = await publicNavHandler(db(), false);
     expect(res.code).toBe(0);
     expect(res.data.site_title).toBe('OneNav');
     expect(res.data.categories.length).toBe(1);
@@ -38,19 +38,19 @@ describe('public_nav', () => {
     await addLinkHandler(db(), { fid: cat.id, title: 'Pub', url: 'https://a.com', description: '', weight: 0, property: 0, url_standby: '', font_icon: '' });
     await addLinkHandler(db(), { fid: cat.id, title: 'Priv', url: 'https://b.com', description: '', weight: 0, property: 1, url_standby: '', font_icon: '' });
 
-    const res = await publicNavHandler(db());
+    const res = await publicNavHandler(db(), false);
     expect(res.data.categories[0].links.length).toBe(1);
     expect(res.data.categories[0].links[0].title).toBe('Pub');
   });
 
   it('site_title 从 on_options 读取', async () => {
     await env.DB.prepare('INSERT INTO on_options (key, value) VALUES (?, ?)').bind('site_title', '我的导航').run();
-    const res = await publicNavHandler(db());
+    const res = await publicNavHandler(db(), false);
     expect(res.data.site_title).toBe('我的导航');
   });
 
   it('空库返回空数组', async () => {
-    const res = await publicNavHandler(db());
+    const res = await publicNavHandler(db(), false);
     expect(res.code).toBe(0);
     expect(res.data.categories).toEqual([]);
   });
@@ -59,11 +59,33 @@ describe('public_nav', () => {
     const top = await addCategoryHandler(db(), { name: '影视&动漫', property: 0, weight: 0, description: 'A&B', font_icon: '', fid: 0 });
     await addLinkHandler(db(), { fid: top.id, title: 'X<Y>', url: 'https://xy.com', description: 'd&e', weight: 0, property: 0, url_standby: '', font_icon: '' });
 
-    const res = await publicNavHandler(db());
+    const res = await publicNavHandler(db(), false);
     const cat = res.data.categories[0];
     expect(cat.name).toBe('影视&动漫');
     expect(cat.description).toBe('A&B');
     expect(cat.links[0].title).toBe('X<Y>');
     expect(cat.links[0].description).toBe('d&e');
+  });
+
+  it('管理员（isAuthed）返回全量含 private 标记', async () => {
+    const pubCat = await addCategoryHandler(db(), { name: '公开', property: 0, weight: 0, description: '', font_icon: '', fid: 0 });
+    const privCat = await addCategoryHandler(db(), { name: '私密分类', property: 1, weight: 0, description: '', font_icon: '', fid: 0 });
+    const { addLinkHandler } = await import('../../src/handlers/link');
+    await addLinkHandler(db(), { fid: pubCat.id, title: 'Pub', url: 'https://p.com', description: '', weight: 0, property: 0, url_standby: '', font_icon: '' });
+    await addLinkHandler(db(), { fid: privCat.id, title: 'Priv', url: 'https://v.com', description: '', weight: 0, property: 1, url_standby: '', font_icon: '' });
+
+    const guest = await publicNavHandler(db(), false);
+    expect(guest.data.categories.map(c => c.name)).toEqual(['公开']);
+
+    const admin = await publicNavHandler(db(), true);
+    const names = admin.data.categories.map(c => c.name);
+    expect(names).toContain('公开');
+    expect(names).toContain('私密分类');
+    const priv = admin.data.categories.find(c => c.name === '私密分类')!;
+    expect(priv.private).toBe(true);
+    expect(priv.links[0].private).toBe(true);
+    const pub = admin.data.categories.find(c => c.name === '公开')!;
+    expect(pub.private).toBe(false);
+    expect(pub.links[0].private).toBe(false);
   });
 });

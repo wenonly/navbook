@@ -88,6 +88,15 @@ describe('router 集成', () => {
     expect(admin.count).toBe(2);
   });
 
+  it('public_nav 带 X-Token 返回私有数据', async () => {
+    await seedUser();
+    await req('/api/add_category', { ...form({ name: '私有', property: '1' }), headers: { 'X-Token': validToken() } });
+    const guest = await (await req('/api/public_nav')).json() as any;
+    expect(guest.data.categories).toEqual([]);
+    const admin = await (await req('/api/public_nav', { headers: { 'X-Token': validToken() } })).json() as any;
+    expect(admin.data.categories[0].private).toBe(true);
+  });
+
   it('init → login → Set-Cookie 且响应体无 cookie 值 → cookie 调 session', async () => {
     const init = await req('/api/init', form({ username: 'admin', password: 'test123' }));
     expect((await json(init)).code).toBe(0);

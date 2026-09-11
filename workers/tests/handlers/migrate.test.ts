@@ -88,7 +88,7 @@ describe('import_json', () => {
     expect(res.data.links_skipped).toBe(0);
 
     const { publicNavHandler } = await import('../../src/handlers/public');
-    const nav = await publicNavHandler(db());
+    const nav = await publicNavHandler(db(), false);
     expect(nav.data.categories[0].name).toBe('一级');
     expect(nav.data.categories[0].children[0].name).toBe('二级');
     expect(nav.data.categories[0].links[0].title).toBe('A');
