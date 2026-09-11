@@ -1,1 +1,0 @@
-ALTER TABLE on_categorys ADD fid INTEGER DEFAULT 0 NOT NULL;

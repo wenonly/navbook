@@ -1,1 +1,0 @@
-ALTER TABLE on_links ADD font_icon TEXT(512);
