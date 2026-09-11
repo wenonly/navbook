@@ -3,12 +3,21 @@ main = "src/index.ts"
 compatibility_date = "2026-09-10"
 compatibility_flags = ["nodejs_compat"]
 
+routes = [
+  { pattern = "nav.wenonly.cn", custom_domain = true }
+]
+
 [vars]
 USERNAME = "admin"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "onenav-db"
-# placeholder for local dev — replace with real ID from 'wrangler d1 create onenav-db' (Task 19)
-database_id = "00000000-0000-4000-8000-000000000000"
+# real remote D1 id (created via 'wrangler d1 create onenav-db', Task 19); local dev still uses miniflare's local D1
+database_id = "6745abcd-6c72-4f6f-9731-7b1b87316ecc"
 migrations_dir = "src/db/migrations"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
