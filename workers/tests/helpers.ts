@@ -33,7 +33,7 @@ export function validToken() {
   return md5('admin' + 'sk_test');
 }
 
-/** 合法登录 cookie = md5(username + passwordHash + 'onenav' + ua) */
+/** 合法登录 cookie = md5(username + passwordHash + 'navbook' + ua) */
 export function validCookie(ua: string) {
-  return md5('admin' + md5('test123') + 'onenav' + ua);
+  return md5('admin' + md5('test123') + 'navbook' + ua);
 }

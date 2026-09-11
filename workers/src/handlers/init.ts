@@ -35,6 +35,6 @@ export async function loginHandler(
   if (user.passwordHash !== md5(password) && user.passwordHash !== password) {
     return { code: -1002, msg: '密码错误' };
   }
-  const cookie = md5(user.username + user.passwordHash + 'onenav' + ua);
+  const cookie = md5(user.username + user.passwordHash + 'navbook' + ua);
   return { code: 0, data: { username: user.username, cookie } };
 }

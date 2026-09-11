@@ -52,7 +52,7 @@ describe('init / login', () => {
     await initHandler(db(), 'admin', 'test123');
     const res = await loginHandler(db(), 'test123', 'my-ua');
     expect(res.code).toBe(0);
-    expect(res.data!.cookie).toBe(md5('admin' + md5('test123') + 'onenav' + 'my-ua'));
+    expect(res.data!.cookie).toBe(md5('admin' + md5('test123') + 'navbook' + 'my-ua'));
   });
 
   it('login 错误密码 -1002', async () => {

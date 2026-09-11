@@ -9,7 +9,7 @@ import type { DB } from '../db/client';
 /**
  * 统一鉴权（对齐 PHP Api::auth + is_login）：
  * - X-Token = md5(username + SecretKey)（SecretKey 需已生成，插件用）
- * - cookie key = md5(username + passwordHash + 'onenav' + User-Agent)（绑定 UA）
+ * - cookie key = md5(username + passwordHash + 'navbook' + User-Agent)（绑定 UA）
  * 成功返回 username，失败返回 null。
  * 已知非恒时比较（===），经评估接受：32 位 hex + 网络噪声掩盖时序差分不可行。
  */
@@ -33,7 +33,7 @@ export async function authenticate(
   }
 
   // cookie 校验（与 PHP is_login() 一致，绑定 UA）
-  if (cookieKey && cookieKey === md5(username + userRow.passwordHash + 'onenav' + ua)) {
+  if (cookieKey && cookieKey === md5(username + userRow.passwordHash + 'navbook' + ua)) {
     return username;
   }
 

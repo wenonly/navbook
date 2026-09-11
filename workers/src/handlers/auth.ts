@@ -46,7 +46,7 @@ export async function appInfoHandler(
   return {
     code: 0,
     data: {
-      version: '1.0.0',
+      version: '2.0.0',
       client_version: clientVersion,
       has_user: !!user,
       username: user?.username ?? null,
