@@ -40,12 +40,28 @@ export async function authenticate(
   return null;
 }
 
+/** 从请求提取插件 token：X-Token header > ?token= 查询参数 > 表单 body 的 token 字段（PHP $_REQUEST 对齐） */
+async function extractToken(c: Context<AppEnv>): Promise<string | undefined> {
+  const header = c.req.header('X-Token');
+  if (header) return header;
+  const query = c.req.query('token');
+  if (query) return query;
+  if (c.req.method === 'POST') {
+    try {
+      const body = await c.req.parseBody() as Record<string, unknown>;
+      const t = body.token;
+      if (typeof t === 'string' && t) return t;
+    } catch { /* 非 form body（如 import_json 的 JSON）忽略 */ }
+  }
+  return undefined;
+}
+
 /** 从请求上下文收集鉴权参数并调用 authenticate（中间件与 /api/session 共用） */
 export async function authenticateRequest(c: Context<AppEnv>): Promise<string | null> {
   return authenticate(
     c.get('db'),
     c.env.USERNAME,
-    c.req.header('X-Token'),
+    await extractToken(c),
     getCookie(c, 'key'),
     c.req.header('User-Agent') ?? '',
   );

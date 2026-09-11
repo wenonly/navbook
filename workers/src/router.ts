@@ -51,9 +51,11 @@ export function createApp() {
     return c.json(await appInfoHandler(c.get('db'), String(body.version ?? '0')));
   });
 
-  app.post('/api/check_login', async c => {
-    const body = await parseBody(c);
-    return c.json(await checkLoginHandler(c.get('db'), body.token ? String(body.token) : undefined));
+  app.on(['GET', 'POST'], '/api/check_login', async c => {
+    const body = await parseBody(c).catch(() => ({}) as Record<string, unknown>);
+    const q = c.req.query();
+    const token = (body.token ? String(body.token) : undefined) ?? q.token;
+    return c.json(await checkLoginHandler(c.get('db'), token));
   });
 
   app.post('/api/init', async c => {
@@ -111,14 +113,15 @@ export function createApp() {
 
   // ---------- 列表端点（可选鉴权：游客只见公开数据） ----------
 
-  app.post('/api/category_list', optionalAuthMiddleware, async c => {
+  // 读端点开 GET（PHP $_REQUEST 不分方法；插件列表查询可能走 GET）；写操作保持 POST-only
+  app.on(['GET', 'POST'], '/api/category_list', optionalAuthMiddleware, async c => {
     const q = c.req.query();
     const page = Math.max(1, parseInt(q.page ?? '1', 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(q.limit ?? '10', 10) || 10));
     return c.json(await categoryListHandler(c.get('db'), page, limit, c.get('isAuthed')));
   });
 
-  app.post('/api/link_list', optionalAuthMiddleware, async c => {
+  app.on(['GET', 'POST'], '/api/link_list', optionalAuthMiddleware, async c => {
     const q = c.req.query();
     const body = await parseBody(c);
     const page = Math.max(1, parseInt(q.page ?? '1', 10) || 1);
@@ -127,7 +130,7 @@ export function createApp() {
     return c.json(await linkListHandler(c.get('db'), page, limit, c.get('isAuthed'), categoryId));
   });
 
-  app.post('/api/q_category_link', optionalAuthMiddleware, async c => {
+  app.on(['GET', 'POST'], '/api/q_category_link', optionalAuthMiddleware, async c => {
     const q = c.req.query();
     const body = await parseBody(c);
     const fid = parseInt(String(body.category_id ?? q.category_id ?? q.id ?? '0'), 10);
@@ -137,14 +140,14 @@ export function createApp() {
     return c.json(await qCategoryLinkHandler(c.get('db'), parsed.category_id, page, limit, c.get('isAuthed')));
   });
 
-  app.post('/api/get_a_category', optionalAuthMiddleware, async c => {
+  app.on(['GET', 'POST'], '/api/get_a_category', optionalAuthMiddleware, async c => {
     const body = await parseBody(c);
     const q = c.req.query();
     const parsed = getACategorySchema.parse({ id: body.id ?? q.id });
     return c.json(await getACategoryHandler(c.get('db'), parsed.id, c.get('isAuthed')));
   });
 
-  app.post('/api/get_a_link', optionalAuthMiddleware, async c => {
+  app.on(['GET', 'POST'], '/api/get_a_link', optionalAuthMiddleware, async c => {
     const q = c.req.query();
     const body = await parseBody(c);
     const parsed = getALinkSchema.parse({ id: body.id ?? q.id });

@@ -105,6 +105,53 @@ describe('router 集成', () => {
     expect(body.id).toBeGreaterThan(0);
   });
 
+  it('token 走 query 参数通过鉴权（PHP $_REQUEST 兼容）', async () => {
+    await seedUser();
+    const res = await req(`/api/category_list?token=${validToken()}&page=1&limit=10`);
+    expect(res.status).toBe(200);
+  });
+
+  it('token 走 form body 通过鉴权（无 X-Token header）', async () => {
+    await seedUser();
+    const res = await req('/api/add_category', form({ name: '体感', token: validToken() }));
+    const json = await res.json() as any;
+    expect(json.code).toBe(0);
+  });
+
+  it('check_login 返回 PHP 原版形状（code 200 + data "true"）', async () => {
+    await seedUser();
+    const res = await req(`/api/check_login?token=${validToken()}`);
+    const json = await res.json() as any;
+    expect(json.code).toBe(200);
+    expect(json.data).toBe('true');
+    expect(json.msg).toBe('success');
+  });
+
+  it('check_login 支持 GET；错误 token 返回 -1002', async () => {
+    await seedUser();
+    expect((await req('/api/check_login?token=bad', { method: 'GET' })).status).toBe(200); // 200 + code -1002
+    const bad = await (await req('/api/check_login?token=bad', { method: 'GET' })).json() as any;
+    expect(bad.code).toBe(-1002);
+  });
+
+  it('列表端点支持 GET（query token + query 分页）', async () => {
+    await seedUser();
+    const res = await req(`/api/link_list?page=1&limit=10&token=${validToken()}`);
+    expect(res.status).toBe(200);
+  });
+
+  it('中间件 parseBody 与 handler parseBody 共存（bodyCache）', async () => {
+    await seedUser();
+    // add_link 的 handler 也 parseBody 读 fid/title——token 在 body，中间件先 parse 后 handler 再 parse
+    // 先建分类拿真实 id（sqlite_sequence 跨 DELETE 存活，不得假定 id=1）
+    const cat = await (await req('/api/add_category', form({ name: '缓存前置', token: validToken() }))).json() as any;
+    const res = await req('/api/add_link', form({
+      token: validToken(), fid: String(cat.id), title: '缓存验证', url: 'https://cache.test',
+    }));
+    const json = await res.json() as any;
+    expect(json.code).toBe(0);
+  });
+
   it('category_list 游客 vs X-Token 可见性', async () => {
     await seedUser();
     await req('/api/add_category', { ...form({ name: '公开' }), headers: { 'X-Token': validToken() } });

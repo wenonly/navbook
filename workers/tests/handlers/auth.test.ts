@@ -13,11 +13,12 @@ beforeEach(async () => {
 const db = () => getDb(env.DB);
 
 describe('check_login', () => {
-  it('合法 token 返回 username', async () => {
+  it('合法 token 返回 PHP 原版形状（code 200 + data "true"）', async () => {
     await seedUser();
     const res = await checkLoginHandler(db(), validToken());
-    expect(res.code).toBe(0);
-    expect(res.data!.username).toBe('admin');
+    expect(res.code).toBe(200);
+    expect(res.data).toBe('true');
+    expect(res.msg).toBe('success');
   });
 
   it('SecretKey 未生成时退化 token 被拒（不走 ?? 退化路径）', async () => {
@@ -71,8 +72,8 @@ describe('create_sk / app_info', () => {
     const res = await createSkHandler(db());
     expect(res.data.secret_key).toMatch(/^[0-9a-f]{32}$/);
     expect(res.data.secret_key).not.toBe('sk_test');
-    // 新 token 立即可用
-    expect((await checkLoginHandler(db(), md5('admin' + res.data.secret_key))).code).toBe(0);
+    // 新 token 立即可用（成功 code=200，PHP 原版形状）
+    expect((await checkLoginHandler(db(), md5('admin' + res.data.secret_key))).code).toBe(200);
     // 旧 token 失效
     expect((await checkLoginHandler(db(), validToken())).code).toBe(-1002);
   });

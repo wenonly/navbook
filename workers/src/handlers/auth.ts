@@ -5,13 +5,14 @@ import * as schema from '../db/schema';
 import { authenticate } from '../middleware/auth';
 import { md5 } from '../lib/md5';
 
-/** check_login：复用 authenticate（单一鉴权路径，Task 8 要求，禁止 md5(username) 退化写法） */
+/** check_login：复用 authenticate（单一鉴权路径，Task 8 要求，禁止 md5(username) 退化写法）。
+ * 成功返回与 PHP check_login 的 return_json(200,"true","success") 逐字对齐——插件校验 code===200。 */
 export async function checkLoginHandler(
   db: DB, token: string | undefined,
-): Promise<{ code: number; data?: { username: string }; msg?: string }> {
+): Promise<{ code: number; data?: string; msg?: string }> {
   const name = await authenticate(db, '', token, undefined, '');
   if (!name) return { code: -1002, msg: 'Authorization failure!' };
-  return { code: 0, data: { username: name } };
+  return { code: 200, data: 'true', msg: 'success' };
 }
 
 /** create_sk：生成/覆盖 SecretKey（对齐 PHP：存 on_options，插件 token 用） */
