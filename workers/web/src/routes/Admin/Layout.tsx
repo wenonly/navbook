@@ -46,6 +46,14 @@ export function AdminLayout() {
             链接管理
           </NavLink>
           <br />
+          <NavLink
+            to="/admin/token"
+            className={({ isActive }) => (isActive ? 'font-bold' : '')}
+            style={{ color: 'var(--color-text)' }}
+          >
+            Token 管理
+          </NavLink>
+          <br />
           <button
             className="text-red-500"
             onClick={() => {

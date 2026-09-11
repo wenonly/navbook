@@ -14,7 +14,7 @@ import {
   linkListHandler, qCategoryLinkHandler, getALinkHandler,
 } from './handlers/link';
 import { publicNavHandler } from './handlers/public';
-import { checkLoginHandler, createSkHandler, appInfoHandler } from './handlers/auth';
+import { checkLoginHandler, createSkHandler, tokenInfoHandler, appInfoHandler } from './handlers/auth';
 import { initHandler, loginHandler } from './handlers/init';
 import {
   addCategorySchema, editCategorySchema, delCategorySchema, getACategorySchema,
@@ -174,6 +174,10 @@ export function createApp() {
 
   app.post('/api/create_sk', authMiddleware, async c => {
     return c.json(await createSkHandler(c.get('db')));
+  });
+
+  app.get('/api/token_info', authMiddleware, async c => {
+    return c.json(await tokenInfoHandler(c.get('db')));
   });
 
   // ---------- SPA fallback（放最后） ----------

@@ -91,3 +91,21 @@ describe('create_sk / app_info', () => {
     expect(res.data.client_version).toBe('0.5.0');
   });
 });
+
+describe('token_info', () => {
+  it('返回 username/secret_key/token（token=validToken 公式）', async () => {
+    await seedUser();
+    const { tokenInfoHandler } = await import('../../src/handlers/auth');
+    const res = await tokenInfoHandler(db());
+    expect(res.code).toBe(0);
+    expect(res.data!.username).toBe('admin');
+    expect(res.data!.secret_key).toBe('sk_test');
+    expect(res.data!.token).toBe(validToken());
+  });
+
+  it('未初始化返回 -2000', async () => {
+    const { tokenInfoHandler } = await import('../../src/handlers/auth');
+    const res = await tokenInfoHandler(db());
+    expect(res.code).toBe(-2000);
+  });
+});

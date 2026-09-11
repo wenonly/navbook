@@ -44,4 +44,7 @@ export const api = {
   addLink: (data: Record<string, unknown>) => post('add_link', data),
   editLink: (data: Record<string, unknown>) => post('edit_link', data),
   delLink: (id: number) => post('del_link', { id }),
+
+  tokenInfo: () => get('/api/token_info'),
+  createSk: () => post('create_sk'),
 };

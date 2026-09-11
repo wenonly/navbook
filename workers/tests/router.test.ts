@@ -116,6 +116,17 @@ describe('router 集成', () => {
     expect((await json(session)).data.username).toBeNull();
   });
 
+  it('token_info 需要鉴权，带 X-Token 返回 token', async () => {
+    await seedUser();
+    const noAuth = await req('/api/token_info');
+    expect(noAuth.status).toBe(401);
+    const ok = await req('/api/token_info', { headers: { 'X-Token': validToken() } });
+    const json = await ok.json() as any;
+    expect(json.code).toBe(0);
+    expect(json.data.token).toBe(validToken());
+    expect(json.data.secret_key).toBe('sk_test');
+  });
+
   it('Zod 校验失败走 error 中间件 200 + code -2000', async () => {
     await seedUser();
     const res = await req('/api/add_link', {
