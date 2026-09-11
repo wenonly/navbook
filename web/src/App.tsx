@@ -15,8 +15,8 @@ export default function App() {
     <QueryClientProvider client={qc}>
       <BrowserRouter>
         <Routes>
-          <Route path="/init" element={<Init />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/admin/init" element={<Init />} />
+          <Route path="/admin/login" element={<Login />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="/admin/categories" replace />} />
             <Route path="categories" element={<AdminCategories />} />

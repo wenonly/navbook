@@ -16,7 +16,7 @@ export function Init() {
     try {
       // code!==0 已在 client 层抛错，走到这里即成功
       await api.init(username, password);
-      navigate('/login'); // 初始化只建账号；登录（下发 cookie）走 /login
+      navigate('/admin/login'); // 初始化只建账号；登录（下发 cookie）走 /admin/login
     } catch (err) {
       setError(err instanceof Error ? err.message : '操作失败');
     } finally {

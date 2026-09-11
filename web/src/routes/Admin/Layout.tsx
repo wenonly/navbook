@@ -23,7 +23,7 @@ export function AdminLayout() {
   }, [setUsername, clear]);
 
   if (!checked) return null; // 等待会话探测，避免闪烁跳转
-  if (!username) return <Navigate to="/login" replace />;
+  if (!username) return <Navigate to="/admin/login" replace />;
 
   return (
     <div className="min-h-screen flex">

@@ -82,7 +82,7 @@ export function createApiClient(_opts: ApiClientOptions = {}) {
   }
 
   return {
-    publicNav: () => get<NavData>('/api/public_nav'),
+    publicNav: () => get<{ code: 0; data: NavData }>('/api/public_nav').then(r => r.data),
     session: () => get<{ code: 0; data: SessionInfo }>('/api/session'),
     // 未来生长点：search(q) / articles() / themeConfig() ...
   };
