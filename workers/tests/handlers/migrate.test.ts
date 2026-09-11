@@ -174,3 +174,20 @@ describe('import_json', () => {
     expect(res.data.links_imported).toBe(1);
   });
 });
+
+describe('import_json 长度边界（回归：旧书签常见超长标题/URL 曾被误拒）', () => {
+  const payload = (categories: unknown[]) => ({ type: 'onenav.bookmarks', version: 1, categories });
+
+  it('超长标题（200+ 字符）与超长 URL（1000+ 字符）可导入', async () => {
+    const longTitle = '超长标题'.repeat(60);           // 240 字符
+    const longUrl = 'https://example.com/?p=' + 'x'.repeat(1000);
+    const res = await importJsonHandler(db(), payload([
+      { name: '长字段', links: [{ title: longTitle, url: longUrl }], children: [] },
+    ]));
+    expect(res.code).toBe(0);
+    expect(res.data.links_imported).toBe(1);
+    const row = await env.DB.prepare('SELECT title, url FROM on_links').first<{ title: string; url: string }>();
+    expect(row!.title).toBe(longTitle);
+    expect(row!.url).toBe(longUrl);
+  });
+});

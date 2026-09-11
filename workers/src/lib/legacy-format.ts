@@ -9,17 +9,19 @@ export { decodeEntities } from './escape';
 // ---- onenav.bookmarks 导入格式（与 PHP export_json / ZMark 互通）----
 
 export const onenavLinkSchema = z.object({
-  title: z.string().min(1).max(64),
+  // 长度上限是防滥用的护栏（宽松），不是 PHP 表结构的"文档长度"——
+  // SQLite/PHP 原版从不强制列长，存量书签常见 200+ 字符的标题和带 token 的超长 URL
+  title: z.string().min(1).max(512),
   // 旧书签可能有任意 scheme，与 DB（无格式约束）一致，不校验 URL 形状
-  url: z.string().min(1).max(256),
-  description: z.string().max(256).optional().default(''),
-  backup_url: z.string().max(256).optional().default(''),
+  url: z.string().min(1).max(2048),
+  description: z.string().max(512).optional().default(''),
+  backup_url: z.string().max(2048).optional().default(''),
   sort_order: z.coerce.number().int().min(0).optional().default(0),
 });
 
 export const onenavL2CategorySchema = z.object({
-  name: z.string().min(1).max(32),
-  description: z.string().max(128).optional().default(''),
+  name: z.string().min(1).max(64),
+  description: z.string().max(512).optional().default(''),
   links: z.array(onenavLinkSchema).optional().default([]),
 });
 

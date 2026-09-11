@@ -2,11 +2,12 @@ import { z } from 'zod';
 
 export const addCategorySchema = z.object({
   token: z.string().optional(),
-  name: z.string().min(1).max(32),
+  // 长度上限是防滥用护栏（宽松）；DB 列长仅为文档（SQLite 不强制，PHP 原版同样不拒绝超长）
+  name: z.string().min(1).max(64),
   property: z.coerce.number().int().min(0).max(1).optional().default(0),
   weight: z.coerce.number().int().min(0).optional().default(0),
-  description: z.string().max(128).optional().default(''),
-  font_icon: z.string().max(32).optional().default(''),
+  description: z.string().max(512).optional().default(''),
+  font_icon: z.string().max(64).optional().default(''),
   fid: z.coerce.number().int().min(0).optional().default(0),
 });
 
@@ -27,12 +28,12 @@ export const getACategorySchema = z.object({
 export const addLinkSchema = z.object({
   token: z.string().optional(),
   fid: z.coerce.number().int().positive(),
-  title: z.string().min(1).max(64),
-  url: z.url().max(256),
-  description: z.string().max(256).optional().default(''),
+  title: z.string().min(1).max(512),
+  url: z.url().max(2048),
+  description: z.string().max(512).optional().default(''),
   weight: z.coerce.number().int().min(0).optional().default(0),
   property: z.coerce.number().int().min(0).max(1).optional().default(0),
-  url_standby: z.string().max(256).optional().default(''),
+  url_standby: z.string().max(2048).optional().default(''),
   font_icon: z.string().max(512).optional().default(''),
 });
 

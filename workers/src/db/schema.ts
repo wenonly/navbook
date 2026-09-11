@@ -15,13 +15,13 @@ export const users = sqliteTable('on_users', {
 
 export const categorys = sqliteTable('on_categorys', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  name: text('name', { length: 32 }).notNull(),
+  name: text('name', { length: 64 }).notNull(),
   addTime: integer('add_time').notNull(),
   upTime: integer('up_time'),
   weight: integer('weight').notNull().default(0),
   property: integer('property').notNull().default(0),
-  description: text('description', { length: 128 }).default(''),
-  fontIcon: text('font_icon', { length: 32 }),
+  description: text('description', { length: 512 }).default(''),
+  fontIcon: text('font_icon', { length: 64 }),
   fid: integer('fid').notNull().default(0),
 }, (t) => [
   uniqueIndex('on_categorys_name_unique').on(t.name),
@@ -31,16 +31,16 @@ export const categorys = sqliteTable('on_categorys', {
 export const links = sqliteTable('on_links', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   fid: integer('fid').notNull(),
-  title: text('title', { length: 64 }).notNull(),
-  url: text('url', { length: 256 }).notNull(),
-  description: text('description', { length: 256 }),
+  title: text('title', { length: 512 }).notNull(),
+  url: text('url', { length: 2048 }).notNull(),
+  description: text('description', { length: 512 }),
   addTime: integer('add_time').notNull(),
   upTime: integer('up_time'),
   weight: integer('weight').notNull().default(0),
   property: integer('property').notNull().default(0),
   click: integer('click').notNull().default(0),
   topping: integer('topping').notNull().default(0),
-  urlStandby: text('url_standby', { length: 256 }),
+  urlStandby: text('url_standby', { length: 2048 }),
   fontIcon: text('font_icon', { length: 512 }),
   // icon_blob IS NULL 即无图标；icon_source 仅在 icon_blob 非空时有意义（Phase 3 图标上传启用）
   iconSource: text('icon_source', { length: 16 }).notNull().default('blob'),
