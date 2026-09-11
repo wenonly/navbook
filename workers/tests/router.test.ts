@@ -138,4 +138,35 @@ describe('router 集成', () => {
     expect(body.code).toBe(-2000);
     expect(String(body.msg)).toContain('url');  // zod 错误信息提到 url 字段
   });
+
+  it('export_json / import_json 需要鉴权', async () => {
+    await seedUser();
+    expect((await req('/api/export_json', form({}))).status).toBe(401);
+    expect((await req('/api/import_json', { method: 'POST', body: '{}' })).status).toBe(401);
+  });
+
+  it('import_json（JSON body）导入后 export_json 往返一致', async () => {
+    await seedUser();
+    const payload = {
+      type: 'onenav.bookmarks', version: 1,
+      categories: [{
+        name: '工具', description: '',
+        links: [{ title: 'GitHub', url: 'https://github.com', description: '', backup_url: '', sort_order: 0 }],
+        children: [],
+      }],
+    };
+    const imp = await req('/api/import_json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Token': validToken() },
+      body: JSON.stringify(payload),
+    });
+    const impJson = await json(imp);
+    expect(impJson.code).toBe(0);
+    expect(impJson.data.links_imported).toBe(1);
+
+    const exp = await req('/api/export_json', { ...form({}), headers: { 'X-Token': validToken() } });
+    const expJson = await json(exp);
+    expect(expJson.data.categories[0].name).toBe('工具');
+    expect(expJson.data.categories[0].links[0].url).toBe('https://github.com');
+  });
 });

@@ -14,6 +14,7 @@ import {
   linkListHandler, qCategoryLinkHandler, getALinkHandler,
 } from './handlers/link';
 import { publicNavHandler } from './handlers/public';
+import { exportJsonHandler, importJsonHandler } from './handlers/migrate';
 import { checkLoginHandler, createSkHandler, tokenInfoHandler, appInfoHandler } from './handlers/auth';
 import { initHandler, loginHandler } from './handlers/init';
 import {
@@ -174,6 +175,18 @@ export function createApp() {
 
   app.post('/api/create_sk', authMiddleware, async c => {
     return c.json(await createSkHandler(c.get('db')));
+  });
+
+  app.post('/api/export_json', authMiddleware, async c => {
+    return c.json(await exportJsonHandler(c.get('db')));
+  });
+
+  app.post('/api/import_json', authMiddleware, async c => {
+    // 注意：本端点收 JSON body（非 FormData），与其它端点不同
+    const payload = await c.req.json().catch(() => {
+      throw new Error('请求体必须是 JSON');
+    });
+    return c.json(await importJsonHandler(c.get('db'), payload));
   });
 
   app.get('/api/token_info', authMiddleware, async c => {
