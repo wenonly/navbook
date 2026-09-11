@@ -1,5 +1,5 @@
 // 错误文案与 PHP 原版逐字对齐（含中英混杂），勿"修正"
-import { eq, sql, desc, and, inArray } from 'drizzle-orm';
+import { eq, sql, desc, and, inArray, like, or } from 'drizzle-orm';
 import type { DB } from '../db/client';
 import * as schema from '../db/schema';
 import { escapeHtml, decodeEntities } from '../lib/escape';
@@ -124,6 +124,48 @@ export async function qCategoryLinkHandler(
 ): Promise<{ code: number; msg: string; count: number; data: LinkRow[] }> {
   if (!fid) return { code: -2000, msg: '分类ID不能为空！', count: 0, data: [] };
   return linkListHandler(db, page, limit, isAuthed, fid);
+}
+
+/** 模糊搜索：标题/URL/备用链接/描述（PHP global_search 对齐，插件搜索框用）。
+ * 返回形状 {code:0, msg:'', count, data} 对齐 PHP；每项带 category_name。
+ * keyword 原样拼 LIKE（与 PHP 一致不转义：SQLite LIKE 的 \ 默认无转义义，用户搜 %/_ 场景罕见）。
+ * 已鉴权端点（PHP 原版 auth 后搜索，含私有链接）。 */
+export async function globalSearchHandler(
+  db: DB, keyword: string,
+): Promise<{ code: 0; msg: ''; count: number; data: Array<LinkRow & { category_name: string }> }> {
+  const pattern = `%${keyword}%`;
+  const rows = await db.select({
+    id: schema.links.id, fid: schema.links.fid, title: schema.links.title,
+    url: schema.links.url, description: schema.links.description,
+    addTime: schema.links.addTime, upTime: schema.links.upTime,
+    weight: schema.links.weight, property: schema.links.property,
+    click: schema.links.click, topping: schema.links.topping,
+    urlStandby: schema.links.urlStandby, fontIcon: schema.links.fontIcon,
+    // 表限定 on_links.fid（同 linkListHandler：防子查询解析到 on_categorys.fid）
+    categoryName: sql<string>`(SELECT name FROM on_categorys WHERE id = on_links.fid)`,
+  }).from(schema.links)
+    .where(or(
+      like(schema.links.title, pattern),
+      like(schema.links.url, pattern),
+      like(schema.links.urlStandby, pattern),
+      like(schema.links.description, pattern),
+    ))
+    .orderBy(desc(schema.links.weight))
+    .limit(100).all();
+
+  // DB 存转义，读输出统一解码为明文（categoryName 子查询取的分类名同为转义存储）；
+  // 分类名输出 snake_case category_name（插件读该字段，对齐 PHP）
+  return {
+    code: 0,
+    msg: '',
+    count: rows.length,
+    data: rows.map(({ categoryName, ...r }) => ({
+      ...r,
+      title: decodeEntities(r.title),
+      description: decodeEntities(r.description ?? ''),
+      category_name: decodeEntities(categoryName ?? ''),
+    })) as Array<LinkRow & { category_name: string }>,
+  };
 }
 
 // select 刻意排除 iconBlob（Buffer 会被 c.json 序列化成巨大对象——Phase 3 图标上传后必须保持排除）

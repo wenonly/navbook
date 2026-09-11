@@ -6,12 +6,13 @@ import { authenticate } from '../middleware/auth';
 import { md5 } from '../lib/md5';
 
 /** check_login：复用 authenticate（单一鉴权路径，Task 8 要求，禁止 md5(username) 退化写法）。
- * 成功返回与 PHP check_login 的 return_json(200,"true","success") 逐字对齐——插件校验 code===200。 */
+ * 成功返回与 PHP check_login 的 return_json(200,"true","success") 逐字对齐——插件校验 code===200；
+ * 失败带 err_msg（插件失败提示读该字段，对齐 PHP err_msg()）。 */
 export async function checkLoginHandler(
   db: DB, token: string | undefined,
-): Promise<{ code: number; data?: string; msg?: string }> {
+): Promise<{ code: number; data?: string; msg?: string; err_msg?: string }> {
   const name = await authenticate(db, '', token, undefined, '');
-  if (!name) return { code: -1002, msg: 'Authorization failure!' };
+  if (!name) return { code: -1002, msg: 'Authorization failure!', err_msg: 'Authorization failure!' };
   return { code: 200, data: 'true', msg: 'success' };
 }
 
@@ -39,15 +40,19 @@ export async function tokenInfoHandler(
   };
 }
 
-/** app_info：SPA 启动元信息（版本/是否已初始化） */
+/** app_info：SPA 启动元信息（版本/是否已初始化）。
+ * code 200 + msg success 对齐 PHP return_json(200,...)——插件判 code==200 才读 onenav_version。
+ * onenav_version 取 v1.x 形态：插件版本检查合法区间为 [0.9, 2)（parseFloat("0.9.32")=0.9，v>=2 触发"发生异常"分支被拒）。 */
 export async function appInfoHandler(
   db: DB, clientVersion: string,
-): Promise<{ code: 0; data: { version: string; client_version: string; has_user: boolean; username: string | null } }> {
+): Promise<{ code: 200; msg: 'success'; data: { version: string; onenav_version: string; client_version: string; has_user: boolean; username: string | null } }> {
   const user = await db.select().from(schema.users).limit(1).get();
   return {
-    code: 0,
+    code: 200,
+    msg: 'success',
     data: {
       version: '2.0.0',
+      onenav_version: 'v1.2.4-navbook',
       client_version: clientVersion,
       has_user: !!user,
       username: user?.username ?? null,

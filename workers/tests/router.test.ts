@@ -363,6 +363,55 @@ describe('router 集成', () => {
     expect((await req('/api/public_nav')).status).toBe(200);
   });
 
+  it('global_search：关键词匹配标题/URL/描述并带 category_name', async () => {
+    await seedUser();
+    await req('/api/add_category', { ...form({ name: '搜索分类' }), headers: { 'X-Token': validToken() } });
+    const cat = await (await req('/api/category_list?page=1&limit=10', { headers: { 'X-Token': validToken() } })).json() as any;
+    const fid = cat.data[0].id;
+    await req('/api/add_link', { ...form({ fid: String(fid), title: 'GitHub 主页', url: 'https://github.com/x', description: '代码托管' }), headers: { 'X-Token': validToken() } });
+
+    const hit = await (await req('/api/global_search', { ...form({ keyword: 'GitHub' }), headers: { 'X-Token': validToken() } })).json() as any;
+    expect(hit.code).toBe(0);
+    expect(hit.data.length).toBe(1);
+    expect(hit.data[0].title).toBe('GitHub 主页');
+    expect(hit.data[0].category_name).toBe('搜索分类');
+
+    const byDesc = await (await req('/api/global_search', { ...form({ keyword: '托管' }), headers: { 'X-Token': validToken() } })).json() as any;
+    expect(byDesc.data.length).toBe(1);
+
+    const miss = await (await req('/api/global_search', { ...form({ keyword: '不存在的词' }), headers: { 'X-Token': validToken() } })).json() as any;
+    expect(miss.code).toBe(0);
+    expect(miss.data).toEqual([]);
+  });
+
+  it('global_search：关键词长度与鉴权', async () => {
+    await seedUser();
+    expect((await req('/api/global_search', form({ keyword: 'xx' }))).status).toBe(401);
+    const short = await (await req('/api/global_search', { ...form({ keyword: 'x' }), headers: { 'X-Token': validToken() } })).json() as any;
+    expect(short.code).toBe(-2000);
+    const long = await (await req('/api/global_search', { ...form({ keyword: 'x'.repeat(33) }), headers: { 'X-Token': validToken() } })).json() as any;
+    expect(long.code).toBe(-2000);
+  });
+
+  it('/index.php 兼容入口：POST form token 走通 check_login 与 category_list', async () => {
+    await seedUser();
+    const check = await req('/index.php?c=api&method=check_login', form({ token: validToken() }));
+    const checkJson = await check.json() as any;
+    expect(checkJson.code).toBe(200);
+
+    const list = await req('/index.php?c=api&method=category_list&page=1&limit=999', form({ token: validToken() }));
+    const listJson = await list.json() as any;
+    expect(listJson.code).toBe(0);
+    expect(typeof listJson.count).toBe('number');
+  });
+
+  it('错误响应带 err_msg 字段（插件读取）', async () => {
+    await seedUser();
+    const bad = await req('/api/check_login', form({ token: 'bad' }));
+    const json = await bad.json() as any;
+    expect(json.err_msg).toBe('Authorization failure!');
+  });
+
   it('隐私模式：/ 游客 302 登录页，登录 cookie 后正常出主题', async () => {
     await seedUser();
     await req('/api/set_site', { ...form({ site_private: '1' }), headers: { 'X-Token': validToken() } });

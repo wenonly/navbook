@@ -11,7 +11,7 @@ import {
 } from './handlers/category';
 import {
   addLinkHandler, editLinkHandler, delLinkHandler,
-  linkListHandler, qCategoryLinkHandler, getALinkHandler,
+  linkListHandler, qCategoryLinkHandler, getALinkHandler, globalSearchHandler,
 } from './handlers/link';
 import { publicNavHandler } from './handlers/public';
 import { exportJsonHandler, importJsonHandler } from './handlers/migrate';
@@ -23,6 +23,7 @@ import { getSiteConfig, setSiteConfig, siteConfigData, isPrivateAndGuest } from 
 import {
   addCategorySchema, editCategorySchema, delCategorySchema, getACategorySchema,
   addLinkSchema, editLinkSchema, delLinkSchema, getALinkSchema, qCategoryLinkSchema,
+  globalSearchSchema,
   initSchema, loginSchema, setSiteSchema,
 } from './lib/validate';
 
@@ -42,6 +43,25 @@ export function createApp() {
     c.set('isAuthed', false);
     c.set('username', null);
     await next();
+  });
+
+  // PHP 兼容入口：/index.php?c=api&method=<m>（无伪静态 URL 形态，浏览器扩展使用）。
+  // 必须在全局中间件之后、具体端点之前注册（app.all('*') 伺服路由在文件末尾兜底）。
+  app.all('/index.php', async c => {
+    const controller = c.req.query('c');
+    const method = c.req.query('method');
+    if (controller === 'api' && method) {
+      const url = new URL(c.req.url);
+      url.pathname = `/api/${method}`;
+      // 其余查询参数（page/limit/category_id 等）原样保留；form body（含 token）随 raw Request 转发
+      const forwarded = new Request(url.toString(), c.req.raw);
+      // ExecutionContext 双类型源（workers-types vs cf-typegen 含 tracing/abort），从 app.request 反推目标类型
+      type ExecCtx = Parameters<typeof app.request>[3];
+      let ec: ExecCtx | undefined;
+      try { ec = c.executionCtx as ExecCtx; } catch { /* 测试环境无执行上下文 */ }
+      return app.request(forwarded, undefined, c.env, ec);
+    }
+    return new Response(null, { status: 302, headers: { Location: '/' } });
   });
 
   // ---------- 公开端点（无鉴权） ----------
@@ -106,7 +126,8 @@ export function createApp() {
   app.get('/api/public_nav', optionalAuthMiddleware, async c => {
     // 隐私模式：游客连公开数据也不给（HTTP 语义收口在 router）
     if (await isPrivateAndGuest(c.get('db'), c.get('isAuthed'))) {
-      return c.json({ code: -1002, msg: '此站点已开启隐私模式，请先登录' }, 401);
+      const msg = '此站点已开启隐私模式，请先登录';
+      return c.json({ code: -1002, msg, err_msg: msg }, 401);
     }
     return c.json(await publicNavHandler(c.get('db'), c.get('isAuthed')));
   });
@@ -208,6 +229,13 @@ export function createApp() {
     return c.json(await createSkHandler(c.get('db')));
   });
 
+  // 全局搜索（插件搜索框）：强制鉴权，keyword 走 body（PHP $_REQUEST 对齐）
+  app.post('/api/global_search', authMiddleware, async c => {
+    const body = await parseBody(c);
+    const p = globalSearchSchema.parse(body);
+    return c.json(await globalSearchHandler(c.get('db'), p.keyword));
+  });
+
   app.post('/api/export_json', authMiddleware, async c => {
     return c.json(await exportJsonHandler(c.get('db')));
   });
@@ -268,9 +296,9 @@ export function createApp() {
   app.all('*', async c => {
     const path = c.req.path;
 
-    // API 未知方法：JSON 404（既有行为）
+    // API 未知方法：JSON 404（既有行为；err_msg 插件读取）
     if (path.startsWith('/api/')) {
-      return c.json({ code: -404, msg: 'method not found!' }, 404);
+      return c.json({ code: -404, msg: 'method not found!', err_msg: 'method not found!' }, 404);
     }
 
     if (!c.env.ASSETS) {

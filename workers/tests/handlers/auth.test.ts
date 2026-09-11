@@ -90,6 +90,13 @@ describe('create_sk / app_info', () => {
     expect(res.data.has_user).toBe(true);
     expect(res.data.username).toBe('admin');
     expect(res.data.client_version).toBe('0.5.0');
+    // 插件契约：code==200 才读 onenav_version；版本须落在 [0.9, 2)（插件 parseFloat("0.9.32")=0.9，v>=2 被"发生异常"分支拒绝）
+    expect(res.code).toBe(200);
+    expect(res.msg).toBe('success');
+    expect(res.data.onenav_version).toMatch(/^v1\./);
+    const v = parseFloat(res.data.onenav_version.split('-')[0].substring(1));
+    expect(v).toBeGreaterThanOrEqual(0.9);
+    expect(v).toBeLessThan(2);
   });
 });
 

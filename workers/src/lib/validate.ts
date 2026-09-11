@@ -56,6 +56,12 @@ export const qCategoryLinkSchema = z.object({
   category_id: z.coerce.number().int().positive(),
 });
 
+// 关键词长度 2-32 对齐 PHP Api.php global_search 的 strlen 校验
+export const globalSearchSchema = z.object({
+  token: z.string().optional(),
+  keyword: z.string().min(2).max(32),
+});
+
 export const initSchema = z.object({
   username: z.string().min(1).max(32),
   password: z.string().min(6).max(64),

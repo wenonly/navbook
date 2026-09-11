@@ -72,7 +72,7 @@ export async function authenticateRequest(c: Context<AppEnv>): Promise<string | 
 export const authMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   const username = await authenticateRequest(c);
   if (!username) {
-    return c.json({ code: -1002, msg: 'Authorization failure!' }, 401);
+    return c.json({ code: -1002, msg: 'Authorization failure!', err_msg: 'Authorization failure!' }, 401);
   }
   c.set('isAuthed', true);
   c.set('username', username);

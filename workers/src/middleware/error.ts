@@ -11,5 +11,6 @@ import type { AppEnv } from '../types';
 export const onErrorHandler: ErrorHandler<AppEnv> = (err, c) => {
   const msg = err instanceof Error ? err.message : 'Internal Server Error';
   console.error('Unhandled error:', err);
-  return c.json({ code: -2000, msg });
+  // err_msg 与 PHP err_msg() 输出对齐——浏览器扩展失败提示读这个字段
+  return c.json({ code: -2000, msg, err_msg: msg });
 };
