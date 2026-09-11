@@ -1,4 +1,4 @@
-import type { NavData } from '@/types/nav';
+import type { NavData } from '@navbook/shared';
 
 // admin SPA 与 API 同源：cookie 由浏览器自动携带（fetch 默认 credentials: 'same-origin'），
 // 前端不传 token、不读 cookie（HttpOnly）。

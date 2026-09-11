@@ -8,8 +8,13 @@ importers:
 
   .: {}
 
+  shared: {}
+
   web:
     dependencies:
+      '@navbook/shared':
+        specifier: workspace:^
+        version: link:../shared
       '@tanstack/react-query':
         specifier: ^5.102.8
         version: 5.102.8(react@19.3.0)
