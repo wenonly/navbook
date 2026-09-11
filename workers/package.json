@@ -1,18 +1,17 @@
 {
-  "name": "onenav-workers",
+  "name": "@navbook/workers",
   "private": true,
   "type": "module",
   "scripts": {
     "predev": "pnpm cf-typegen",
     "dev": "wrangler dev",
-    "deploy": "pnpm --filter web build && wrangler deploy",
-    "pretest": "pnpm typecheck",
+    "deploy": "wrangler deploy",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:migrate:local": "wrangler d1 migrations apply onenav-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply onenav-db --remote",
+    "typecheck": "tsc --noEmit",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "typecheck": "tsc --noEmit"
+    "db:migrate:local": "wrangler d1 migrations apply onenav-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply onenav-db --remote"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
