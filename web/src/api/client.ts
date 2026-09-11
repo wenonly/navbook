@@ -58,6 +58,9 @@ export const api = {
   themes: () => get('/api/themes'),
   setTheme: (theme: string) => post('set_theme', { theme }),
 
+  siteConfig: () => get('/api/site_config'),
+  setSite: (data: Record<string, unknown>) => post('set_site', data),
+
   tokenInfo: () => get('/api/token_info'),
   createSk: () => post('create_sk'),
 };

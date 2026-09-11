@@ -3,6 +3,7 @@ import { eq, desc, and, inArray } from 'drizzle-orm';
 import type { DB } from '../db/client';
 import * as schema from '../db/schema';
 import { decodeEntities } from '../lib/escape';
+import { getSiteConfig } from './site';
 
 export interface PublicNavLink {
   id: number; fid: number; title: string; url: string;
@@ -78,14 +79,13 @@ export async function publicNavHandler(db: DB, isAuthed: boolean): Promise<Publi
     });
   }
 
-  const titleRow = await db.select().from(schema.options)
-    .where(eq(schema.options.key, 'site_title')).get();
+  const site = await getSiteConfig(db);
 
   return {
     code: 0,
     data: {
-      site_title: titleRow?.value || 'NavBook',
-      site_subtitle: '',
+      site_title: site.siteTitle,
+      site_subtitle: site.siteSubtitle,
       categories: tops,
     },
   };

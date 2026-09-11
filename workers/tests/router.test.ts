@@ -280,4 +280,59 @@ describe('router 集成', () => {
     expect(res.status).toBe(200);
     expect(await res.text()).toContain('THEME_DEFAULT2');
   });
+
+  it('site_config/set_site：读取与写入往返（需鉴权）', async () => {
+    await seedUser();
+    expect((await req('/api/site_config')).status).toBe(401);
+    expect((await req('/api/set_site', form({ site_private: '1' }))).status).toBe(401);
+    const before = await (await req('/api/site_config', { headers: { 'X-Token': validToken() } })).json() as any;
+    expect(before.data.site_private).toBe(false);
+    expect(before.data.site_title).toBe('NavBook');
+    expect(before.data.site_subtitle).toBe('');
+
+    await req('/api/set_site', {
+      ...form({ site_private: '1', site_title: '我的导航', site_subtitle: 'sub' }),
+      headers: { 'X-Token': validToken() },
+    });
+    const after = await (await req('/api/site_config', { headers: { 'X-Token': validToken() } })).json() as any;
+    expect(after.data.site_private).toBe(true);
+    expect(after.data.site_title).toBe('我的导航');
+    expect(after.data.site_subtitle).toBe('sub');
+  });
+
+  it('隐私模式：public_nav 游客 401，鉴权后正常', async () => {
+    await seedUser();
+    await req('/api/set_theme', { ...form({ theme: 'default2' }), headers: { 'X-Token': validToken() } });
+    await req('/api/set_site', { ...form({ site_private: '1' }), headers: { 'X-Token': validToken() } });
+
+    const guest = await req('/api/public_nav');
+    expect(guest.status).toBe(401);
+
+    const authed = await req('/api/public_nav', { headers: { 'X-Token': validToken() } });
+    expect(authed.status).toBe(200);
+
+    // 关闭后恢复
+    await req('/api/set_site', { ...form({ site_private: '0' }), headers: { 'X-Token': validToken() } });
+    expect((await req('/api/public_nav')).status).toBe(200);
+  });
+
+  it('隐私模式：/ 游客 302 登录页，登录 cookie 后正常出主题', async () => {
+    await seedUser();
+    await req('/api/set_site', { ...form({ site_private: '1' }), headers: { 'X-Token': validToken() } });
+
+    const guest = await req('/');
+    expect(guest.status).toBe(302);
+    expect(guest.headers.get('Location')).toContain('/admin/login');
+
+    // X-Token 不能用于 / 伺服路由（那是 API 头）；用 login 拿 cookie 走 /
+    // login 与 / 的 UA 必须一致（cookie 公式绑定 UA）
+    const login = await req('/api/login', {
+      ...form({ password: 'test123' }),
+      headers: { 'User-Agent': 'privacy-test' },
+    });
+    const cookieVal = login.headers.get('Set-Cookie')!.match(/key=([^;]+)/)![1];
+    const home = await req('/', { headers: { Cookie: `key=${cookieVal}`, 'User-Agent': 'privacy-test' } });
+    expect(home.status).toBe(200);
+    expect(await home.text()).toContain('THEME_');
+  });
 });

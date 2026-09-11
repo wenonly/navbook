@@ -64,3 +64,11 @@ export const initSchema = z.object({
 export const loginSchema = z.object({
   password: z.string().min(1).max(64),
 });
+
+export const setSiteSchema = z.object({
+  token: z.string().optional(),
+  // FormData 传来 '1'/'0' 字符串（z.coerce.boolean 会把 '0' 当 true，禁用）
+  site_private: z.enum(['0', '1']).transform(v => v === '1').optional(),
+  site_title: z.string().min(1).max(64).optional(),
+  site_subtitle: z.string().max(128).optional(),
+});

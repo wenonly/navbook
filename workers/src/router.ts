@@ -19,10 +19,11 @@ import { checkLoginHandler, createSkHandler, tokenInfoHandler, appInfoHandler } 
 import { initHandler, loginHandler } from './handlers/init';
 import { getActiveTheme, setActiveTheme, mergeManifest, DEFAULT_THEME } from './handlers/themes';
 import type { ThemeManifestEntry } from './handlers/themes';
+import { getSiteConfig, setSiteConfig, siteConfigData, isPrivateAndGuest } from './handlers/site';
 import {
   addCategorySchema, editCategorySchema, delCategorySchema, getACategorySchema,
   addLinkSchema, editLinkSchema, delLinkSchema, getALinkSchema, qCategoryLinkSchema,
-  initSchema, loginSchema,
+  initSchema, loginSchema, setSiteSchema,
 } from './lib/validate';
 
 /** body 解析统一入口：非法/缺失 body 一律落空对象，交给 Zod 报具体字段错误 */
@@ -85,7 +86,26 @@ export function createApp() {
     return c.json({ code: 0, data: { username } });
   });
 
+  app.get('/api/site_config', authMiddleware, async c => {
+    return c.json({ code: 0, data: siteConfigData(await getSiteConfig(c.get('db'))) });
+  });
+
+  app.post('/api/set_site', authMiddleware, async c => {
+    const body = await parseBody(c);
+    const p = setSiteSchema.parse(body);
+    await setSiteConfig(c.get('db'), {
+      ...(p.site_private !== undefined ? { sitePrivate: p.site_private } : {}),
+      ...(p.site_title !== undefined ? { siteTitle: p.site_title } : {}),
+      ...(p.site_subtitle !== undefined ? { siteSubtitle: p.site_subtitle } : {}),
+    });
+    return c.json({ code: 0, data: siteConfigData(await getSiteConfig(c.get('db'))) });
+  });
+
   app.get('/api/public_nav', optionalAuthMiddleware, async c => {
+    // 隐私模式：游客连公开数据也不给（HTTP 语义收口在 router）
+    if (await isPrivateAndGuest(c.get('db'), c.get('isAuthed'))) {
+      return c.json({ code: -1002, msg: '此站点已开启隐私模式，请先登录' }, 401);
+    }
     return c.json(await publicNavHandler(c.get('db'), c.get('isAuthed')));
   });
 
@@ -269,6 +289,14 @@ export function createApp() {
 
     // 首页：当前主题（降级链：配置主题 → default2 → 302 /admin）
     if (path === '/') {
+      // 隐私模式：未登录先跳登录（主题 HTML 也不给看）
+      if (await isPrivateAndGuest(c.get('db'), false)) {
+        const user = await authenticateRequest(c);
+        if (!user) {
+          return new Response(null, { status: 302, headers: { Location: '/admin/login?redirect=%2F' } });
+        }
+      }
+
       const manifest = readManifestList(await fetchAssetsJson(c, '/themes/manifest.json'));
       const ids = new Set(manifest.map(t => t.id));
       let active = await getActiveTheme(c.get('db'));

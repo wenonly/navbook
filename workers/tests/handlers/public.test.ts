@@ -49,6 +49,14 @@ describe('public_nav', () => {
     expect(res.data.site_title).toBe('我的导航');
   });
 
+  it('site_title/site_subtitle 持久化后出现在输出', async () => {
+    await env.DB.prepare("INSERT OR REPLACE INTO on_options (key, value) VALUES ('site_title', ?)").bind('我的站').run();
+    await env.DB.prepare("INSERT OR REPLACE INTO on_options (key, value) VALUES ('site_subtitle', ?)").bind('一句话').run();
+    const res = await publicNavHandler(db(), false);
+    expect(res.data.site_title).toBe('我的站');
+    expect(res.data.site_subtitle).toBe('一句话');
+  });
+
   it('空库返回空数组', async () => {
     const res = await publicNavHandler(db(), false);
     expect(res.code).toBe(0);
