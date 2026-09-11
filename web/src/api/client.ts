@@ -54,6 +54,9 @@ export const api = {
   exportJson: () => post('export_json'),
   importJson: (payload: unknown) => postJson('/api/import_json', payload),
 
+  themes: () => get('/api/themes'),
+  setTheme: (theme: string) => post('set_theme', { theme }),
+
   tokenInfo: () => get('/api/token_info'),
   createSk: () => post('create_sk'),
 };

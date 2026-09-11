@@ -62,6 +62,14 @@ export function AdminLayout() {
             导入导出
           </NavLink>
           <br />
+          <NavLink
+            to="/admin/theme"
+            className={({ isActive }) => (isActive ? 'font-bold' : '')}
+            style={{ color: 'var(--color-text)' }}
+          >
+            主题管理
+          </NavLink>
+          <br />
           <button
             className="text-red-500"
             onClick={() => {
