@@ -594,24 +594,41 @@ mkdir web/src/themes/my-new-theme
 
 ## 9. 数据迁移（JSON 导出 / 导入）
 
-**导出格式：**
+**入口：** 后台管理 UI 的「导入导出」页面，调用 `export_json` / `import_json` 两个端点（均强制鉴权）。
+
+**格式：与 PHP 版 `export_json` 完全兼容**（ZMark 互通），嵌套树结构：
 
 ```json
 {
-  "categories": [{ "id": 1, "name": "工具", "fid": 0, ... }],
-  "links": [{ "id": 1, "fid": 2, "title": "GitHub", ... }]
+  "type": "onenav.bookmarks",
+  "version": 1,
+  "categories": [
+    {
+      "name": "顶级分类",
+      "description": "",
+      "links": [
+        { "title": "GitHub", "url": "https://github.com", "description": "", "backup_url": "", "sort_order": 0 }
+      ],
+      "children": [
+        { "name": "二级分类", "description": "", "links": [] }
+      ]
+    }
+  ]
 }
 ```
 
+字段映射：`backup_url` ↔ `url_standby`；`sort_order` ↔ `weight`。导出时对 name/title/description 做 html_entity_decode（入库时已 escapeHtml，对称）；格式不含 property/font_icon（导入后默认公开、无图标）；父分类缺失的孤儿分类并入「默认分类」（PHP 行为对齐）。
+
 **导入逻辑：**
 
-1. 解析 JSON
-2. 分类映射：旧 ID → 新 ID，按 fid=0 先建顶级，再建二级
-3. 链接批量插入，fid 用新映射替换
-4. `db.batch([...])` 包成事务
-5. URL 唯一约束去重（重复跳过不报错）
+1. Zod 校验 payload（type/version/嵌套结构）
+2. 加载现有分类名 → id 映射、现有 URL 集合
+3. 分类按名复用：同名分类不重建（合并导入）；新名插入（顶级先建、二级挂新 fid）
+4. 链接按 URL 去重（库内已有或文件内重复均跳过，不报错）
+5. `db.batch` 分块插入（每块 ≤50 条语句）
+6. 返回统计 `{categories_created, categories_reused, links_imported, links_skipped}`
 
-**前端：** 后台「导入导出」页面，下载 / 上传 JSON。
+**前端：** 后台「导入导出」页面，导出按钮下载 JSON / 导入选择文件（客户端预读统计 + 确认 + 提交）。
 
 ---
 
