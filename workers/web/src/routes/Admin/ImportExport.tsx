@@ -46,7 +46,8 @@ export function AdminImportExport() {
       if (!cats.length) throw new Error('文件中没有分类数据（type 应为 onenav.bookmarks）');
       const ok = confirm(
         `文件「${file.name}」：${cats.length} 个分类 / ${linkCount} 条链接。\n` +
-        '同名分类将合并，重复 URL 将跳过。确认导入？'
+        '同名分类将合并，重复 URL 将跳过。确认导入？' +
+        '\n注意：导入后的条目将对访客公开。'
       );
       if (!ok) {
         if (fileRef.current) fileRef.current.value = '';
@@ -98,6 +99,7 @@ export function AdminImportExport() {
         <h3 className="font-medium mb-2" style={{ color: 'var(--color-text)' }}>导入书签</h3>
         <p className="text-sm mb-3" style={{ color: 'var(--color-text-subtle)' }}>
           支持从 PHP 版 OneNav 后台导出的 JSON（type: onenav.bookmarks）。同名分类合并，重复 URL 自动跳过。
+          注意：导出格式不含私密标记，文件中所有分类与链接导入后都将公开可见。
         </p>
         <input
           ref={fileRef}

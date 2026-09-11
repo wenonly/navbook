@@ -50,6 +50,24 @@ describe('export_json', () => {
     const res = await exportJsonHandler(db());
     expect(res.data.categories.map(c => c.name)).toEqual(['公开']);
   });
+
+  it('父分类私有时公开二级分类归入默认分类', async () => {
+    const privTop = await addCategoryHandler(db(), catInput('私有父', 0, 1));
+    await addCategoryHandler(db(), catInput('公开二级', privTop.id));
+    const res = await exportJsonHandler(db());
+    const names = res.data.categories.map(c => c.name);
+    expect(names).toEqual(['默认分类']);
+    expect(res.data.categories[0].children[0].name).toBe('公开二级');
+  });
+
+  it('私有链接不导出', async () => {
+    const cat = await addCategoryHandler(db(), catInput('公开'));
+    const { addLinkHandler } = await import('../../src/handlers/link');
+    await addLinkHandler(db(), { ...linkInput(cat.id, 'Pub', 'https://pub.com') });
+    await addLinkHandler(db(), { ...linkInput(cat.id, 'Priv', 'https://priv.com'), property: 1 });
+    const res = await exportJsonHandler(db());
+    expect(res.data.categories[0].links.map((l: any) => l.title)).toEqual(['Pub']);
+  });
 });
 
 describe('import_json', () => {
@@ -133,5 +151,26 @@ describe('import_json', () => {
     await expect(importJsonHandler(db(), payload([
       { name: 'x', links: [{ title: '', url: 'https://a.com' }], children: [] },
     ]))).rejects.toThrow();
+  });
+
+  it('特殊字符分类名的幂等重导（回归：nameToId 键不一致 bug）', async () => {
+    const p = payload([
+      { name: '影视&动漫', links: [{ title: 'A', url: 'https://a.com' }], children: [] },
+    ]);
+    await importJsonHandler(db(), p);
+    const again = await importJsonHandler(db(), p);
+    expect(again.data.categories_created).toBe(0);
+    expect(again.data.categories_reused).toBe(1);   // 修复前这里 UNIQUE 崩溃
+    expect(again.data.links_skipped).toBe(1);
+  });
+
+  it('特殊字符分类名合并进手建同名分类', async () => {
+    await addCategoryHandler(db(), catInput('影视&动漫'));   // 手建路径转义入库
+    const res = await importJsonHandler(db(), payload([
+      { name: '影视&动漫', links: [{ title: 'A', url: 'https://a.com' }], children: [] },
+    ]));
+    expect(res.data.categories_created).toBe(0);
+    expect(res.data.categories_reused).toBe(1);
+    expect(res.data.links_imported).toBe(1);
   });
 });

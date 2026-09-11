@@ -4,6 +4,7 @@ import * as schema from '../db/schema';
 import { decodeEntities, DEFAULT_CATEGORY_NAME } from '../lib/legacy-format';
 import type { OnenavExportPayload } from '../lib/legacy-format';
 import { escapeHtml } from '../lib/escape';
+import { isUniqueViolation } from '../lib/d1-errors';
 import { onenavImportSchema } from '../lib/legacy-format';
 import type { OnenavImportPayload, OnenavLink } from '../lib/legacy-format';
 
@@ -119,19 +120,25 @@ export async function importJsonHandler(
   const now = Math.floor(Date.now() / 1000);
 
   async function ensureCategory(name: string, description: string, fid: number): Promise<number> {
-    const hit = nameToId.get(name);
+    const key = escapeHtml(name);          // 与 DB 存储 / existingCats 查询结果一致的键
+    const hit = nameToId.get(key);
     if (hit !== undefined) {
       stats.categories_reused++;
       return hit;
     }
-    await db.insert(schema.categorys).values({
-      name: escapeHtml(name),
-      addTime: now, weight: 0, property: 0,
-      description: escapeHtml(description), fontIcon: null, fid,
-    });
+    try {
+      await db.insert(schema.categorys).values({
+        name: key,
+        addTime: now, weight: 0, property: 0,
+        description: escapeHtml(description), fontIcon: null, fid,
+      });
+    } catch (e) {
+      if (isUniqueViolation(e)) throw new Error(`分类「${name}」已存在但无法复用`);
+      throw e;
+    }
     const row = await db.select({ id: schema.categorys.id }).from(schema.categorys)
-      .where(eq(schema.categorys.name, escapeHtml(name))).get();
-    nameToId.set(name, row!.id);
+      .where(eq(schema.categorys.name, key)).get();
+    nameToId.set(key, row!.id);
     stats.categories_created++;
     return row!.id;
   }
