@@ -17,6 +17,8 @@ import { publicNavHandler } from './handlers/public';
 import { exportJsonHandler, importJsonHandler } from './handlers/migrate';
 import { checkLoginHandler, createSkHandler, tokenInfoHandler, appInfoHandler } from './handlers/auth';
 import { initHandler, loginHandler } from './handlers/init';
+import { getActiveTheme, setActiveTheme, mergeManifest, DEFAULT_THEME } from './handlers/themes';
+import type { ThemeManifestEntry } from './handlers/themes';
 import {
   addCategorySchema, editCategorySchema, delCategorySchema, getACategorySchema,
   addLinkSchema, editLinkSchema, delLinkSchema, getALinkSchema, qCategoryLinkSchema,
@@ -193,18 +195,95 @@ export function createApp() {
     return c.json(await tokenInfoHandler(c.get('db')));
   });
 
-  // ---------- SPA fallback（放最后） ----------
+  // ---------- 主题配置 API ----------
+
+  async function fetchAssetsJson(c: Context<AppEnv>, path: string): Promise<unknown | null> {
+    const res = await c.env.ASSETS.fetch(new Request(new URL(path, c.req.url)));
+    if (!res.ok) return null;
+    return res.json().catch(() => null);
+  }
+
+  function readManifestList(v: unknown): ThemeManifestEntry[] {
+    return Array.isArray(v) ? v as ThemeManifestEntry[] : [];
+  }
+
+  app.get('/api/themes', authMiddleware, async c => {
+    if (!c.env.ASSETS) return c.json({ code: -2000, msg: 'assets 未配置' });
+    const d1 = readManifestList(await fetchAssetsJson(c, '/themes/manifest.d1.json'));   // 未来 R2 段的路径，当前不存在→null
+    const assets = readManifestList(await fetchAssetsJson(c, '/themes/manifest.json'));
+    return c.json({
+      code: 0,
+      data: { active: await getActiveTheme(c.get('db')), themes: mergeManifest(d1, assets) },
+    });
+  });
+
+  app.post('/api/set_theme', authMiddleware, async c => {
+    if (!c.env.ASSETS) return c.json({ code: -2000, msg: 'assets 未配置' });
+    const body = await parseBody(c);
+    const theme = String(body.theme ?? '');
+    if (!theme) return c.json({ code: -2000, msg: 'theme 不能为空' });
+    const d1 = readManifestList(await fetchAssetsJson(c, '/themes/manifest.d1.json'));
+    const assets = readManifestList(await fetchAssetsJson(c, '/themes/manifest.json'));
+    const known = new Set(mergeManifest(d1, assets).map(t => t.id));
+    if (!known.has(theme)) return c.json({ code: -2000, msg: `未知主题：${theme}` });
+    await setActiveTheme(c.get('db'), theme);
+    return c.json({ code: 0, data: { active: theme } });
+  });
+
+  // ---------- 伺服路由（放最后） ----------
+
+  function assetReq(c: Context<AppEnv>, path: string): Request {
+    return new Request(new URL(path, c.req.url));
+  }
 
   app.all('*', async c => {
-    if (c.req.path.startsWith('/api/')) {
-      // 未知 /api 方法返回 JSON 404，不落 SPA fallback
+    const path = c.req.path;
+
+    // API 未知方法：JSON 404（既有行为）
+    if (path.startsWith('/api/')) {
       return c.json({ code: -404, msg: 'method not found!' }, 404);
     }
-    // ASSETS 绑定到 Task 19（assets binding）才存在，之前判空防护
+
     if (!c.env.ASSETS) {
-      return c.text('SPA assets not configured (deploy task pending)', 404);
+      return c.text('assets not configured (build first: pnpm build)', 500);
     }
-    return c.env.ASSETS.fetch(c.req.raw);
+
+    // 主题资产 / 根公共资产：直出
+    if (path.startsWith('/themes/') || path === '/favicon.svg' || path === '/favicon.ico' || path === '/robots.txt') {
+      return c.env.ASSETS.fetch(assetReq(c, path));
+    }
+
+    // 管理壳：直出，404 回落 SPA index（深链）
+    if (path === '/admin' || path.startsWith('/admin/') || path === '/login' || path === '/init') {
+      const res = await c.env.ASSETS.fetch(assetReq(c, path));
+      if (res.status !== 404) return res;
+      return c.env.ASSETS.fetch(assetReq(c, '/admin/index.html'));
+    }
+
+    // 首页：当前主题（降级链：配置主题 → default2 → 302 /admin）
+    if (path === '/') {
+      const manifest = readManifestList(await fetchAssetsJson(c, '/themes/manifest.json'));
+      const ids = new Set(manifest.map(t => t.id));
+      let active = await getActiveTheme(c.get('db'));
+      if (!ids.has(active)) {
+        console.warn(`theme "${active}" not in manifest, falling back to ${DEFAULT_THEME}`);
+        active = DEFAULT_THEME;
+      }
+      if (active === DEFAULT_THEME || ids.has(active)) {
+        const res = await c.env.ASSETS.fetch(assetReq(c, `/themes/${active}/index.html`));
+        if (res.status !== 404) return res;
+        console.warn(`theme "${active}" entry missing`);
+        if (active !== DEFAULT_THEME) {
+          const fb = await c.env.ASSETS.fetch(assetReq(c, `/themes/${DEFAULT_THEME}/index.html`));
+          if (fb.status !== 404) return fb;
+        }
+      }
+      // default2 也没有（异常部署）→ 管理壳；不能 302 到 / 自环
+      return new Response(null, { status: 302, headers: { Location: '/admin' } });
+    }
+
+    // 其余未知路径
+    return new Response(null, { status: 302, headers: { Location: '/' } });
   });
 
   return app;

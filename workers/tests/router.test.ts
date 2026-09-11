@@ -12,8 +12,33 @@ async function json(res: Response): Promise<any> {
   return (await res.json()) as any;
 }
 
+// fake ASSETS：内存文件表模拟 Workers Assets binding（真绑定在 vitest-pool-workers 里不可用）
+function makeFakeAssets() {
+  const files = new Map<string, string>([
+    ['/admin/index.html', '<html>ADMIN_SHELL</html>'],
+    ['/themes/manifest.json', JSON.stringify([
+      { id: 'default2', name: 'Default 2', version: '1.0.0', author: 't', description: '', minAppVersion: '1.0.0' },
+      { id: 'minima', name: 'Minima', version: '1.0.0', author: 't', description: '', minAppVersion: '1.0.0' },
+    ])],
+    ['/themes/default2/index.html', '<html>THEME_DEFAULT2</html>'],
+    ['/themes/minima/index.html', '<html>THEME_MINIMA</html>'],
+    ['/themes/default2/assets/app.js', 'console.log(1)'],
+    ['/favicon.svg', '<svg/>'],
+  ]);
+  return {
+    fetch: (req: Request) => {
+      const path = new URL(req.url).pathname;
+      const body = files.get(path);
+      const type = path.endsWith('.json') ? 'application/json'
+        : path.endsWith('.html') ? 'text/html'
+        : path.endsWith('.svg') ? 'image/svg+xml' : 'application/javascript';
+      return Promise.resolve(new Response(body ?? null, { status: body ? 200 : 404, headers: { 'Content-Type': type } }));
+    },
+  } as unknown as Fetcher;
+}
+
 // testEnv：与 auth.test.ts 相同的 cast 模式（类型上缺 Task 19 的 ASSETS，运行时齐全）
-const testEnv = env as unknown as import('../src/types').AppEnv['Bindings'];
+const testEnv = { ...env, ASSETS: makeFakeAssets() } as unknown as import('../src/types').AppEnv['Bindings'];
 
 function req(path: string, init?: RequestInit) {
   return createApp().request(path, init, testEnv);
@@ -177,5 +202,57 @@ describe('router 集成', () => {
     const expJson = await json(exp);
     expect(expJson.data.categories[0].name).toBe('工具');
     expect(expJson.data.categories[0].links[0].url).toBe('https://github.com');
+  });
+
+  it('/ 返回当前主题 HTML（缺省 default2）', async () => {
+    const res = await req('/');
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain('THEME_DEFAULT2');
+  });
+
+  it('set_theme 切换后 / 即刻返回新主题（需鉴权）', async () => {
+    await seedUser();
+    const noAuth = await req('/api/set_theme', form({}));
+    expect(noAuth.status).toBe(401);
+
+    await req('/api/set_theme', { ...form({ theme: 'minima' }), headers: { 'X-Token': validToken() } });
+    const home = await req('/');
+    expect(await home.text()).toContain('THEME_MINIMA');
+  });
+
+  it('set_theme 校验 manifest，未知主题拒绝', async () => {
+    await seedUser();
+    const res = await req('/api/set_theme', { ...form({ theme: 'nope' }), headers: { 'X-Token': validToken() } });
+    const json = await res.json() as any;
+    expect(json.code).not.toBe(0);
+  });
+
+  it('GET /api/themes 需鉴权并返回 active+列表', async () => {
+    await seedUser();
+    expect((await req('/api/themes')).status).toBe(401);
+    const res = await req('/api/themes', { headers: { 'X-Token': validToken() } });
+    const json = await res.json() as any;
+    expect(json.data.active).toBe('default2');
+    expect(json.data.themes.map((t: any) => t.id)).toContain('minima');
+  });
+
+  it('/admin 深链 404 回落 admin SPA', async () => {
+    const res = await req('/admin/links');
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain('ADMIN_SHELL');
+  });
+
+  it('主题资产直出 + 未知路径 302 /', async () => {
+    expect((await req('/themes/default2/assets/app.js')).status).toBe(200);
+    const unknown = await req('/whatever');
+    expect(unknown.status).toBe(302);
+    expect(unknown.headers.get('Location')).toBe('/');
+  });
+
+  it('active 指向不在 manifest 的主题时回落 default2', async () => {
+    await env.DB.prepare("INSERT OR REPLACE INTO on_options (key, value) VALUES ('s_themes', ?)")
+      .bind('{"active":"ghost"}').run();
+    const res = await req('/');
+    expect(await res.text()).toContain('THEME_DEFAULT2');
   });
 });
