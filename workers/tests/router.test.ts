@@ -19,6 +19,7 @@ function makeFakeAssets() {
     ['/themes/manifest.json', JSON.stringify([
       { id: 'default2', name: 'Default 2', version: '1.0.0', author: 't', description: '', minAppVersion: '1.0.0' },
       { id: 'minima', name: 'Minima', version: '1.0.0', author: 't', description: '', minAppVersion: '1.0.0' },
+      { id: 'broken', name: 'Broken', version: '1.0.0', author: 't', description: '', minAppVersion: '1.0.0' },
     ])],
     ['/themes/default2/index.html', '<html>THEME_DEFAULT2</html>'],
     ['/themes/minima/index.html', '<html>THEME_MINIMA</html>'],
@@ -28,6 +29,11 @@ function makeFakeAssets() {
   return {
     fetch: (req: Request) => {
       const path = new URL(req.url).pathname;
+      // 模拟真实 assets binding（wrangler 4.130, html_handling="none"）：
+      // 请求"存在的目录 + 缺失的 index.html"返回 500 而非 404
+      if (path === '/themes/broken/index.html') {
+        return Promise.resolve(new Response('asset error', { status: 500 }));
+      }
       const body = files.get(path);
       const type = path.endsWith('.json') ? 'application/json'
         : path.endsWith('.html') ? 'text/html'
@@ -253,6 +259,15 @@ describe('router 集成', () => {
     await env.DB.prepare("INSERT OR REPLACE INTO on_options (key, value) VALUES ('s_themes', ?)")
       .bind('{"active":"ghost"}').run();
     const res = await req('/');
+    expect(await res.text()).toContain('THEME_DEFAULT2');
+  });
+
+  it('主题 entry 返回 500 时回落 default2（真实 assets 行为回归）', async () => {
+    await seedUser();
+    await env.DB.prepare("INSERT OR REPLACE INTO on_options (key, value) VALUES ('s_themes', ?)")
+      .bind('{"active":"broken"}').run();
+    const res = await req('/');
+    expect(res.status).toBe(200);
     expect(await res.text()).toContain('THEME_DEFAULT2');
   });
 });

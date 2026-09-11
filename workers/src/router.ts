@@ -253,10 +253,11 @@ export function createApp() {
       return c.env.ASSETS.fetch(assetReq(c, path));
     }
 
-    // 管理壳：直出，404 回落 SPA index（深链）
+    // 管理壳：直出，非 ok（含 404/500）回落 SPA index（深链）；
+    // 真实 binding 对"目录在 index 缺"返回 500 而非 404，故用 ok 判定
     if (path === '/admin' || path.startsWith('/admin/') || path === '/login' || path === '/init') {
       const res = await c.env.ASSETS.fetch(assetReq(c, path));
-      if (res.status !== 404) return res;
+      if (res.ok) return res;
       return c.env.ASSETS.fetch(assetReq(c, '/admin/index.html'));
     }
 
@@ -271,11 +272,11 @@ export function createApp() {
       }
       if (active === DEFAULT_THEME || ids.has(active)) {
         const res = await c.env.ASSETS.fetch(assetReq(c, `/themes/${active}/index.html`));
-        if (res.status !== 404) return res;
+        if (res.ok) return res;
         console.warn(`theme "${active}" entry missing`);
         if (active !== DEFAULT_THEME) {
           const fb = await c.env.ASSETS.fetch(assetReq(c, `/themes/${DEFAULT_THEME}/index.html`));
-          if (fb.status !== 404) return fb;
+          if (fb.ok) return fb;
         }
       }
       // default2 也没有（异常部署）→ 管理壳；不能 302 到 / 自环
