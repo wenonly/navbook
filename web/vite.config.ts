@@ -5,6 +5,7 @@ import path from 'node:path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/admin/',
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },

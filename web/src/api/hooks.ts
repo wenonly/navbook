@@ -1,10 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
 
-export function usePublicNav() {
-  return useQuery({ queryKey: ['publicNav'], queryFn: api.publicNav });
-}
-
 export function useCategories() {
   return useQuery({ queryKey: ['categories'], queryFn: () => api.listCategories() });
 }
@@ -32,19 +28,19 @@ function useInvalidatingMutation<TVars>(
 // 分类写操作同时失效 ['links']：Links 表格缓存了 categoryName，分类改名/删除后会过期
 export const useAddCategory = () =>
   useInvalidatingMutation((data: Record<string, unknown>) => api.addCategory(data),
-    [['categories'], ['publicNav'], ['links']]);
+    [['categories'], ['links']]);
 export const useEditCategory = () =>
   useInvalidatingMutation((data: Record<string, unknown>) => api.editCategory(data),
-    [['categories'], ['publicNav'], ['links']]);
+    [['categories'], ['links']]);
 export const useDelCategory = () =>
   useInvalidatingMutation((id: number) => api.delCategory(id),
-    [['categories'], ['publicNav'], ['links']]);
+    [['categories'], ['links']]);
 export const useAddLink = () =>
   useInvalidatingMutation((data: Record<string, unknown>) => api.addLink(data),
-    [['links'], ['publicNav']]);
+    [['links']]);
 export const useEditLink = () =>
   useInvalidatingMutation((data: Record<string, unknown>) => api.editLink(data),
-    [['links'], ['publicNav']]);
+    [['links']]);
 export const useDelLink = () =>
   useInvalidatingMutation((id: number) => api.delLink(id),
-    [['links'], ['publicNav']]);
+    [['links']]);

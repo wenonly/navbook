@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Home } from './routes/Home';
 import { Login } from './routes/Login';
 import { Init } from './routes/Init';
 import { AdminLayout } from './routes/Admin/Layout';
@@ -16,7 +15,6 @@ export default function App() {
     <QueryClientProvider client={qc}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
           <Route path="/init" element={<Init />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<AdminLayout />}>
@@ -26,7 +24,7 @@ export default function App() {
             <Route path="token" element={<AdminToken />} />
             <Route path="import-export" element={<AdminImportExport />} />
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

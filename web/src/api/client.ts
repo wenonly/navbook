@@ -1,5 +1,3 @@
-import type { NavData } from '@navbook/shared';
-
 // admin SPA 与 API 同源：cookie 由浏览器自动携带（fetch 默认 credentials: 'same-origin'），
 // 前端不传 token、不读 cookie（HttpOnly）。
 
@@ -40,7 +38,6 @@ export const api = {
   init: (username: string, password: string) => post('init', { username, password }),
   login: (password: string) => post('login', { password }),
   session: () => get<{ code: number; data: { username: string | null } }>('/api/session'),
-  publicNav: () => get<{ code: number; data: NavData }>('/api/public_nav'),
 
   // 后端从 URL query 读 page/limit（上限 100）、从 body 读 category_id
   listCategories: (page = 1, limit = 100) => post(`category_list?page=${page}&limit=${limit}`),
