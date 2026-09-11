@@ -47,6 +47,43 @@ importers:
         specifier: ^8.3.0
         version: 8.3.0(@types/node@24.13.4)(esbuild@0.28.2)(jiti@1.21.7)(tsx@4.23.13)
 
+  themes/minima:
+    dependencies:
+      '@navbook/shared':
+        specifier: workspace:^
+        version: link:../../shared
+      react:
+        specifier: ^19.2.8
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.2.8
+        version: 19.3.0(react@19.3.0)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.2.7
+        version: 19.3.0(@types/react@19.3.0)
+      '@vitejs/plugin-react':
+        specifier: ^6.1.1
+        version: 6.1.1(vite@8.3.0(@types/node@24.13.4)(esbuild@0.28.2)(jiti@1.21.7)(tsx@4.23.13))
+      autoprefixer:
+        specifier: ^10.5.6
+        version: 10.5.6(postcss@8.5.28)
+      postcss:
+        specifier: ^8.5.28
+        version: 8.5.28
+      tailwindcss:
+        specifier: ^3
+        version: 3.4.19(tsx@4.23.13)
+      typescript:
+        specifier: ~6.0.2
+        version: 6.0.3
+      vite:
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@24.13.4)(esbuild@0.28.2)(jiti@1.21.7)(tsx@4.23.13)
+
   web:
     dependencies:
       '@navbook/shared':

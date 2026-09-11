@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #2563eb;
+  --color-bg: #fafafa;
+  --color-bg-subtle: #f0f0f0;
+  --color-text: #18181b;
+  --color-text-subtle: #71717a;
+  --color-border: #e4e4e7;
+  --radius: 2px;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+:root[data-mode="dark"] {
+  --color-bg: #111111;
+  --color-bg-subtle: #1c1c1c;
+  --color-text: #f4f4f5;
+  --color-text-subtle: #a1a1aa;
+  --color-border: #27272a;
+}
