@@ -126,6 +126,13 @@ describe('category_list', () => {
     const admin = await categoryListHandler(db(), 1, 10, true);
     expect(admin.count).toBe(2);
   });
+
+  it('特殊字符名读输出明文', async () => {
+    await addCategoryHandler(db(), { ...catInput('影视&动漫'), description: 'A&B' });
+    const res = await categoryListHandler(db(), 1, 10, true);
+    expect(res.data[0].name).toBe('影视&动漫');
+    expect(res.data[0].description).toBe('A&B');
+  });
 });
 
 describe('get_a_category', () => {

@@ -113,4 +113,12 @@ describe('link_list / q_category_link（游客可见性）', () => {
     const admin = await getALinkHandler(db(), added.id, true);
     expect(admin.code).toBe(0);
   });
+
+  it('特殊字符标题读输出明文', async () => {
+    const cat = await seedCat();
+    await addLinkHandler(db(), { ...linkInput(cat.id, 'https://xy.com'), title: 'X<Y>&Z', description: 'd&e' });
+    const res = await linkListHandler(db(), 1, 10, true);
+    expect(res.data[0].title).toBe('X<Y>&Z');
+    expect(res.data[0].description).toBe('d&e');
+  });
 });

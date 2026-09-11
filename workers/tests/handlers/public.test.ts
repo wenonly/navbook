@@ -54,4 +54,16 @@ describe('public_nav', () => {
     expect(res.code).toBe(0);
     expect(res.data.categories).toEqual([]);
   });
+
+  it('名字含特殊字符时 API 输出明文（读路径解码）', async () => {
+    const top = await addCategoryHandler(db(), { name: '影视&动漫', property: 0, weight: 0, description: 'A&B', font_icon: '', fid: 0 });
+    await addLinkHandler(db(), { fid: top.id, title: 'X<Y>', url: 'https://xy.com', description: 'd&e', weight: 0, property: 0, url_standby: '', font_icon: '' });
+
+    const res = await publicNavHandler(db());
+    const cat = res.data.categories[0];
+    expect(cat.name).toBe('影视&动漫');
+    expect(cat.description).toBe('A&B');
+    expect(cat.links[0].title).toBe('X<Y>');
+    expect(cat.links[0].description).toBe('d&e');
+  });
 });

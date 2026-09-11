@@ -2,7 +2,7 @@
 import { eq, sql, desc } from 'drizzle-orm';
 import type { DB } from '../db/client';
 import * as schema from '../db/schema';
-import { escapeHtml } from '../lib/escape';
+import { escapeHtml, decodeEntities } from '../lib/escape';
 import { isUniqueViolation } from '../lib/d1-errors';
 
 export interface CategoryInput {
@@ -100,7 +100,13 @@ export async function categoryListHandler(
     .where(where)
     .orderBy(desc(schema.categorys.weight), desc(schema.categorys.id))
     .limit(limit).offset(offset).all();
-  return { code: 0, msg: '', count: countRow?.c ?? 0, data: rows as CategoryRow[] };
+  // DB 存转义，读输出统一解码为明文
+  const data = rows.map(r => ({
+    ...r,
+    name: decodeEntities(r.name),
+    description: decodeEntities(r.description ?? ''),
+  })) as CategoryRow[];
+  return { code: 0, msg: '', count: countRow?.c ?? 0, data };
 }
 
 export async function getACategoryHandler(
@@ -111,5 +117,12 @@ export async function getACategoryHandler(
   if (row.property === 1 && !isAuthed) {
     return { code: -1002, msg: 'Authorization failure!', data: null };
   }
-  return { code: 0, data: row as CategoryRow };
+  return {
+    code: 0,
+    data: {
+      ...row,
+      name: decodeEntities(row.name),
+      description: decodeEntities(row.description ?? ''),
+    } as CategoryRow,
+  };
 }

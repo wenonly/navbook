@@ -1,6 +1,7 @@
 import { eq, desc, and, inArray } from 'drizzle-orm';
 import type { DB } from '../db/client';
 import * as schema from '../db/schema';
+import { decodeEntities } from '../lib/escape';
 
 export interface PublicNavLink {
   id: number; fid: number; title: string; url: string;
@@ -50,7 +51,10 @@ export async function publicNavHandler(db: DB): Promise<PublicNavResult> {
   const byId = new Map<number, PublicNavCategory>();
   const tops: PublicNavCategory[] = [];
   for (const c of cats) {
-    byId.set(c.id, { id: c.id, name: c.name, font_icon: c.fontIcon, description: c.description, children: [], links: [] });
+    byId.set(c.id, {
+      id: c.id, name: decodeEntities(c.name), font_icon: c.fontIcon,
+      description: decodeEntities(c.description ?? ''), children: [], links: [],
+    });
   }
   for (const c of cats) {
     const node = byId.get(c.id)!;
@@ -59,8 +63,8 @@ export async function publicNavHandler(db: DB): Promise<PublicNavResult> {
   }
   for (const l of pubLinks) {
     byId.get(l.fid)?.links.push({
-      id: l.id, fid: l.fid, title: l.title, url: l.url,
-      description: l.description, font_icon: l.fontIcon, url_standby: l.urlStandby,
+      id: l.id, fid: l.fid, title: decodeEntities(l.title), url: l.url,
+      description: decodeEntities(l.description ?? ''), font_icon: l.fontIcon, url_standby: l.urlStandby,
     });
   }
 

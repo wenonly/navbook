@@ -2,7 +2,7 @@
 import { eq, sql, desc, and, inArray } from 'drizzle-orm';
 import type { DB } from '../db/client';
 import * as schema from '../db/schema';
-import { escapeHtml } from '../lib/escape';
+import { escapeHtml, decodeEntities } from '../lib/escape';
 import { isUniqueViolation } from '../lib/d1-errors';
 
 export interface LinkInput {
@@ -109,7 +109,14 @@ export async function linkListHandler(
     .orderBy(desc(schema.links.weight), desc(schema.links.id))
     .limit(limit).offset(offset).all();
 
-  return { code: 0, msg: '', count: countRow?.c ?? 0, data: rows as LinkRow[] };
+  // DB 存转义，读输出统一解码为明文（categoryName 子查询取的分类名同为转义存储）
+  const data = rows.map(r => ({
+    ...r,
+    title: decodeEntities(r.title),
+    description: decodeEntities(r.description ?? ''),
+    categoryName: decodeEntities(r.categoryName ?? ''),
+  })) as LinkRow[];
+  return { code: 0, msg: '', count: countRow?.c ?? 0, data };
 }
 
 export async function qCategoryLinkHandler(
@@ -137,5 +144,12 @@ export async function getALinkHandler(
     const cat = await db.select().from(schema.categorys).where(eq(schema.categorys.id, row.fid)).get();
     if (cat?.property === 1) return { code: -1002, msg: 'Authorization failure!', data: null };
   }
-  return { code: 0, data: row as LinkRow };
+  return {
+    code: 0,
+    data: {
+      ...row,
+      title: decodeEntities(row.title),
+      description: decodeEntities(row.description ?? ''),
+    } as LinkRow,
+  };
 }

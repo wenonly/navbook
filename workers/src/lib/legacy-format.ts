@@ -3,18 +3,8 @@ import { z } from 'zod';
 /** PHP export_json 的孤儿分类容器名（Api.php:858 '默认分类'） */
 export const DEFAULT_CATEGORY_NAME = '默认分类';
 
-/**
- * html_entity_decode($s, ENT_QUOTES, 'UTF-8') 的等价实现（覆盖 htmlspecialchars 产生的五种实体）。
- * &amp; 必须最后解码，否则 "&amp;lt;" 会被二次解码成 "<"。
- */
-export function decodeEntities(s: string): string {
-  return s
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#0?39;/g, "'")
-    .replace(/&amp;/g, '&');
-}
+// decodeEntities 已移至 escape.ts（与 escapeHtml 同居，编解码对称），此处重导出保持既有 import 路径
+export { decodeEntities } from './escape';
 
 // ---- onenav.bookmarks 导入格式（与 PHP export_json / ZMark 互通）----
 
