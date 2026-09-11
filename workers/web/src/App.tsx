@@ -7,6 +7,7 @@ import { AdminLayout } from './routes/Admin/Layout';
 import { AdminCategories } from './routes/Admin/Categories';
 import { AdminLinks } from './routes/Admin/Links';
 import { AdminToken } from './routes/Admin/Token';
+import { AdminImportExport } from './routes/Admin/ImportExport';
 
 const qc = new QueryClient();
 
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="categories" element={<AdminCategories />} />
             <Route path="links" element={<AdminLinks />} />
             <Route path="token" element={<AdminToken />} />
+            <Route path="import-export" element={<AdminImportExport />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

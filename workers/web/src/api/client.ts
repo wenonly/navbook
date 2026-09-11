@@ -27,6 +27,15 @@ async function get<T = any>(path: string): Promise<T> {
   return unwrap<T>(res);
 }
 
+async function postJson<T = any>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return unwrap<T>(res);
+}
+
 export const api = {
   init: (username: string, password: string) => post('init', { username, password }),
   login: (password: string) => post('login', { password }),
@@ -44,6 +53,9 @@ export const api = {
   addLink: (data: Record<string, unknown>) => post('add_link', data),
   editLink: (data: Record<string, unknown>) => post('edit_link', data),
   delLink: (id: number) => post('del_link', { id }),
+
+  exportJson: () => post('export_json'),
+  importJson: (payload: unknown) => postJson('/api/import_json', payload),
 
   tokenInfo: () => get('/api/token_info'),
   createSk: () => post('create_sk'),
