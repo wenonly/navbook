@@ -24,7 +24,7 @@ export default defineConfig({
   },
   plugins: [
     cloudflareTest({
-      wrangler: { configPath: here('./wrangler.toml') },
+      wrangler: { configPath: here('../wrangler.toml') },
       miniflare: {
         // 本包内嵌的 workerd 二进制最高支持 2026-08-22，低于 wrangler.toml 的
         // 2026-09-10，此处仅对测试运行时降级覆盖（两者之间无行为差异 flag）。

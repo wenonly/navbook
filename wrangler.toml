@@ -1,5 +1,5 @@
 name = "navbook"
-main = "src/index.ts"
+main = "workers/src/index.ts"
 compatibility_date = "2026-09-10"
 compatibility_flags = ["nodejs_compat"]
 
@@ -16,10 +16,10 @@ binding = "DB"
 database_name = "onenav-db"
 # real remote D1 id (created via 'wrangler d1 create onenav-db', Task 19); local dev still uses miniflare's local D1
 database_id = "6745abcd-6c72-4f6f-9731-7b1b87316ecc"
-migrations_dir = "src/db/migrations"
+migrations_dir = "workers/src/db/migrations"
 
 [assets]
-directory = "./dist"
+directory = "workers/dist"
 binding = "ASSETS"
 run_worker_first = true
 html_handling = "none"
