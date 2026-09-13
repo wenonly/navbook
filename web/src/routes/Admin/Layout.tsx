@@ -59,7 +59,7 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-page">
+    <div className="flex h-screen overflow-hidden bg-page">
       <aside className="flex w-60 shrink-0 flex-col bg-sidebar p-4">
         <div className="mb-6 flex items-center gap-3 px-1">
           <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-primary">
@@ -118,7 +118,7 @@ export function AdminLayout() {
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 p-8">
+      <main className="min-w-0 flex-1 overflow-y-auto p-8">
         <Outlet />
       </main>
     </div>

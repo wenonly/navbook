@@ -19,11 +19,11 @@ interface Props {
 export function Pagination({ page, pageCount, total, onChange }: Props) {
   if (pageCount <= 1) {
     return (
-      <div className="py-3 text-xs text-ink-faint">共 {total} 条</div>
+      <div className="text-xs text-ink-faint">共 {total} 条</div>
     );
   }
   return (
-    <div className="mt-3 flex items-center justify-between">
+    <div className="flex items-center justify-between">
       <span className="text-xs text-ink-faint">共 {total} 条 · 第 {page}/{pageCount} 页</span>
       <div className="flex items-center gap-1">
         <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => onChange(page - 1)}>

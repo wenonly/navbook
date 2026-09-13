@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Pagination } from '@/components/ui/Pagination';
-import { Table, Th, Td } from '@/components/ui/Table';
-import { ErrorNote, Loading } from '@/components/ui/Feedback';
+import { Table, Th, Td, TableCard } from '@/components/ui/Table';
+import { ErrorNote } from '@/components/ui/Feedback';
 
 interface CategoryRow {
   id: number;
@@ -22,7 +22,7 @@ const PAGE_SIZE = 20;
 
 export function AdminCategories() {
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useCategories(page, PAGE_SIZE);
+  const { data, isFetching } = useCategories(page, PAGE_SIZE);
   const add = useAddCategory();
   const edit = useEditCategory();
   const del = useDelCategory();
@@ -36,7 +36,6 @@ export function AdminCategories() {
   const pageCount = Math.max(1, Math.ceil((data?.count ?? 0) / PAGE_SIZE));
   useEffect(() => { if (data && page > pageCount) setPage(pageCount); }, [page, pageCount, data]);
 
-  if (isLoading) return <Loading />;
   const cats: CategoryRow[] = data?.data ?? [];
   const total = data?.count ?? 0;
 
@@ -65,7 +64,7 @@ export function AdminCategories() {
   }
 
   return (
-    <div>
+    <div className="flex h-full flex-col">
       <PageHeader title="分类管理" />
 
       <form className="mb-4 flex gap-2" onSubmit={submit}>
@@ -86,54 +85,58 @@ export function AdminCategories() {
       </form>
       {error && <div className="mb-2"><ErrorNote>{error}</ErrorNote></div>}
 
-      <Table>
-        <thead>
-          <tr>
-            <Th className="w-16">ID</Th>
-            <Th>名称</Th>
-            <Th className="w-20">属性</Th>
-            <Th className="w-20">权重</Th>
-            <Th className="w-28">操作</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {cats.length === 0 && (
+      <TableCard
+        loading={isFetching}
+        footer={<Pagination page={page} pageCount={pageCount} total={total} onChange={setPage} />}
+      >
+        <Table>
+          <thead>
             <tr>
-              <Td colSpan={5} className="py-10 text-center text-ink-faint">暂无分类,使用上方表单添加</Td>
+              <Th className="w-16">ID</Th>
+              <Th>名称</Th>
+              <Th className="w-20">属性</Th>
+              <Th className="w-20">权重</Th>
+              <Th className="w-28">操作</Th>
             </tr>
-          )}
-          {cats.map(c => (
-            <tr key={c.id} className="transition-colors hover:bg-row-hover">
-              <Td className="text-ink-faint">{c.id}</Td>
-              <Td className="font-medium text-ink">{c.name}</Td>
-              <Td>
-                {c.property === 1
-                  ? <Badge tone="danger">私有</Badge>
-                  : <Badge tone="neutral">公开</Badge>}
-              </Td>
-              <Td className="text-ink-secondary">{c.weight}</Td>
-              <Td>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => { setEditRow(c); setName(c.name); }}>
-                    编辑
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-danger hover:bg-danger-soft hover:text-danger"
-                    onClick={() => {
-                      if (confirm(`删除分类「${c.name}」？`)) del.mutate(c.id);
-                    }}
-                  >
-                    删除
-                  </Button>
-                </div>
-              </Td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-      <Pagination page={page} pageCount={pageCount} total={total} onChange={setPage} />
+          </thead>
+          <tbody>
+            {cats.length === 0 && !isFetching && (
+              <tr>
+                <Td colSpan={5} className="py-10 text-center text-ink-faint">暂无分类,使用上方表单添加</Td>
+              </tr>
+            )}
+            {cats.map(c => (
+              <tr key={c.id} className="transition-colors hover:bg-row-hover">
+                <Td className="text-ink-faint">{c.id}</Td>
+                <Td className="font-medium text-ink">{c.name}</Td>
+                <Td>
+                  {c.property === 1
+                    ? <Badge tone="danger">私有</Badge>
+                    : <Badge tone="neutral">公开</Badge>}
+                </Td>
+                <Td className="text-ink-secondary">{c.weight}</Td>
+                <Td>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => { setEditRow(c); setName(c.name); }}>
+                      编辑
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-danger hover:bg-danger-soft hover:text-danger"
+                      onClick={() => {
+                        if (confirm(`删除分类「${c.name}」？`)) del.mutate(c.id);
+                      }}
+                    >
+                      删除
+                    </Button>
+                  </div>
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </TableCard>
     </div>
   );
 }

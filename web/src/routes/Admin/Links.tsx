@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/Button';
 import { Input, Select } from '@/components/ui/Input';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Pagination } from '@/components/ui/Pagination';
-import { Table, Th, Td } from '@/components/ui/Table';
-import { ErrorNote, Loading } from '@/components/ui/Feedback';
+import { Table, Th, Td, TableCard } from '@/components/ui/Table';
+import { ErrorNote } from '@/components/ui/Feedback';
 import { LetterAvatar } from '@/components/admin/LetterAvatar';
 
 interface LinkRow {
@@ -20,7 +20,7 @@ const PAGE_SIZE = 20;
 export function AdminLinks() {
   const [page, setPage] = useState(1);
   const { data: catData } = useAllCategories();
-  const { data: linkData, isLoading } = useLinks(page, PAGE_SIZE);
+  const { data: linkData, isFetching } = useLinks(page, PAGE_SIZE);
   const add = useAddLink();
   const del = useDelLink();
 
@@ -32,7 +32,6 @@ export function AdminLinks() {
   const pageCount = Math.max(1, Math.ceil((linkData?.count ?? 0) / PAGE_SIZE));
   useEffect(() => { if (linkData && page > pageCount) setPage(pageCount); }, [page, pageCount, linkData]);
 
-  if (isLoading) return <Loading />;
   const cats: Array<{ id: number; name: string }> = catData?.data ?? [];
   const links: LinkRow[] = linkData?.data ?? [];
   const total = linkData?.count ?? 0;
@@ -56,7 +55,7 @@ export function AdminLinks() {
   }
 
   return (
-    <div>
+    <div className="flex h-full flex-col">
       <PageHeader title="链接管理" />
 
       <form className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-5" onSubmit={submit}>
@@ -88,50 +87,54 @@ export function AdminLinks() {
       </form>
       {error && <div className="mb-2"><ErrorNote>{error}</ErrorNote></div>}
 
-      <Table>
-        <thead>
-          <tr>
-            <Th className="w-16">ID</Th>
-            <Th>标题</Th>
-            <Th>URL</Th>
-            <Th className="w-32">分类</Th>
-            <Th className="w-20">操作</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {links.length === 0 && (
+      <TableCard
+        loading={isFetching}
+        footer={<Pagination page={page} pageCount={pageCount} total={total} onChange={setPage} />}
+      >
+        <Table>
+          <thead>
             <tr>
-              <Td colSpan={5} className="py-10 text-center text-ink-faint">暂无链接,使用上方表单添加</Td>
+              <Th className="w-16">ID</Th>
+              <Th>标题</Th>
+              <Th>URL</Th>
+              <Th className="w-32">分类</Th>
+              <Th className="w-20">操作</Th>
             </tr>
-          )}
-          {links.map(l => (
-            <tr key={l.id} className="transition-colors hover:bg-row-hover">
-              <Td className="text-ink-faint">{l.id}</Td>
-              <Td>
-                <div className="flex items-center gap-2.5">
-                  <LetterAvatar text={l.title} />
-                  <span className="font-medium text-ink">{l.title}</span>
-                </div>
-              </Td>
-              <Td className="max-w-xs truncate font-mono text-xs text-ink-secondary">{l.url}</Td>
-              <Td className="text-ink-secondary">{l.categoryName}</Td>
-              <Td>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-danger hover:bg-danger-soft hover:text-danger"
-                  onClick={() => {
-                    if (confirm(`删除链接「${l.title}」？`)) del.mutate(l.id);
-                  }}
-                >
-                  删除
-                </Button>
-              </Td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-      <Pagination page={page} pageCount={pageCount} total={total} onChange={setPage} />
+          </thead>
+          <tbody>
+            {links.length === 0 && !isFetching && (
+              <tr>
+                <Td colSpan={5} className="py-10 text-center text-ink-faint">暂无链接,使用上方表单添加</Td>
+              </tr>
+            )}
+            {links.map(l => (
+              <tr key={l.id} className="transition-colors hover:bg-row-hover">
+                <Td className="text-ink-faint">{l.id}</Td>
+                <Td>
+                  <div className="flex items-center gap-2.5">
+                    <LetterAvatar text={l.title} />
+                    <span className="font-medium text-ink">{l.title}</span>
+                  </div>
+                </Td>
+                <Td className="max-w-xs truncate font-mono text-xs text-ink-secondary">{l.url}</Td>
+                <Td className="text-ink-secondary">{l.categoryName}</Td>
+                <Td>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-danger hover:bg-danger-soft hover:text-danger"
+                    onClick={() => {
+                      if (confirm(`删除链接「${l.title}」？`)) del.mutate(l.id);
+                    }}
+                  >
+                    删除
+                  </Button>
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </TableCard>
     </div>
   );
 }
