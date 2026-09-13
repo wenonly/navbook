@@ -55,8 +55,8 @@ export const api = {
   exportJson: () => post('export_json'),
   importJson: (payload: unknown) => postJson('/api/import_json', payload),
 
-  themes: () => get('/api/themes'),
-  setTheme: (theme: string) => post('set_theme', { theme }),
+  themes: <T = any>() => get<T>('/api/themes'),
+  setTheme: (theme: string) => post<{ code: number; data: unknown }>('set_theme', { theme }),
 
   siteConfig: () => get('/api/site_config'),
   setSite: (data: Record<string, unknown>) => post('set_site', data),

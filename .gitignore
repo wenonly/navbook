@@ -4,3 +4,5 @@ dist/
 .dev.vars
 *.log
 .playwright-mcp/
+e2e-shots/
+web/design.pen

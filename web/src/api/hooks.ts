@@ -12,6 +12,24 @@ export function useLinks(categoryId?: number) {
   });
 }
 
+export interface ThemeEntry {
+  id: string;
+  name: string;
+  version: string;
+  author: string;
+  description: string;
+}
+
+export function useThemes() {
+  return useQuery({
+    queryKey: ['themes'],
+    queryFn: () => api.themes<{ data: { active: string; themes: ThemeEntry[] } }>(),
+  });
+}
+
+export const useSetTheme = () =>
+  useInvalidatingMutation((id: string) => api.setTheme(id), [['themes']]);
+
 function useInvalidatingMutation<TVars>(
   mutationFn: (vars: TVars) => Promise<unknown>,
   keysToInvalidate: string[][],

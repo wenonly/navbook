@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 设计令牌：与 design.pen 保持一致，改主题只动这里 + tailwind.config.js 的映射 */
 :root {
-  font-family: system-ui, -apple-system, sans-serif;
+  --color-page: #f4f5f8;
+  --color-surface: #ffffff;
+  --color-line: #e6e8ee;
+  --color-row-hover: #f9fafc;
+
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-primary-soft: #eef2ff;
+
+  --color-ink: #171b26;
+  --color-ink-secondary: #5b6472;
+  --color-ink-faint: #9aa1b0;
+
+  --color-sidebar: #101423;
+  --color-sidebar-hover: #1c2236;
+  --color-sidebar-muted: #8a92a6;
+  --color-sidebar-divider: #222a40;
+
+  --color-danger: #dc2626;
+  --color-danger-soft: #fee2e2;
+  --color-success: #059669;
+  --color-success-soft: #d1fae5;
+}
+
+body {
+  @apply bg-page text-ink font-sans antialiased;
 }

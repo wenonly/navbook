@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Bookmark, KeyRound, UserRound } from 'lucide-react';
 import { api } from '@/api/client';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { ErrorNote } from '@/components/ui/Feedback';
 
 export function Init() {
   const [username, setUsername] = useState('');
@@ -25,37 +29,47 @@ export function Init() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <form
-        onSubmit={submit}
-        className="w-80 space-y-4 p-6 border rounded"
-        style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)', borderRadius: 'var(--radius)' }}
-      >
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>首次使用 · 设置管理员</h1>
-        <input
-          placeholder="用户名"
-          value={username}
-          onChange={e => setUsername(e.target.value)}
-          className="w-full px-3 py-2 border rounded"
-          style={{ borderColor: 'var(--color-border)' }}
-        />
-        <input
-          type="password"
-          placeholder="密码（≥6 位）"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          className="w-full px-3 py-2 border rounded"
-          style={{ borderColor: 'var(--color-border)' }}
-        />
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full py-2 rounded text-white disabled:opacity-50"
-          style={{ background: 'var(--color-primary)' }}
-        >
-          {busy ? '初始化中...' : '初始化'}
-        </button>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#4338CA]">
+      <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-primary/40 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-16 h-[28rem] w-[28rem] rounded-full bg-[#6366F1]/40 blur-3xl" />
+
+      <form onSubmit={submit} className="relative w-96 rounded-2xl bg-surface p-8 shadow-2xl">
+        <div className="mb-6 flex flex-col items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
+            <Bookmark size={24} className="text-white" />
+          </div>
+          <div className="text-center">
+            <h1 className="text-lg font-bold text-ink">首次使用 · 设置管理员</h1>
+            <p className="mt-0.5 text-xs text-ink-faint">创建管理员账号后进入登录页</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="relative">
+            <UserRound size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+            <Input
+              placeholder="用户名"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              className="pl-9"
+              autoFocus
+            />
+          </div>
+          <div className="relative">
+            <KeyRound size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+            <Input
+              type="password"
+              placeholder="密码（≥6 位）"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          {error && <ErrorNote>{error}</ErrorNote>}
+          <Button type="submit" disabled={busy} className="w-full">
+            {busy ? '初始化中...' : '初始化'}
+          </Button>
+        </div>
       </form>
     </div>
   );

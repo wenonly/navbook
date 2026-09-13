@@ -1,5 +1,11 @@
 import { useRef, useState } from 'react';
+import { Download, FileJson } from 'lucide-react';
 import { api } from '@/api/client';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { ErrorNote } from '@/components/ui/Feedback';
 
 interface ImportStats {
   categories_created: number;
@@ -78,26 +84,28 @@ export function AdminImportExport() {
 
   return (
     <div className="max-w-xl">
-      <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>导入 / 导出</h2>
+      <PageHeader title="导入 / 导出" />
 
-      <section className="mb-8 p-4 border rounded" style={{ borderColor: 'var(--color-border)' }}>
-        <h3 className="font-medium mb-2" style={{ color: 'var(--color-text)' }}>导出备份</h3>
-        <p className="text-sm mb-3" style={{ color: 'var(--color-text-subtle)' }}>
+      <Card className="mb-8">
+        <div className="mb-2 flex items-center gap-2">
+          <Download size={16} className="text-primary" />
+          <h3 className="font-medium text-ink">导出备份</h3>
+        </div>
+        <p className="mb-4 text-sm text-ink-secondary">
           导出全部公开分类与链接（PHP OneNav / ZMark 兼容格式）。
         </p>
-        <button
-          type="button"
-          onClick={doExport}
-          className="px-4 py-2 rounded text-sm text-white"
-          style={{ background: 'var(--color-primary)' }}
-        >
+        <Button onClick={doExport}>
+          <Download size={13} />
           下载 JSON
-        </button>
-      </section>
+        </Button>
+      </Card>
 
-      <section className="p-4 border rounded" style={{ borderColor: 'var(--color-border)' }}>
-        <h3 className="font-medium mb-2" style={{ color: 'var(--color-text)' }}>导入书签</h3>
-        <p className="text-sm mb-3" style={{ color: 'var(--color-text-subtle)' }}>
+      <Card>
+        <div className="mb-2 flex items-center gap-2">
+          <FileJson size={16} className="text-primary" />
+          <h3 className="font-medium text-ink">导入书签</h3>
+        </div>
+        <p className="mb-4 text-sm text-ink-secondary">
           支持从 PHP 版 OneNav 后台导出的 JSON（type: onenav.bookmarks）。同名分类合并，重复 URL 自动跳过。
           注意：导出格式不含私密标记，文件中所有分类与链接导入后都将公开可见。
         </p>
@@ -106,28 +114,27 @@ export function AdminImportExport() {
           type="file"
           accept=".json,application/json"
           onChange={onFile}
-          className="block w-full text-sm mb-3"
+          className="mb-3 block w-full text-sm text-ink-secondary
+            file:mr-3 file:h-8 file:cursor-pointer file:rounded-lg file:border-0
+            file:bg-primary-soft file:px-3 file:text-sm file:font-medium file:text-primary"
         />
         {pendingFile && (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={doImport}
-            className="px-4 py-2 rounded text-sm text-white disabled:opacity-50"
-            style={{ background: 'var(--color-primary)' }}
-          >
+          <Button disabled={busy} onClick={doImport}>
+            <FileJson size={13} />
             {busy ? '导入中...' : `确认导入 ${pendingFile.name}`}
-          </button>
+          </Button>
         )}
         {stats && (
-          <div className="mt-4 p-3 rounded text-sm" style={{ background: 'var(--color-bg-subtle)', color: 'var(--color-text)' }}>
-            导入完成：新建分类 {stats.categories_created}、复用分类 {stats.categories_reused}、
-            导入链接 {stats.links_imported}、跳过 {stats.links_skipped}。
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Badge tone="success">新建分类 {stats.categories_created}</Badge>
+            <Badge tone="primary">复用分类 {stats.categories_reused}</Badge>
+            <Badge tone="success">导入链接 {stats.links_imported}</Badge>
+            <Badge tone="neutral">跳过 {stats.links_skipped}</Badge>
           </div>
         )}
-      </section>
+      </Card>
 
-      {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
+      {error && <div className="mt-4"><ErrorNote>{error}</ErrorNote></div>}
     </div>
   );
 }

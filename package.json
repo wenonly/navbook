@@ -2,6 +2,7 @@
   "name": "navbook",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@9.7.0",
   "scripts": {
     "build": "pnpm --filter @navbook/theme-default2 --filter @navbook/theme-minima --filter web run build && node scripts/aggregate.mjs",
     "dev": "pnpm -C workers dev & pnpm -C web dev",

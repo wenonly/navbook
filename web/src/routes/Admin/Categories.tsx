@@ -1,5 +1,21 @@
 import { useState } from 'react';
 import { useCategories, useAddCategory, useEditCategory, useDelCategory } from '@/api/hooks';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Table, Th, Td } from '@/components/ui/Table';
+import { ErrorNote, Loading } from '@/components/ui/Feedback';
+
+interface CategoryRow {
+  id: number;
+  name: string;
+  property: number;
+  weight: number;
+  description: string | null;
+  fontIcon: string | null;
+  fid: number;
+}
 
 export function AdminCategories() {
   const { data, isLoading } = useCategories();
@@ -8,11 +24,11 @@ export function AdminCategories() {
   const del = useDelCategory();
 
   const [name, setName] = useState('');
-  const [editRow, setEditRow] = useState<Record<string, any> | null>(null);
+  const [editRow, setEditRow] = useState<CategoryRow | null>(null);
   const [error, setError] = useState('');
 
-  if (isLoading) return <div>加载中...</div>;
-  const cats: any[] = data?.data ?? [];
+  if (isLoading) return <Loading />;
+  const cats: CategoryRow[] = data?.data ?? [];
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,69 +56,73 @@ export function AdminCategories() {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--color-text)' }}>分类管理</h2>
+      <PageHeader title="分类管理" />
+
       <form className="mb-4 flex gap-2" onSubmit={submit}>
-        <input
+        <Input
           placeholder="分类名称"
           value={name}
           onChange={e => setName(e.target.value)}
-          className="px-3 py-1 border rounded"
-          style={{ borderColor: 'var(--color-border)' }}
+          className="w-64"
         />
-        <button
-          type="submit"
-          disabled={add.isPending || edit.isPending}
-          className="px-4 py-1 rounded text-white disabled:opacity-50"
-          style={{ background: 'var(--color-primary)' }}
-        >
+        <Button type="submit" disabled={add.isPending || edit.isPending}>
           {editRow ? '更新' : '新增'}
-        </button>
+        </Button>
         {editRow && (
-          <button
-            type="button"
-            onClick={() => { setEditRow(null); setName(''); }}
-            className="px-4 py-1 border rounded"
-            style={{ borderColor: 'var(--color-border)' }}
-          >
+          <Button variant="outline" onClick={() => { setEditRow(null); setName(''); }}>
             取消
-          </button>
+          </Button>
         )}
       </form>
-      {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-      <table className="w-full border-collapse">
+      {error && <div className="mb-2"><ErrorNote>{error}</ErrorNote></div>}
+
+      <Table>
         <thead>
-          <tr className="border-b" style={{ borderColor: 'var(--color-border)' }}>
-            <th className="text-left py-2">ID</th>
-            <th className="text-left py-2">名称</th>
-            <th className="text-left py-2">属性</th>
-            <th className="text-left py-2">权重</th>
-            <th className="text-left py-2">操作</th>
+          <tr>
+            <Th className="w-16">ID</Th>
+            <Th>名称</Th>
+            <Th className="w-20">属性</Th>
+            <Th className="w-20">权重</Th>
+            <Th className="w-28">操作</Th>
           </tr>
         </thead>
         <tbody>
+          {cats.length === 0 && (
+            <tr>
+              <Td colSpan={5} className="py-10 text-center text-ink-faint">暂无分类,使用上方表单添加</Td>
+            </tr>
+          )}
           {cats.map(c => (
-            <tr key={c.id} className="border-b" style={{ borderColor: 'var(--color-border)' }}>
-              <td className="py-2">{c.id}</td>
-              <td className="py-2">{c.name}</td>
-              <td className="py-2">{c.property === 1 ? '私有' : '公开'}</td>
-              <td className="py-2">{c.weight}</td>
-              <td className="py-2 space-x-2">
-                <button className="text-blue-500" onClick={() => { setEditRow(c); setName(c.name); }}>
-                  编辑
-                </button>
-                <button
-                  className="text-red-500"
-                  onClick={() => {
-                    if (confirm(`删除分类「${c.name}」？`)) del.mutate(c.id);
-                  }}
-                >
-                  删除
-                </button>
-              </td>
+            <tr key={c.id} className="transition-colors hover:bg-row-hover">
+              <Td className="text-ink-faint">{c.id}</Td>
+              <Td className="font-medium text-ink">{c.name}</Td>
+              <Td>
+                {c.property === 1
+                  ? <Badge tone="danger">私有</Badge>
+                  : <Badge tone="neutral">公开</Badge>}
+              </Td>
+              <Td className="text-ink-secondary">{c.weight}</Td>
+              <Td>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => { setEditRow(c); setName(c.name); }}>
+                    编辑
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-danger hover:bg-danger-soft hover:text-danger"
+                    onClick={() => {
+                      if (confirm(`删除分类「${c.name}」？`)) del.mutate(c.id);
+                    }}
+                  >
+                    删除
+                  </Button>
+                </div>
+              </Td>
             </tr>
           ))}
         </tbody>
-      </table>
+      </Table>
     </div>
   );
 }
