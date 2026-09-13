@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { useLinks, useCategories, useAddLink, useDelLink } from '@/api/hooks';
+import { useEffect, useState } from 'react';
+import { useLinks, useAllCategories, useAddLink, useDelLink } from '@/api/hooks';
 import { Button } from '@/components/ui/Button';
 import { Input, Select } from '@/components/ui/Input';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Pagination } from '@/components/ui/Pagination';
 import { Table, Th, Td } from '@/components/ui/Table';
 import { ErrorNote, Loading } from '@/components/ui/Feedback';
 import { LetterAvatar } from '@/components/admin/LetterAvatar';
@@ -14,18 +15,27 @@ interface LinkRow {
   categoryName: string;
 }
 
+const PAGE_SIZE = 20;
+
 export function AdminLinks() {
-  const { data: catData } = useCategories();
-  const { data: linkData, isLoading } = useLinks();
+  const [page, setPage] = useState(1);
+  const { data: catData } = useAllCategories();
+  const { data: linkData, isLoading } = useLinks(page, PAGE_SIZE);
   const add = useAddLink();
   const del = useDelLink();
 
   const [form, setForm] = useState({ fid: 0, title: '', url: '', description: '' });
   const [error, setError] = useState('');
 
+  // 删除末页最后一条后回退，避免停留在空页；count 未知（切换页码的加载间隙）不回退，
+  // 否则 pageCount 被误算为 1，会把刚点的页码弹回第 1 页
+  const pageCount = Math.max(1, Math.ceil((linkData?.count ?? 0) / PAGE_SIZE));
+  useEffect(() => { if (linkData && page > pageCount) setPage(pageCount); }, [page, pageCount, linkData]);
+
   if (isLoading) return <Loading />;
   const cats: Array<{ id: number; name: string }> = catData?.data ?? [];
   const links: LinkRow[] = linkData?.data ?? [];
+  const total = linkData?.count ?? 0;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -121,6 +131,7 @@ export function AdminLinks() {
           ))}
         </tbody>
       </Table>
+      <Pagination page={page} pageCount={pageCount} total={total} onChange={setPage} />
     </div>
   );
 }

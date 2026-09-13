@@ -1,14 +1,34 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { api } from './client';
 
-export function useCategories() {
-  return useQuery({ queryKey: ['categories'], queryFn: () => api.listCategories() });
+export interface Paged<T> {
+  code: number;
+  msg: string;
+  count: number;
+  data: T[];
 }
 
-export function useLinks(categoryId?: number) {
+export function useCategories(page: number, limit: number) {
   return useQuery({
-    queryKey: ['links', categoryId],
-    queryFn: () => api.listLinks(1, 100, categoryId),
+    queryKey: ['categories', page, limit],
+    queryFn: () => api.listCategories(page, limit),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** 下拉选择等场景要全量分类（后端 limit 上限 100，分类数远小于此） */
+export function useAllCategories() {
+  return useQuery({
+    queryKey: ['categories', 'all'],
+    queryFn: () => api.listCategories(1, 100),
+  });
+}
+
+export function useLinks(page: number, limit: number) {
+  return useQuery({
+    queryKey: ['links', page, limit],
+    queryFn: () => api.listLinks(page, limit),
+    placeholderData: keepPreviousData,
   });
 }
 

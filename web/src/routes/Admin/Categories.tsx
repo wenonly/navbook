@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCategories, useAddCategory, useEditCategory, useDelCategory } from '@/api/hooks';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Pagination } from '@/components/ui/Pagination';
 import { Table, Th, Td } from '@/components/ui/Table';
 import { ErrorNote, Loading } from '@/components/ui/Feedback';
 
@@ -17,8 +18,11 @@ interface CategoryRow {
   fid: number;
 }
 
+const PAGE_SIZE = 20;
+
 export function AdminCategories() {
-  const { data, isLoading } = useCategories();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useCategories(page, PAGE_SIZE);
   const add = useAddCategory();
   const edit = useEditCategory();
   const del = useDelCategory();
@@ -27,8 +31,14 @@ export function AdminCategories() {
   const [editRow, setEditRow] = useState<CategoryRow | null>(null);
   const [error, setError] = useState('');
 
+  // 删除末页最后一条后回退，避免停留在空页；count 未知（切换页码的加载间隙）不回退，
+  // 否则 pageCount 被误算为 1，会把刚点的页码弹回第 1 页
+  const pageCount = Math.max(1, Math.ceil((data?.count ?? 0) / PAGE_SIZE));
+  useEffect(() => { if (data && page > pageCount) setPage(pageCount); }, [page, pageCount, data]);
+
   if (isLoading) return <Loading />;
   const cats: CategoryRow[] = data?.data ?? [];
+  const total = data?.count ?? 0;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -123,6 +133,7 @@ export function AdminCategories() {
           ))}
         </tbody>
       </Table>
+      <Pagination page={page} pageCount={pageCount} total={total} onChange={setPage} />
     </div>
   );
 }
