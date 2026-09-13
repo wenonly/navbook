@@ -1,16 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Lock } from 'lucide-react';
+import { Bookmark, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
 import { api } from '@/api/client';
 import { useAuth } from '@/stores/auth';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { ErrorNote } from '@/components/ui/Feedback';
 
 export function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [show, setShow] = useState(false);
   const navigate = useNavigate();
   const setUsername = useAuth(s => s.setUsername);
 
@@ -31,40 +30,66 @@ export function Login() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#4338CA]">
-      {/* 装饰光斑 */}
-      <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-primary/40 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-16 h-[28rem] w-[28rem] rounded-full bg-[#6366F1]/40 blur-3xl" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-[#E9EBF4] to-[#F6F7FA]">
+      {/* 装饰圆：右上靛蓝、左下天蓝 */}
+      <div className="pointer-events-none absolute -right-[120px] -top-[140px] h-[640px] w-[640px] rounded-full bg-[#C7D2FE]/45" />
+      <div className="pointer-events-none absolute -bottom-[156px] -left-[180px] h-[560px] w-[560px] rounded-full bg-[#BAE6FD]/35" />
 
-      <form onSubmit={submit} className="relative w-96 rounded-2xl bg-surface p-8 shadow-2xl">
-        <div className="mb-6 flex flex-col items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
+      <form
+        onSubmit={submit}
+        className="relative flex w-[400px] flex-col items-center gap-[22px] rounded-2xl border border-white bg-surface p-9 shadow-[0_16px_48px_rgba(26,31,53,0.08)]"
+      >
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-primary">
             <Bookmark size={24} className="text-white" />
           </div>
-          <div className="text-center">
-            <h1 className="text-lg font-bold text-ink">NavBook 管理后台</h1>
-            <p className="mt-0.5 text-xs text-ink-faint">请输入管理员密码登录</p>
+          <div className="flex flex-col items-center gap-1">
+            <h1 className="text-xl font-bold tracking-[0.3px] text-ink">NavBook</h1>
+            <p className="text-[13px] text-ink-secondary">输入管理员密码进入后台</p>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="relative">
-            <Lock size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
-            <Input
-              type="password"
-              placeholder="密码"
+        <div className="flex w-full flex-col gap-2">
+          <label htmlFor="login-password" className="text-xs font-medium text-ink-secondary">访问密码</label>
+          <div className="flex h-[42px] items-center gap-2.5 rounded-lg border border-line bg-surface px-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-soft">
+            <Lock size={15} className="shrink-0 text-ink-faint" />
+            <input
+              id="login-password"
+              type={show ? 'text' : 'password'}
+              placeholder="请输入密码"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="pl-9"
+              className="h-full min-w-0 flex-1 border-0 bg-transparent text-[13px] text-ink outline-none placeholder:text-ink-faint"
               autoFocus
             />
+            <button
+              type="button"
+              aria-label={show ? '隐藏密码' : '显示密码'}
+              onClick={() => setShow(!show)}
+              className="shrink-0 text-ink-faint transition-colors hover:text-ink-secondary"
+            >
+              {show ? <Eye size={15} /> : <EyeOff size={15} />}
+            </button>
           </div>
-          {error && <ErrorNote>{error}</ErrorNote>}
-          <Button type="submit" disabled={busy || !password} className="w-full">
-            {busy ? '登录中...' : '登录'}
-          </Button>
         </div>
+
+        {error && <div className="w-full"><ErrorNote>{error}</ErrorNote></div>}
+
+        <button
+          type="submit"
+          disabled={busy || !password}
+          className="flex h-[42px] w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <LogIn size={15} />
+          {busy ? '登录中...' : '登录'}
+        </button>
+
+        <p className="text-center text-[11px] text-ink-faint">首次部署请通过初始化页面设置管理员密码</p>
       </form>
+
+      <footer className="absolute inset-x-0 bottom-6 text-center text-xs text-ink-faint">
+        NavBook · 轻量书签导航系统
+      </footer>
     </div>
   );
 }
