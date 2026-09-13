@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Input, Select } from '@/components/ui/Input';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Pagination } from '@/components/ui/Pagination';
-import { Table, Th, Td, TableCard } from '@/components/ui/Table';
+import { Th, Td, TableCard } from '@/components/ui/Table';
 import { ErrorNote } from '@/components/ui/Feedback';
 import { LetterAvatar } from '@/components/admin/LetterAvatar';
 
@@ -88,52 +88,49 @@ export function AdminLinks() {
       {error && <div className="mb-2"><ErrorNote>{error}</ErrorNote></div>}
 
       <TableCard
+        cols={[64, 260, 320, 128, 0]}
+        header={
+          <tr>
+            <Th>ID</Th>
+            <Th>标题</Th>
+            <Th>URL</Th>
+            <Th>分类</Th>
+            <Th>操作</Th>
+          </tr>
+        }
         loading={isFetching}
         footer={<Pagination page={page} pageCount={pageCount} total={total} onChange={setPage} />}
       >
-        <Table>
-          <thead>
-            <tr>
-              <Th className="w-16">ID</Th>
-              <Th>标题</Th>
-              <Th>URL</Th>
-              <Th className="w-32">分类</Th>
-              <Th className="w-20">操作</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {links.length === 0 && !isFetching && (
-              <tr>
-                <Td colSpan={5} className="py-10 text-center text-ink-faint">暂无链接,使用上方表单添加</Td>
-              </tr>
-            )}
-            {links.map(l => (
-              <tr key={l.id} className="transition-colors hover:bg-row-hover">
-                <Td className="text-ink-faint">{l.id}</Td>
-                <Td>
-                  <div className="flex items-center gap-2.5">
-                    <LetterAvatar text={l.title} />
-                    <span className="font-medium text-ink">{l.title}</span>
-                  </div>
-                </Td>
-                <Td className="max-w-xs truncate font-mono text-xs text-ink-secondary">{l.url}</Td>
-                <Td className="text-ink-secondary">{l.categoryName}</Td>
-                <Td>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-danger hover:bg-danger-soft hover:text-danger"
-                    onClick={() => {
-                      if (confirm(`删除链接「${l.title}」？`)) del.mutate(l.id);
-                    }}
-                  >
-                    删除
-                  </Button>
-                </Td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
+        {links.length === 0 && !isFetching && (
+          <tr>
+            <Td colSpan={5} className="py-10 text-center text-ink-faint">暂无链接,使用上方表单添加</Td>
+          </tr>
+        )}
+        {links.map(l => (
+          <tr key={l.id} className="transition-colors hover:bg-row-hover">
+            <Td className="text-ink-faint">{l.id}</Td>
+            <Td>
+              <div className="flex items-center gap-2.5">
+                <LetterAvatar text={l.title} />
+                <span className="font-medium text-ink">{l.title}</span>
+              </div>
+            </Td>
+            <Td className="truncate font-mono text-xs text-ink-secondary">{l.url}</Td>
+            <Td className="text-ink-secondary">{l.categoryName}</Td>
+            <Td>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-danger hover:bg-danger-soft hover:text-danger"
+                onClick={() => {
+                  if (confirm(`删除链接「${l.title}」？`)) del.mutate(l.id);
+                }}
+              >
+                删除
+              </Button>
+            </Td>
+          </tr>
+        ))}
       </TableCard>
     </div>
   );

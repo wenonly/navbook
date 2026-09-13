@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Pagination } from '@/components/ui/Pagination';
-import { Table, Th, Td, TableCard } from '@/components/ui/Table';
+import { Th, Td, TableCard } from '@/components/ui/Table';
 import { ErrorNote } from '@/components/ui/Feedback';
 
 interface CategoryRow {
@@ -86,56 +86,53 @@ export function AdminCategories() {
       {error && <div className="mb-2"><ErrorNote>{error}</ErrorNote></div>}
 
       <TableCard
+        cols={[64, 360, 80, 80, 0]}
+        header={
+          <tr>
+            <Th>ID</Th>
+            <Th>名称</Th>
+            <Th>属性</Th>
+            <Th>权重</Th>
+            <Th>操作</Th>
+          </tr>
+        }
         loading={isFetching}
         footer={<Pagination page={page} pageCount={pageCount} total={total} onChange={setPage} />}
       >
-        <Table>
-          <thead>
-            <tr>
-              <Th className="w-16">ID</Th>
-              <Th>名称</Th>
-              <Th className="w-20">属性</Th>
-              <Th className="w-20">权重</Th>
-              <Th className="w-28">操作</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {cats.length === 0 && !isFetching && (
-              <tr>
-                <Td colSpan={5} className="py-10 text-center text-ink-faint">暂无分类,使用上方表单添加</Td>
-              </tr>
-            )}
-            {cats.map(c => (
-              <tr key={c.id} className="transition-colors hover:bg-row-hover">
-                <Td className="text-ink-faint">{c.id}</Td>
-                <Td className="font-medium text-ink">{c.name}</Td>
-                <Td>
-                  {c.property === 1
-                    ? <Badge tone="danger">私有</Badge>
-                    : <Badge tone="neutral">公开</Badge>}
-                </Td>
-                <Td className="text-ink-secondary">{c.weight}</Td>
-                <Td>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => { setEditRow(c); setName(c.name); }}>
-                      编辑
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-danger hover:bg-danger-soft hover:text-danger"
-                      onClick={() => {
-                        if (confirm(`删除分类「${c.name}」？`)) del.mutate(c.id);
-                      }}
-                    >
-                      删除
-                    </Button>
-                  </div>
-                </Td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
+        {cats.length === 0 && !isFetching && (
+          <tr>
+            <Td colSpan={5} className="py-10 text-center text-ink-faint">暂无分类,使用上方表单添加</Td>
+          </tr>
+        )}
+        {cats.map(c => (
+          <tr key={c.id} className="transition-colors hover:bg-row-hover">
+            <Td className="text-ink-faint">{c.id}</Td>
+            <Td className="font-medium text-ink">{c.name}</Td>
+            <Td>
+              {c.property === 1
+                ? <Badge tone="danger">私有</Badge>
+                : <Badge tone="neutral">公开</Badge>}
+            </Td>
+            <Td className="text-ink-secondary">{c.weight}</Td>
+            <Td>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { setEditRow(c); setName(c.name); }}>
+                  编辑
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-danger hover:bg-danger-soft hover:text-danger"
+                  onClick={() => {
+                    if (confirm(`删除分类「${c.name}」？`)) del.mutate(c.id);
+                  }}
+                >
+                  删除
+                </Button>
+              </div>
+            </Td>
+          </tr>
+        ))}
       </TableCard>
     </div>
   );
