@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 设计令牌：与 design.pen 保持一致，改主题只动这里 + tailwind.config.js 的映射 */
+/* 设计令牌：与 design.pen 保持一致，改主题只动这里（shadcn 语义变量均为别名，勿套 hsl()） */
 :root {
   --color-page: #f4f5f8;
   --color-surface: #ffffff;
@@ -26,6 +26,28 @@
   --color-danger-soft: #fee2e2;
   --color-success: #059669;
   --color-success-soft: #d1fae5;
+
+  /* shadcn 语义层（别名；alpha 修饰符如 bg-primary/80 不可用，组件内已改为实色 token） */
+  --background: var(--color-page);
+  --foreground: var(--color-ink);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-primary);
+  --primary-foreground: #ffffff;
+  --secondary: var(--color-row-hover);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-row-hover);
+  --muted-foreground: var(--color-ink-secondary);
+  --accent: var(--color-row-hover);
+  --accent-foreground: var(--color-ink);
+  --destructive: var(--color-danger);
+  --destructive-foreground: #ffffff;
+  --border: var(--color-line);
+  --input: var(--color-line);
+  --ring: var(--color-primary);
+  --radius: 0.5rem;
 }
 
 body {
