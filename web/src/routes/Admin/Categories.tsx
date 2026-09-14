@@ -1,5 +1,12 @@
-import { useState } from 'react';
-import { CornerDownRight, Plus } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ChevronRight, Plus } from 'lucide-react';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getExpandedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import { useCategories, useDelCategory } from '@/api/hooks';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -9,10 +16,13 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { CategoryDialog } from '@/components/admin/CategoryDialog';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { DataTableCard } from '@/components/admin/DataTableCard';
-import { groupByParent, type CategoryRow } from '@/lib/category-tree';
+import { cn } from '@/lib/utils';
+import { topsOf, type CategoryRow } from '@/lib/category-tree';
 
-// 后端 category_list limit 上限 100；分类数远小于此，一次拉全量分组展示（不分页）
+// 后端 category_list limit 上限 100；分类数远小于此，一次拉全量（不分页）
 const FETCH_ALL = 100;
+
+const col = createColumnHelper<CategoryRow>();
 
 export function AdminCategories() {
   const { data, isFetching } = useCategories(1, FETCH_ALL);
@@ -23,7 +33,71 @@ export function AdminCategories() {
   const [delTarget, setDelTarget] = useState<CategoryRow | null>(null);
 
   const all: CategoryRow[] = data?.data ?? [];
-  const rows = groupByParent(all);
+
+  const columns = useMemo(() => [
+    col.accessor('id', {
+      header: 'ID',
+      cell: info => <span className="text-ink-faint">{info.getValue()}</span>,
+    }),
+    col.accessor('name', {
+      header: '名称',
+      // 父子渲染交给 TanStack 展开行模型：子行 depth>0 缩进；父行可收起（默认全展开）
+      cell: ({ row, getValue }) => (
+        <span
+          className="flex items-center gap-1.5"
+          style={row.depth > 0 ? { paddingLeft: `${1.25 + row.depth * 1.25}rem` } : undefined}
+        >
+          {row.getCanExpand() && (
+            <button
+              type="button"
+              aria-label={row.getIsExpanded() ? '收起子分类' : '展开子分类'}
+              onClick={row.getToggleExpandedHandler()}
+              className="shrink-0 text-ink-faint transition-colors hover:text-ink"
+            >
+              <ChevronRight size={13} className={cn('transition-transform', row.getIsExpanded() && 'rotate-90')} />
+            </button>
+          )}
+          <span className={row.depth === 0 ? 'font-medium text-ink' : 'text-ink'}>{getValue()}</span>
+        </span>
+      ),
+    }),
+    col.accessor('property', {
+      header: '属性',
+      cell: info => info.getValue() === 1
+        ? <Badge variant="destructive">私有</Badge>
+        : <Badge variant="secondary">公开</Badge>,
+    }),
+    col.accessor('weight', {
+      header: '权重',
+      cell: info => <span className="text-ink-secondary">{info.getValue()}</span>,
+    }),
+    col.display({
+      id: 'actions',
+      header: '操作',
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={() => { setEditRow(row.original); setDialogOpen(true); }}>
+            编辑
+          </Button>
+          <Button variant="ghost" size="sm" className="text-danger hover:bg-danger-soft hover:text-danger" onClick={() => setDelTarget(row.original)}>
+            删除
+          </Button>
+        </div>
+      ),
+    }),
+  ], []);
+
+  const table = useReactTable({
+    // 树模式要求顶层只传父行：子行若同时出现在 data 顶层会重复渲染（React duplicate key）
+    data: topsOf(all),
+    columns,
+    getSubRows: row => all.filter(c => c.fid === row.id),
+    getRowId: row => String(row.id),
+    getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    // 默认全展开（用户拍板：分组展示、默认展开；需要时可点箭头收起）
+    initialState: { expanded: true },
+  });
 
   return (
     <div className="flex h-full flex-col">
@@ -41,45 +115,33 @@ export function AdminCategories() {
         cols={[64, 360, 80, 80, 0]}
         headers={
           <TableRow className="hover:bg-transparent">
-            <TableHead className="sticky top-0 z-10 bg-row-hover">ID</TableHead>
-            <TableHead className="sticky top-0 z-10 bg-row-hover">名称</TableHead>
-            <TableHead className="sticky top-0 z-10 bg-row-hover">属性</TableHead>
-            <TableHead className="sticky top-0 z-10 bg-row-hover">权重</TableHead>
-            <TableHead className="sticky top-0 z-10 bg-row-hover">操作</TableHead>
+            {table.getHeaderGroups()[0].headers.map(header => (
+              <TableHead key={header.id} className="sticky top-0 z-10 bg-row-hover">
+                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+              </TableHead>
+            ))}
           </TableRow>
         }
         loading={isFetching}
       >
-        {rows.length === 0 && !isFetching && (
+        {all.length === 0 && !isFetching ? (
           <TableRow>
             <TableCell colSpan={5} className="py-10 text-center text-ink-faint">暂无分类，点击右上角「新增分类」添加</TableCell>
           </TableRow>
+        ) : (
+          table.getRowModel().rows.map(row => (
+            <TableRow
+              key={row.id}
+              className={row.depth === 0 && row.subRows.length > 0 ? 'bg-page' : ''}
+            >
+              {row.getVisibleCells().map(cell => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))
         )}
-        {rows.map(({ row: c, child }) => (
-          <TableRow key={c.id} className={child ? '' : 'bg-page'}>
-            <TableCell className="text-ink-faint">{c.id}</TableCell>
-            <TableCell className={child ? 'py-1.5' : 'font-medium text-ink'}>
-              {child && <CornerDownRight size={13} className="mr-1.5 inline-block shrink-0 text-ink-faint" />}
-              {c.name}
-            </TableCell>
-            <TableCell>
-              {c.property === 1
-                ? <Badge variant="destructive">私有</Badge>
-                : <Badge variant="secondary">公开</Badge>}
-            </TableCell>
-            <TableCell className="text-ink-secondary">{c.weight}</TableCell>
-            <TableCell>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => { setEditRow(c); setDialogOpen(true); }}>
-                  编辑
-                </Button>
-                <Button variant="ghost" size="sm" className="text-danger hover:bg-danger-soft hover:text-danger" onClick={() => setDelTarget(c)}>
-                  删除
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
       </DataTableCard>
 
       <CategoryDialog open={dialogOpen} onOpenChange={setDialogOpen} row={editRow} />
