@@ -5,4 +5,3 @@ dist/
 *.log
 .playwright-mcp/
 e2e-shots/
-web/design.pen
