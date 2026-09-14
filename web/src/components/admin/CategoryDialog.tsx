@@ -8,17 +8,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-
-/** category_list 返回行（camelCase）；提交时映射回 snake_case */
-export interface CategoryRow {
-  id: number;
-  name: string;
-  property: number;
-  weight: number;
-  description: string | null;
-  fontIcon: string | null;
-  fid: number;
-}
+import { topsOf, type CategoryRow } from '@/lib/category-tree';
 
 interface Props {
   open: boolean;
@@ -40,7 +30,7 @@ export function CategoryDialog({ open, onOpenChange, row }: Props) {
   const [fid, setFid] = useState('0');
 
   const { data: catData } = useCategories(1, 100);
-  const cats: Array<{ id: number; name: string }> = catData?.data ?? [];
+  const allCats: CategoryRow[] = catData?.data ?? [];
 
   // 打开时按模式重置：编辑回填整行，新增清空
   useEffect(() => {
@@ -115,7 +105,8 @@ export function CategoryDialog({ open, onOpenChange, row }: Props) {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="cat-fid">父分类</Label>
-            {/* 低频字段用原生 select：够用且规避焦点管理复杂度；链接的主字段才用 Radix Select */}
+            {/* 后端规则：父分类不能是二级分类 → 候选只列顶级（排除自己）。
+                低频字段用原生 select：够用且规避焦点管理复杂度；链接的主字段才用 Radix Select */}
             <select
               id="cat-fid"
               value={fid}
@@ -123,7 +114,7 @@ export function CategoryDialog({ open, onOpenChange, row }: Props) {
               className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <option value="0">无（顶级分类）</option>
-              {cats.filter(c => c.id !== row?.id).map(c => (
+              {topsOf(allCats).filter(c => c.id !== row?.id).map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>

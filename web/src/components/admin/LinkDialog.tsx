@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { CornerDownRight } from 'lucide-react';
 import { useAddLink, useEditLink, useAllCategories } from '@/api/hooks';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -8,9 +9,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { topsOf, type CategoryRow } from '@/lib/category-tree';
 
 /** link_list 返回行（camelCase，见 workers handlers/link.ts LinkRow）；提交映射回 snake_case */
 export interface LinkRow {
@@ -38,7 +40,7 @@ export function LinkDialog({ open, onOpenChange, row }: Props) {
   const edit = useEditLink();
   const pending = add.isPending || edit.isPending;
   const { data: catData } = useAllCategories();
-  const cats: Array<{ id: number; name: string }> = catData?.data ?? [];
+  const allCats: CategoryRow[] = catData?.data ?? [];
 
   const [fid, setFid] = useState('0');
   const [title, setTitle] = useState('');
@@ -111,9 +113,23 @@ export function LinkDialog({ open, onOpenChange, row }: Props) {
                 <SelectValue placeholder="选择分类" />
               </SelectTrigger>
               <SelectContent>
-                {cats.map(c => (
-                  <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-                ))}
+                {topsOf(allCats).map(top => {
+                  const children = allCats.filter(c => c.fid === top.id);
+                  return (
+                    <SelectGroup key={top.id}>
+                      {children.length > 0 && <SelectLabel>{top.name}</SelectLabel>}
+                      <SelectItem value={String(top.id)}>{top.name}</SelectItem>
+                      {children.map(sub => (
+                        <SelectItem key={sub.id} value={String(sub.id)}>
+                          <span className="inline-flex items-center gap-1">
+                            <CornerDownRight size={12} className="text-ink-faint" />
+                            {sub.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

@@ -1,39 +1,35 @@
-import { useEffect, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import { CornerDownRight, Plus } from 'lucide-react';
 import { useCategories, useDelCategory } from '@/api/hooks';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableHead, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { CategoryDialog, type CategoryRow } from '@/components/admin/CategoryDialog';
+import { CategoryDialog } from '@/components/admin/CategoryDialog';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { DataTableCard } from '@/components/admin/DataTableCard';
-import { TablePagination } from '@/components/admin/TablePagination';
+import { groupByParent, type CategoryRow } from '@/lib/category-tree';
 
-const PAGE_SIZE = 20;
+// 后端 category_list limit 上限 100；分类数远小于此，一次拉全量分组展示（不分页）
+const FETCH_ALL = 100;
 
 export function AdminCategories() {
-  const [page, setPage] = useState(1);
-  const { data, isFetching } = useCategories(page, PAGE_SIZE);
+  const { data, isFetching } = useCategories(1, FETCH_ALL);
   const del = useDelCategory();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editRow, setEditRow] = useState<CategoryRow | null>(null);
   const [delTarget, setDelTarget] = useState<CategoryRow | null>(null);
 
-  // 删除末页最后一条后回退，避免停留在空页；count 未知（切换页码的加载间隙）不回退，
-  // 否则 pageCount 被误算为 1，会把刚点的页码弹回第 1 页
-  const pageCount = Math.max(1, Math.ceil((data?.count ?? 0) / PAGE_SIZE));
-  useEffect(() => { if (data && page > pageCount) setPage(pageCount); }, [page, pageCount, data]);
-
-  const cats: CategoryRow[] = data?.data ?? [];
-  const total = data?.count ?? 0;
+  const all: CategoryRow[] = data?.data ?? [];
+  const rows = groupByParent(all);
 
   return (
     <div className="flex h-full flex-col">
       <PageHeader
         title="分类管理"
+        subtitle={`共 ${all.length} 个分类，按父子分组展示`}
         right={
           <Button onClick={() => { setEditRow(null); setDialogOpen(true); }}>
             <Plus size={14} /> 新增分类
@@ -53,17 +49,19 @@ export function AdminCategories() {
           </TableRow>
         }
         loading={isFetching}
-        footer={<TablePagination page={page} pageCount={pageCount} total={total} onChange={setPage} />}
       >
-        {cats.length === 0 && !isFetching && (
+        {rows.length === 0 && !isFetching && (
           <TableRow>
             <TableCell colSpan={5} className="py-10 text-center text-ink-faint">暂无分类，点击右上角「新增分类」添加</TableCell>
           </TableRow>
         )}
-        {cats.map(c => (
-          <TableRow key={c.id}>
+        {rows.map(({ row: c, child }) => (
+          <TableRow key={c.id} className={child ? '' : 'bg-page'}>
             <TableCell className="text-ink-faint">{c.id}</TableCell>
-            <TableCell className="font-medium text-ink">{c.name}</TableCell>
+            <TableCell className={child ? 'py-1.5' : 'font-medium text-ink'}>
+              {child && <CornerDownRight size={13} className="mr-1.5 inline-block shrink-0 text-ink-faint" />}
+              {c.name}
+            </TableCell>
             <TableCell>
               {c.property === 1
                 ? <Badge variant="destructive">私有</Badge>
@@ -89,7 +87,7 @@ export function AdminCategories() {
         open={delTarget !== null}
         onOpenChange={v => { if (!v) setDelTarget(null); }}
         title={`删除分类「${delTarget?.name ?? ''}」？`}
-        description="该操作不可撤销，其下链接将失去分类归属。"
+        description="该操作不可撤销；有子分类或链接的分类无法删除。"
         confirmText="删除"
         destructive
         onConfirm={() => {
