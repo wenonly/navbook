@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Bookmark, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
 import { api } from '@/api/client';
 import { useAuth } from '@/stores/auth';
-import { ErrorNote } from '@/components/legacy/Feedback';
+import { toast } from 'sonner';
 
 export function Login() {
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [show, setShow] = useState(false);
   const navigate = useNavigate();
@@ -16,14 +15,13 @@ export function Login() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError('');
     try {
       const res = await api.login(password);
       // code!==0 已在 client 层抛错，走到这里即成功；cookie 由服务端 Set-Cookie 下发（HttpOnly）
       setUsername(res.data.username);
       navigate('/admin');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '操作失败');
+      toast.error(err instanceof Error ? err.message : '操作失败');
     } finally {
       setBusy(false);
     }
@@ -72,8 +70,6 @@ export function Login() {
             </button>
           </div>
         </div>
-
-        {error && <div className="w-full"><ErrorNote>{error}</ErrorNote></div>}
 
         <button
           type="submit"

@@ -1,28 +1,26 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bookmark, KeyRound, UserRound } from 'lucide-react';
+import { toast } from 'sonner';
 import { api } from '@/api/client';
-import { Button } from '@/components/legacy/Button';
-import { Input } from '@/components/legacy/Input';
-import { ErrorNote } from '@/components/legacy/Feedback';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export function Init() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError('');
     try {
       // code!==0 已在 client 层抛错，走到这里即成功
       await api.init(username, password);
       navigate('/admin/login'); // 初始化只建账号；登录（下发 cookie）走 /admin/login
     } catch (err) {
-      setError(err instanceof Error ? err.message : '操作失败');
+      toast.error(err instanceof Error ? err.message : '操作失败');
     } finally {
       setBusy(false);
     }
@@ -65,7 +63,6 @@ export function Init() {
               className="pl-9"
             />
           </div>
-          {error && <ErrorNote>{error}</ErrorNote>}
           <Button type="submit" disabled={busy} className="w-full">
             {busy ? '初始化中...' : '初始化'}
           </Button>

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/stores/auth';
 import { api } from '@/api/client';
-import { cx } from '@/components/legacy/cx';
+import { cn } from '@/lib/utils';
 
 const NAV_SECTIONS: Array<{ label: string; items: Array<{ to: string; label: string; icon: LucideIcon }> }> = [
   {
@@ -81,7 +81,7 @@ export function AdminLayout() {
                     key={to}
                     to={to}
                     className={({ isActive }) =>
-                      cx(
+                      cn(
                         'flex h-9 items-center gap-2.5 rounded-lg px-3 text-sm transition-colors',
                         isActive
                           ? 'bg-primary font-medium text-white'
