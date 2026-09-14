@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/sonner';
 import { Login } from './routes/Login';
 import { Init } from './routes/Init';
 import { AdminLayout } from './routes/Admin/Layout';
@@ -15,6 +16,7 @@ const qc = new QueryClient();
 export default function App() {
   return (
     <QueryClientProvider client={qc}>
+      <Toaster position="top-center" />
       <BrowserRouter>
         <Routes>
           <Route path="/admin/init" element={<Init />} />

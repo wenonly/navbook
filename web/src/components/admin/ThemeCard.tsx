@@ -1,8 +1,8 @@
 import { CircleCheck, Zap } from 'lucide-react';
 import type { ThemeEntry } from '@/api/hooks';
-import { Badge } from '@/components/legacy/Badge';
-import { Button } from '@/components/legacy/Button';
-import { cx } from '@/components/legacy/cx';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { ThemePreview } from './ThemePreview';
 import { paletteFor } from './themePalettes';
 
@@ -16,7 +16,7 @@ interface Props {
 export function ThemeCard({ theme, active, switching, onSwitch }: Props) {
   return (
     <div
-      className={cx(
+      className={cn(
         'flex gap-4 rounded-xl border bg-surface p-4',
         active ? 'border-primary' : 'border-line',
       )}
@@ -27,7 +27,7 @@ export function ThemeCard({ theme, active, switching, onSwitch }: Props) {
           <span className="text-[15px] font-semibold text-ink">{theme.name}</span>
           <span className="text-[11px] text-ink-faint">v{theme.version}</span>
           {active && (
-            <Badge tone="primary">
+            <Badge>
               <CircleCheck size={11} />
               使用中
             </Badge>
