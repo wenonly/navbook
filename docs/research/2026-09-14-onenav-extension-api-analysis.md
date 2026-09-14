@@ -78,3 +78,46 @@ fetch(`${domain}/index.php?c=api&method=add_link`, {
   headers: { "Content-Type": "application/x-www-form-urlencoded" }
 })
 ```
+
+---
+
+## 六、数据结构差异对照（2026-09-14 补充，PHP vs navbook 字段级）
+
+### 6.1 字段命名：snake_case vs camelCase（最大差异）
+
+| PHP（数据库直出） | navbook | 说明 |
+|---|---|---|
+| add_time / up_time | addTime / upTime | 时间戳（unix int），两边同型 |
+| url_standby | urlStandby | |
+| font_icon | fontIcon | |
+| check_status / last_checked_time | checkStatus / lastCheckedTime | Phase 4 才启用；PHP 的 last_checked_time 是 **TEXT**、我们 INTEGER（届时注意） |
+| category_name（link_list/q_category_link） | categoryName | global_search 两侧均为 category_name ✓ |
+
+插件实测只读 `id/fid/title/url/description`（这些两边同名），不受影响；**严格按 PHP 字段名消费的第三方客户端（ZMark 等）会踩到**。
+
+### 6.2 缺失的派生字段
+
+| 端点 | PHP 有 | navbook |
+|---|---|---|
+| category_list | `fname`（父分类名）、`link_num`（分类下链接数）子查询 | 无 |
+| app_info | `cat_num`、`link_num`、`php_version`、`email` | 无统计字段（php_version 对 Workers 无意义） |
+
+### 6.3 行为差异
+
+| 维度 | PHP | navbook |
+|---|---|---|
+| category_list 排序 | `fid ASC, weight DESC, id ASC`（父子穿插） | `weight DESC, id DESC` |
+| category_list 分页 | SQL 无 LIMIT，**实际返回全量** | 真分页（插件 limit=999 无感） |
+| 文本编码 | 返回存储的 HTML 转义原文 | 返回解码明文（更干净，插值安全） |
+| NULL 处理 | 原样 NULL | 统一空串（description 等） |
+
+### 6.4 数据值层面
+
+- **导入书签的 add_time 全部为导入时刻**：`onenav.bookmarks` 格式不含时间戳，211 条链接的原始添加时间（2024-12~2026-09）没有迁移过来。
+- click 计数同样未迁移（格式不含）。
+
+### 6.5 结论与建议
+
+对浏览器插件：**零影响**（它读的字段两边同名同义）。
+对严格 PHP 兼容客户端：字段命名是真实差异，但改 API 字段名会破坏自家 web SPA（消费 camelCase），收益仅服务于理论上的第三方客户端——**建议保持现状 + 本文档声明**。
+低成本可补齐项（按需）：category_list 补 `fname`/`link_num`、app_info 补 `cat_num`/`link_num`（派生统计，对后台展示也有用）。
