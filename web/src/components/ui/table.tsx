@@ -6,13 +6,14 @@ const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
-    <table
-      ref={ref}
-      className={cn("w-full caption-bottom text-sm", className)}
-      {...props}
-    />
-  </div>
+  // 不包 shadcn 模板的 <div overflow-auto>：外层滚动容器由 DataTableCard 提供，
+  // 多一层 overflow-auto 会成为 sticky 的滚动容器导致表头吸顶失效
+  // border-separate + spacing 0：collapse 下单元格 sticky 失效且边框随滚动消失（旧 Table 的坑）
+  <table
+    ref={ref}
+    className={cn("w-full caption-bottom text-sm border-separate border-spacing-0", className)}
+    {...props}
+  />
 ))
 Table.displayName = "Table"
 
@@ -73,7 +74,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      "h-10 border-b border-line px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className
     )}
     {...props}
@@ -88,7 +89,8 @@ const TableCell = React.forwardRef<
   <td
     ref={ref}
     className={cn(
-      "p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      // border-separate 下 tr 边框不渲染，行分隔线由单元格承担（同表头）
+      "border-b border-line p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className
     )}
     {...props}
