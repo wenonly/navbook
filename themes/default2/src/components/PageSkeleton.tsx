@@ -7,7 +7,7 @@ export default function PageSkeleton() {
         <div className="skeleton-block h-8.5 w-8.5 rounded-lg" />
         <div className="skeleton-block h-4 w-24" />
         <div className="flex-1" />
-        <div className="skeleton-block hidden h-9.5 w-105 rounded-input md:block" />
+        <div className="skeleton-block hidden h-9.5 w-[26rem] rounded-input md:block" />
         <div className="skeleton-block h-9 w-9 rounded-lg" />
       </div>
       <div className="flex">

@@ -3,6 +3,16 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // 默认刻度缺 4.5/6.5/7.5/8.5/9.5/15/27/100/105，不补则这些工具类静默不生成
+      spacing: {
+        '4.5': '1.125rem',
+        '6.5': '1.625rem',
+        '7.5': '1.875rem',
+        '8.5': '2.125rem',
+        '9.5': '2.375rem',
+        15: '3.75rem',
+        27: '6.75rem',
+      },
       colors: {
         bg: 'var(--bg)',
         surface: 'var(--surface)',

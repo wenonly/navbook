@@ -22,7 +22,7 @@ export default function CategorySection({ cat }: { cat: NavCategory }) {
           </span>
         )}
         {cat.description && (
-          <span className="ml-1 hidden max-w-100 truncate text-xs text-faint lg:block" title={cat.description}>
+          <span className="ml-1 hidden max-w-[25rem] truncate text-xs text-faint lg:block" title={cat.description}>
             {cat.description}
           </span>
         )}
