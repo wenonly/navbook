@@ -1,4 +1,4 @@
-import { cx } from '@/components/legacy/cx';
+import { cn } from '@/lib/utils';
 
 const COLORS = [
   'bg-primary-soft text-primary',
@@ -18,7 +18,7 @@ export function LetterAvatar({ text, size = 'md' }: { text: string; size?: 'md' 
   const letter = (text.trim()[0] ?? '?').toUpperCase();
   return (
     <span
-      className={cx(
+      className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-lg font-semibold',
         size === 'md' ? 'h-8 w-8 text-sm' : 'h-6 w-6 text-xs',
         COLORS[hashIndex(text || '?')],
