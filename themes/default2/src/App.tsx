@@ -1,83 +1,63 @@
-import type { NavData, NavLink } from '@navbook/shared';
+import { useMemo } from 'react';
+import type { NavData } from '@navbook/shared';
+import { useTheme } from './hooks/useTheme';
+import { useSession } from './hooks/useSession';
+import { useScrollSpy } from './hooks/useScrollSpy';
+import { buildIndex } from './lib/search';
+import Topbar from './components/Topbar';
+import Sidebar from './components/Sidebar';
+import MobileChips from './components/MobileChips';
+import SearchBox from './components/SearchBox';
+import CategorySection from './components/CategorySection';
+import Footer from './components/Footer';
 
 export default function App({ data }: { data: NavData }) {
-  return (
-    <main className="max-w-6xl mx-auto px-4 py-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--color-text)' }}>{data.site_title}</h1>
-        {data.site_subtitle && (
-          <p className="text-sm mt-1" style={{ color: 'var(--color-text-subtle)' }}>{data.site_subtitle}</p>
-        )}
-      </header>
-      <div className="space-y-10">
-        {data.categories.map(cat => (
-          <section key={cat.id}>
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
-              {cat.font_icon && <span className={cat.font_icon} aria-hidden />}
-              {cat.name}
-              {cat.private && <PrivateBadge />}
-            </h2>
-            {cat.links.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-4">
-                {cat.links.map(link => <LinkCard key={link.id} link={link} />)}
-              </div>
-            )}
-            {cat.children.map(sub => (
-              <div key={sub.id} className="mb-4">
-                <h3 className="text-sm font-medium mb-2 uppercase tracking-wide flex items-center gap-1"
-                    style={{ color: 'var(--color-text-subtle)' }}>
-                  {sub.font_icon && <span className={`${sub.font_icon} mr-1`} aria-hidden />}
-                  {sub.name}
-                  {sub.private && <PrivateBadge />}
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {sub.links.map(link => <LinkCard key={link.id} link={link} />)}
-                </div>
-              </div>
-            ))}
-          </section>
-        ))}
-      </div>
-    </main>
+  const [mode, toggleTheme] = useTheme();
+  const session = useSession();
+  const searchIndex = useMemo(() => buildIndex(data.categories), [data]);
+  const sectionIds = useMemo(
+    () => data.categories.flatMap(c => [`cat-${c.id}`, ...c.children.map(s => `cat-${s.id}`)]),
+    [data],
   );
-}
-
-function PrivateBadge() {
-  return (
-    <span
-      title="私有（仅登录后可见）"
-      className="text-xs px-1.5 py-0.5 rounded"
-      style={{ background: 'var(--color-bg-subtle)', color: 'var(--color-text-subtle)' }}
-    >
-      🔒
-    </span>
+  const activeId = useScrollSpy(sectionIds);
+  const linkCount = useMemo(
+    () => data.categories.reduce(
+      (n, c) => n + c.links.length + c.children.reduce((m, s) => m + s.links.length, 0), 0),
+    [data],
   );
-}
 
-function LinkCard({ link }: { link: NavLink }) {
   return (
-    <a
-      href={link.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block p-3 transition hover:shadow-md relative"
-      style={{
-        backgroundColor: 'var(--color-bg)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius)',
-        opacity: link.private ? 0.75 : 1,
-      }}
-    >
-      {link.private && (
-        <span className="absolute top-1.5 right-1.5 text-[10px]" title="私有">🔒</span>
-      )}
-      <div className="flex items-center gap-2 mb-1">
-        {link.font_icon && <span className={link.font_icon} aria-hidden />}
-        <span className="font-medium truncate text-sm" style={{ color: 'var(--color-text)' }}>{link.title}</span>
+    <div className="min-h-screen">
+      <Topbar
+        siteTitle={data.site_title || 'NavBook'}
+        mode={mode}
+        onToggleTheme={toggleTheme}
+        session={session}
+        searchIndex={searchIndex}
+      />
+      {/* 移动端：顶栏下整行搜索 + 分类 chips；桌面端搜索在顶栏内 */}
+      <div className="px-4 pt-3 md:hidden">
+        <SearchBox index={searchIndex} />
       </div>
-      {link.description && (
-        <p className="text-xs truncate" style={{ color: 'var(--color-text-subtle)' }}>{link.description}</p>
-      )}
-    </a>
+      <MobileChips categories={data.categories} activeId={activeId} />
+      <div className="flex items-start">
+        <Sidebar categories={data.categories} activeId={activeId} session={session} />
+        <main className="min-w-0 flex-1 p-4 md:p-7">
+          {data.categories.length === 0 ? (
+            <div className="rounded-card border border-dashed border-border px-4 py-16 text-center">
+              <p className="text-sm text-muted">还没有任何分类</p>
+              <p className="mt-1 text-xs text-faint">登录后进入后台管理添加书签</p>
+            </div>
+          ) : (
+            <div className="space-y-7">
+              {data.categories.map(cat => <CategorySection key={cat.id} cat={cat} />)}
+            </div>
+          )}
+          <div className="mt-8">
+            <Footer categories={data.categories.length} links={linkCount} />
+          </div>
+        </main>
+      </div>
+    </div>
   );
 }

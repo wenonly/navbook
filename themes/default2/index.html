@@ -4,7 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/favicon.svg" />
+    <!-- 数据里的 font_icon 为 FontAwesome 类名（OneNav 兼容）；加载失败时回退首字母方块 -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+    <!-- OneNav 数据里的 fa fa-* 旧类名（含品牌图标）靠 v4 shims 兼容 -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/v4-shims.min.css"
+      referrerpolicy="no-referrer"
+    />
     <title>NavBook</title>
+    <script>
+      // 首屏防闪烁：在渲染前恢复上次主题
+      (function () {
+        var m = localStorage.getItem('navbook-theme');
+        if (m === 'dark' || (!m && matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.dataset.mode = 'dark';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
