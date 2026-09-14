@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bookmark, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
 import { api } from '@/api/client';
 import { useAuth } from '@/stores/auth';
-import { ErrorNote } from '@/components/ui/Feedback';
+import { ErrorNote } from '@/components/legacy/Feedback';
 
 export function Login() {
   const [password, setPassword] = useState('');

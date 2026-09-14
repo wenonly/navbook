@@ -1,4 +1,4 @@
-import { cx } from '@/components/ui/cx';
+import { cx } from '@/components/legacy/cx';
 
 const COLORS = [
   'bg-primary-soft text-primary',

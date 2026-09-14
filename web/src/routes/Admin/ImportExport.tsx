@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
 import { Download, FileJson } from 'lucide-react';
 import { api } from '@/api/client';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/legacy/Badge';
+import { Button } from '@/components/legacy/Button';
+import { Card } from '@/components/legacy/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { ErrorNote } from '@/components/ui/Feedback';
+import { ErrorNote } from '@/components/legacy/Feedback';
 
 interface ImportStats {
   categories_created: number;

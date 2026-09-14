@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bookmark, KeyRound, UserRound } from 'lucide-react';
 import { api } from '@/api/client';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { ErrorNote } from '@/components/ui/Feedback';
+import { Button } from '@/components/legacy/Button';
+import { Input } from '@/components/legacy/Input';
+import { ErrorNote } from '@/components/legacy/Feedback';
 
 export function Init() {
   const [username, setUsername] = useState('');

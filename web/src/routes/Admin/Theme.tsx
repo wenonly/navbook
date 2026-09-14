@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { CircleCheck } from 'lucide-react';
 import { useThemes, useSetTheme } from '@/api/hooks';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/legacy/Badge';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { ErrorNote, Loading } from '@/components/ui/Feedback';
+import { ErrorNote, Loading } from '@/components/legacy/Feedback';
 import { ThemeCard } from '@/components/admin/ThemeCard';
 
 export function AdminTheme() {

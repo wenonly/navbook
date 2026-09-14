@@ -1,8 +1,8 @@
 import { CircleCheck, Zap } from 'lucide-react';
 import type { ThemeEntry } from '@/api/hooks';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { cx } from '@/components/ui/cx';
+import { Badge } from '@/components/legacy/Badge';
+import { Button } from '@/components/legacy/Button';
+import { cx } from '@/components/legacy/cx';
 import { ThemePreview } from './ThemePreview';
 import { paletteFor } from './themePalettes';
 

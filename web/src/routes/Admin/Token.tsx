@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { KeyRound, RefreshCw } from 'lucide-react';
 import { api } from '@/api/client';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/legacy/Button';
+import { Card } from '@/components/legacy/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { ErrorNote, Loading } from '@/components/ui/Feedback';
+import { ErrorNote, Loading } from '@/components/legacy/Feedback';
 import { CopyField } from '@/components/admin/CopyField';
 
 export function AdminToken() {

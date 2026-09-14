@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/stores/auth';
 import { api } from '@/api/client';
-import { cx } from '@/components/ui/cx';
+import { cx } from '@/components/legacy/cx';
 
 const NAV_SECTIONS: Array<{ label: string; items: Array<{ to: string; label: string; icon: LucideIcon }> }> = [
   {

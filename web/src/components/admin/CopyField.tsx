@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/legacy/Button';
 
 interface Props {
   label: string;

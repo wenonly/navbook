@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useCategories, useAddCategory, useEditCategory, useDelCategory } from '@/api/hooks';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/legacy/Badge';
+import { Button } from '@/components/legacy/Button';
+import { Input } from '@/components/legacy/Input';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { Pagination } from '@/components/ui/Pagination';
-import { Th, Td, TableCard } from '@/components/ui/Table';
-import { ErrorNote } from '@/components/ui/Feedback';
+import { Pagination } from '@/components/legacy/Pagination';
+import { Th, Td, TableCard } from '@/components/legacy/Table';
+import { ErrorNote } from '@/components/legacy/Feedback';
 
 interface CategoryRow {
   id: number;

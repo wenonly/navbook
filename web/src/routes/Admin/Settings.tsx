@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Eye, EyeOff } from 'lucide-react';
 import { api } from '@/api/client';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { cx } from '@/components/ui/cx';
-import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/legacy/Badge';
+import { Button } from '@/components/legacy/Button';
+import { Card } from '@/components/legacy/Card';
+import { cx } from '@/components/legacy/cx';
+import { Input } from '@/components/legacy/Input';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { ErrorNote, Loading, SuccessNote } from '@/components/ui/Feedback';
+import { ErrorNote, Loading, SuccessNote } from '@/components/legacy/Feedback';
 
 interface SiteConfigData {
   site_private: boolean;

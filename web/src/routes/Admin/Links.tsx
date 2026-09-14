@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useLinks, useAllCategories, useAddLink, useDelLink } from '@/api/hooks';
-import { Button } from '@/components/ui/Button';
-import { Input, Select } from '@/components/ui/Input';
+import { Button } from '@/components/legacy/Button';
+import { Input, Select } from '@/components/legacy/Input';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { Pagination } from '@/components/ui/Pagination';
-import { Th, Td, TableCard } from '@/components/ui/Table';
-import { ErrorNote } from '@/components/ui/Feedback';
+import { Pagination } from '@/components/legacy/Pagination';
+import { Th, Td, TableCard } from '@/components/legacy/Table';
+import { ErrorNote } from '@/components/legacy/Feedback';
 import { LetterAvatar } from '@/components/admin/LetterAvatar';
 
 interface LinkRow {
