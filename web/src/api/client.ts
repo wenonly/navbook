@@ -67,4 +67,8 @@ export const api = {
 
   tokenInfo: () => get('/api/token_info'),
   createSk: () => post('create_sk'),
+
+  // AI 助手
+  aiConfig: () => get('/api/ai_config'),
+  saveAiConfig: (payload: unknown) => postJson('/api/ai_config', payload),
 };
