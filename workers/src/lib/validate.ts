@@ -78,3 +78,22 @@ export const setSiteSchema = z.object({
   site_title: z.string().min(1).max(64).optional(),
   site_subtitle: z.string().max(128).optional(),
 });
+
+// ---------- AI ----------
+
+export const aiProviderSchema = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().min(1).max(64),
+  preset: z.string().min(1).max(32),
+  baseUrl: z.url().max(256),
+  apiKey: z.string().max(256),   // 允许回显的打码占位(含 ***),保存时合并回原值
+  model: z.string().min(1).max(128),
+  enabled: z.boolean(),
+});
+
+export const aiConfigSchema = z.object({
+  token: z.string().optional(),
+  providers: z.array(aiProviderSchema).max(10),
+  activeProviderId: z.string().max(64).nullable(),
+  systemPrompt: z.string().max(4000).optional().default(''),
+});

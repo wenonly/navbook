@@ -25,7 +25,9 @@ import {
   addLinkSchema, editLinkSchema, delLinkSchema, getALinkSchema, qCategoryLinkSchema,
   globalSearchSchema,
   initSchema, loginSchema, setSiteSchema,
+  aiConfigSchema,
 } from './lib/validate';
+import { getAiConfigHandler, saveAiConfigHandler } from './handlers/ai';
 
 /** body 解析统一入口：非法/缺失 body 一律落空对象，交给 Zod 报具体字段错误 */
 async function parseBody(c: Context<AppEnv>): Promise<Record<string, unknown>> {
@@ -292,6 +294,21 @@ export function createApp() {
     if (!known.has(theme)) return c.json({ code: -2000, msg: `未知主题：${theme}` });
     await setActiveTheme(c.get('db'), theme);
     return c.json({ code: 0, data: { active: theme } });
+  });
+
+  // ---------- AI 助手（仅管理员） ----------
+
+  app.get('/api/ai_config', authMiddleware, async c => {
+    return c.json(await getAiConfigHandler(c.get('db')));
+  });
+
+  app.post('/api/ai_config', authMiddleware, async c => {
+    // JSON body（先例：import_json）——providers 数组/布尔值走 FormData 会失真
+    const payload = await c.req.json().catch(() => {
+      throw new Error('请求体必须是 JSON');
+    });
+    const parsed = aiConfigSchema.parse(payload);
+    return c.json(await saveAiConfigHandler(c.get('db'), parsed));
   });
 
   // ---------- 伺服路由（放最后） ----------
