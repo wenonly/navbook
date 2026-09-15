@@ -56,7 +56,7 @@ themes/compass/src/components/AssistantBubble.tsx
 - Create: `workers/src/ai/types.ts`(本任务只写配置相关类型)
 - Test: `workers/tests/ai/config.test.ts`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // workers/tests/ai/config.test.ts
@@ -139,12 +139,12 @@ describe('ai config', () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/config.test.ts`
 Expected: FAIL(模块不存在)
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 ```ts
 // workers/src/ai/types.ts
@@ -303,12 +303,12 @@ export function resolveActiveProvider(cfg: AiConfig): AiProviderConfig | null {
 }
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/config.test.ts`
 Expected: PASS(6 个用例)
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add workers/src/ai/ workers/tests/ai/
@@ -323,7 +323,7 @@ git commit -m "feat(ai): s_ai 配置存取/预设厂商表/apiKey 打码与合�
 - Modify: `workers/src/router.ts`(「主题配置 API」分区之后、「伺服路由」之前插入)
 - Test: `workers/tests/ai/endpoints.test.ts`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // workers/tests/ai/endpoints.test.ts
@@ -394,12 +394,12 @@ describe('GET/POST /api/ai_config', () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/endpoints.test.ts`
 Expected: FAIL(路由不存在,404)
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `workers/src/lib/validate.ts` 末尾追加:
 
@@ -475,12 +475,12 @@ import { aiConfigSchema } from './lib/validate';
   });
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/endpoints.test.ts`
 Expected: PASS(4 个用例)
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add workers/src/lib/validate.ts workers/src/handlers/ai.ts workers/src/router.ts workers/tests/ai/endpoints.test.ts
@@ -495,7 +495,7 @@ git commit -m "feat(ai): GET/POST /api/ai_config 配置端点(key 打码回显/�
 - Modify: `web/src/App.tsx`(注册路由)
 - Modify: `web/src/routes/Admin/Layout.tsx`(NAV_SECTIONS 加分组)
 
-- [ ] **Step 1: client.ts 追加方法**(api 对象内,tokenInfo 之前)
+- [x] **Step 1: client.ts 追加方法**(api 对象内,tokenInfo 之前)
 
 ```ts
   // AI 助手
@@ -503,7 +503,7 @@ git commit -m "feat(ai): GET/POST /api/ai_config 配置端点(key 打码回显/�
   saveAiConfig: (payload: unknown) => postJson('/api/ai_config', payload),
 ```
 
-- [ ] **Step 2: AiConfig 页面**
+- [x] **Step 2: AiConfig 页面**
 
 ```tsx
 // web/src/routes/Admin/AiConfig.tsx
@@ -652,7 +652,7 @@ export function AdminAiConfig() {
 }
 ```
 
-- [ ] **Step 3: 注册路由与菜单**
+- [x] **Step 3: 注册路由与菜单**
 
 `web/src/App.tsx`:import 区加 `import { AdminAiConfig } from './routes/Admin/AiConfig';`,`settings` Route 之后加:
 
@@ -674,17 +674,17 @@ export function AdminAiConfig() {
 
 (lucide import 行补 `Sparkles, Bot`。`/admin/assistant` 路由在 Task 11 注册,本任务先挂菜单;若介意临时死链,可把 Assistant 条目与路由都推迟到 Task 11 一并加——二选一,推荐后者。)
 
-- [ ] **Step 4: 构建验证**
+- [x] **Step 4: 构建验证**
 
 Run: `pnpm --filter web build`
 Expected: tsc + vite build 成功
 
-- [ ] **Step 5: 手动验证**(wrangler dev 起本地环境)
+- [x] **Step 5: 手动验证**(wrangler dev 起本地环境)
 
 Run: `pnpm --filter @navbook/workers dev`(另开终端 `pnpm --filter web dev` 代理到本地,按 web/vite.config 现有代理配置)
 验证:登录 → 模型配置页 → 选 DeepSeek 预设自动填充 → 填 key 保存 → 刷新页面回显 `sk-***1234` → 原样再保存 → 不弹"key 错误"(原值未丢)。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add web/src
@@ -703,7 +703,7 @@ git commit -m "feat(web): 模型配置页(预设厂商/启停/当前标记/系�
 - Create: `workers/src/ai/conversations.ts`
 - Test: `workers/tests/ai/conversations.test.ts`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // workers/tests/ai/conversations.test.ts
@@ -771,12 +771,12 @@ describe('conversations', () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/conversations.test.ts`
 Expected: FAIL(模块/表不存在)
 
-- [ ] **Step 3: 迁移 SQL + schema + 实现**
+- [x] **Step 3: 迁移 SQL + schema + 实现**
 
 ```sql
 -- workers/src/db/migrations/0001_ai_conversations.sql
@@ -907,12 +907,12 @@ export async function countMessages(db: WorkerDB, conversationId: number): Promi
 }
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/conversations.test.ts`
 Expected: PASS(5 个用例)
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add workers/src/db workers/src/ai/conversations.ts workers/tests/ai/conversations.test.ts
@@ -928,7 +928,7 @@ git commit -m "feat(ai): on_ai_conversations/on_ai_messages 表与会话 CRUD(�
 - Modify: `shared/package.json`(test 脚本 + vitest devDep)
 - Modify: `shared/src/index.ts`(re-export)
 
-- [ ] **Step 1: shared/package.json 加测试设施**
+- [x] **Step 1: shared/package.json 加测试设施**
 
 ```json
 {
@@ -944,7 +944,7 @@ git commit -m "feat(ai): on_ai_conversations/on_ai_messages 表与会话 CRUD(�
 
 Run: `pnpm install`(链接新 devDep)
 
-- [ ] **Step 2: 写失败测试**
+- [x] **Step 2: 写失败测试**
 
 ```ts
 // shared/src/chat/sse.test.ts
@@ -994,12 +994,12 @@ describe('parseSseStream', () => {
 });
 ```
 
-- [ ] **Step 3: 跑测试确认失败**
+- [x] **Step 3: 跑测试确认失败**
 
 Run: `pnpm --filter @navbook/shared exec vitest run src/chat/sse.test.ts`
 Expected: FAIL(模块不存在)
 
-- [ ] **Step 4: 实现**
+- [x] **Step 4: 实现**
 
 ```ts
 // shared/src/chat/types.ts
@@ -1095,12 +1095,12 @@ export { ChatMachine } from './chat/machine';   // Task 10 提供;本任务先�
 
 (本任务先不 export machine——写成 `// export { ChatMachine } from './chat/machine';` 注释,Task 10 解开。)
 
-- [ ] **Step 5: 跑测试确认通过**
+- [x] **Step 5: 跑测试确认通过**
 
 Run: `pnpm --filter @navbook/shared exec vitest run src/chat/sse.test.ts`
 Expected: PASS(3 个用例)
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add shared
@@ -1113,7 +1113,7 @@ git commit -m "feat(shared): 聊天线缆契约类型 + SSE 流解析器(跨chun
 - Create: `workers/src/ai/provider.ts`
 - Test: `workers/tests/ai/provider.test.ts`
 
-- [ ] **Step 1: 写失败测试**(fixture 覆盖:纯文本/思考流/tool_calls 分片拼装/HTTP 错误)
+- [x] **Step 1: 写失败测试**(fixture 覆盖:纯文本/思考流/tool_calls 分片拼装/HTTP 错误)
 
 ```ts
 // workers/tests/ai/provider.test.ts
@@ -1201,12 +1201,12 @@ describe('OpenAiCompatProvider', () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/provider.test.ts`
 Expected: FAIL(模块不存在)
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 ```ts
 // workers/src/ai/provider.ts
@@ -1297,12 +1297,12 @@ export class OpenAiCompatProvider implements ProviderClient {
 }
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/provider.test.ts`
 Expected: PASS(5 个用例)
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add workers/src/ai/provider.ts workers/tests/ai/provider.test.ts
@@ -1315,7 +1315,7 @@ git commit -m "feat(ai): OpenAI 兼容流式客户端(reasoning流/tool_calls分
 - Create: `workers/src/ai/tools.ts`
 - Test: `workers/tests/ai/tools.test.ts`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // workers/tests/ai/tools.test.ts
@@ -1390,12 +1390,12 @@ describe('read tools', () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/tools.test.ts`
 Expected: FAIL(模块不存在)
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 ```ts
 // workers/src/ai/tools.ts
@@ -1520,12 +1520,12 @@ export { getACategoryHandler };
 
 (末尾 `export { getACategoryHandler }` 仅为 Task 12 复用而 re-export 的过渡——Task 12 实装写工具时删除该行,直接在写工具内使用。)
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/tools.test.ts`
 Expected: PASS(6 个用例)
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add workers/src/ai/tools.ts workers/tests/ai/tools.test.ts
@@ -1538,7 +1538,7 @@ git commit -m "feat(ai): 工具注册表与5个只读工具(搜索/分类/详情
 - Create: `workers/src/ai/agent.ts`
 - Test: `workers/tests/ai/agent.test.ts`
 
-- [ ] **Step 1: 写失败测试**(FakeProvider 脚本化厂商行为)
+- [x] **Step 1: 写失败测试**(FakeProvider 脚本化厂商行为)
 
 ```ts
 // workers/tests/ai/agent.test.ts
@@ -1659,12 +1659,12 @@ describe('runAgentTurn(只读阶段)', () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/agent.test.ts`
 Expected: FAIL(模块不存在)
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 ```ts
 // workers/src/ai/agent.ts
@@ -1875,12 +1875,12 @@ function toProviderMessage(id: number, role: 'user' | 'assistant' | 'tool', cont
 }
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/agent.test.ts`
 Expected: PASS(8 个用例)
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add workers/src/ai/agent.ts workers/tests/ai/agent.test.ts
@@ -1895,7 +1895,7 @@ git commit -m "feat(ai): ReAct agent 循环(只读阶段)——上下文裁剪/8
 - Modify: `workers/src/router.ts`(追加 4 个端点)
 - Test: `workers/tests/ai/endpoints.test.ts`(追加用例)
 
-- [ ] **Step 1: 追加失败测试**(同一 `endpoints.test.ts` 文件内追加)
+- [x] **Step 1: 追加失败测试**(同一 `endpoints.test.ts` 文件内追加)
 
 ```ts
 describe('AI 会话端点与 ai_chat SSE', () => {
@@ -1949,12 +1949,12 @@ describe('AI 会话端点与 ai_chat SSE', () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/endpoints.test.ts`
 Expected: 新增用例 FAIL(404)
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `workers/src/lib/validate.ts` 追加:
 
@@ -2064,12 +2064,12 @@ export async function listAiMessagesHandler(db: WorkerDB, cid: number) {
 
 (router import 区同时补 `import type { ChatSseEvent } from './ai/types';`。)
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/endpoints.test.ts`
 Expected: 全部 PASS(配置 4 + 本任务 5)
 
-- [ ] **Step 5: 全量回归 + 提交**
+- [x] **Step 5: 全量回归 + 提交**
 
 Run: `pnpm --filter @navbook/workers test && pnpm --filter @navbook/workers typecheck`
 Expected: 全绿
@@ -2086,7 +2086,7 @@ git commit -m "feat(ai): ai_chat SSE 端点(心跳/180s上限/断连清理)与�
 - Create: `shared/src/chat/machine.test.ts`
 - Modify: `shared/src/index.ts`(解开 machine 的 export 注释)
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // shared/src/chat/machine.test.ts
@@ -2201,12 +2201,12 @@ describe('ChatMachine', () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @navbook/shared exec vitest run src/chat/machine.test.ts`
 Expected: FAIL(模块不存在)
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 ```ts
 // shared/src/chat/machine.ts
@@ -2399,12 +2399,12 @@ export { ChatMachine } from './chat/machine';
 export type { ChatTransport, UiItem, ChatSnapshot } from './chat/machine';
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter @navbook/shared exec vitest run src/chat/`
 Expected: machine 6 用例 + sse 3 用例全 PASS
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add shared/src
@@ -2419,7 +2419,7 @@ git commit -m "feat(shared): ChatMachine 聊天状态机(事件归约/确认流/
 - Modify: `web/src/api/client.ts`(追加会话方法)
 - Modify: `web/src/App.tsx`(注册 `/admin/assistant` 路由;若 Task 3 未挂菜单,现在把 Layout NAV_SECTIONS 的 AI 分组补全)
 
-- [ ] **Step 1: client.ts 追加方法**(api 对象内)
+- [x] **Step 1: client.ts 追加方法**(api 对象内)
 
 ```ts
   aiConversations: () => get('/api/ai_conversations'),
@@ -2427,7 +2427,7 @@ git commit -m "feat(shared): ChatMachine 聊天状态机(事件归约/确认流/
   aiMessages: (cid: number) => get(`/api/ai_messages?cid=${cid}`),
 ```
 
-- [ ] **Step 2: 消息区组件**
+- [x] **Step 2: 消息区组件**
 
 ```tsx
 // web/src/components/assistant/ChatMessages.tsx
@@ -2540,7 +2540,7 @@ function ToolCard({
 }
 ```
 
-- [ ] **Step 3: 聊天页**
+- [x] **Step 3: 聊天页**
 
 ```tsx
 // web/src/routes/Admin/Assistant.tsx
@@ -2706,16 +2706,16 @@ export function AdminAssistant() {
   },
 ```
 
-- [ ] **Step 4: 构建验证**
+- [x] **Step 4: 构建验证**
 
 Run: `pnpm --filter web build`
 Expected: 成功
 
-- [ ] **Step 5: 手动验证(需真实厂商 key)**
+- [x] **Step 5: 手动验证(需真实厂商 key)**
 
 本地 `pnpm --filter @navbook/workers dev` + `pnpm --filter web dev`:模型配置页配好 key → AI 助手页发"我站里有哪些分类?" → 观察:思考块折叠、工具卡执行、流式文本、会话列表自动出标题。**无 key 时也应看到明确错误提示文案。**
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add web/src
@@ -2734,7 +2734,7 @@ git commit -m "feat(web): AI 助手聊天页(会话列表/流式消息/思考折
 - Modify: `workers/src/ai/tools.ts`(AI_TOOLS 追加,删除过渡 re-export 行)
 - Test: `workers/tests/ai/tools.test.ts`(追加)
 
-- [ ] **Step 1: 追加失败测试**
+- [x] **Step 1: 追加失败测试**
 
 ```ts
 // workers/tests/ai/tools.test.ts 追加
@@ -2794,12 +2794,12 @@ describe('write tools', () => {
   });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/tools.test.ts`
 Expected: 新增用例 FAIL
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `workers/src/ai/tools.ts`:import 区补 `addLinkHandler, editLinkHandler, delLinkHandler`、`addCategoryHandler, editCategoryHandler, delCategoryHandler`,删除文件末尾 `export { getACategoryHandler };` 过渡行。在 `const s = ...` 行旁补工具函数:
 
@@ -2931,12 +2931,12 @@ const int = (v: unknown, dflt = 0) => (typeof v === 'number' && Number.isFinite(
 },
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+- [x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/tools.test.ts`
 Expected: 全部 PASS
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add workers/src/ai/tools.ts workers/tests/ai/tools.test.ts
@@ -2949,7 +2949,7 @@ git commit -m "feat(ai): 6个写工具(增删改链接/分类),update 支持部�
 - Modify: `workers/src/ai/agent.ts`
 - Test: `workers/tests/ai/agent.test.ts`(追加)
 
-- [ ] **Step 1: 追加失败测试**
+- [x] **Step 1: 追加失败测试**
 
 ```ts
 // workers/tests/ai/agent.test.ts 追加
@@ -3039,12 +3039,12 @@ describe('runAgentTurn(写工具确认流)', () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/agent.test.ts`
 Expected: 新增 4 用例中前三个 FAIL(pending 已落库但 confirm 不恢复/不执行)
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `workers/src/ai/agent.ts`:`runAgentTurn` 中 `if (opts.message !== undefined)` 块之前插入 confirm 处理,并新增内部函数:
 
@@ -3081,16 +3081,16 @@ Expected: 新增 4 用例中前三个 FAIL(pending 已落库但 confirm 不恢�
 
 同文件 import 区补 `updateMessageContent`(并入 conversations import)。既有 for 循环内的 `if (tool.danger === 'write')` 分支保持不变——Task 8 已预埋(confirm_required 发出 + pending 落库 + 本轮 done),本任务让恢复路径闭环。
 
-- [ ] **Step 4: 跑测试确认通过 + 全量回归**
+- [x] **Step 4: 跑测试确认通过 + 全量回归**
 
 Run: `pnpm --filter @navbook/workers exec vitest run tests/ai/ && pnpm --filter @navbook/workers test`
 Expected: 全部 PASS
 
-- [ ] **Step 5: 手动验证**
+- [x] **Step 5: 手动验证**
 
 管理端聊天页:配好真实 key → 发"帮我把 GitHub 那条链接改成私密" → 出确认卡(取消一次,观察模型反应;再确认一次,观察执行与续答)→ 到链接管理页核对数据真的变了。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add workers/src/ai/agent.ts workers/tests/ai/agent.test.ts
@@ -3106,7 +3106,7 @@ git commit -m "feat(ai): 写工具人工确认流(pending/confirm_required/appro
 **Files:**
 - Modify: `shared/src/index.ts`
 
-- [ ] **Step 1: 实现**
+- [x] **Step 1: 实现**
 
 `createApiClient` 的 return 对象替换为(保留 `publicNav`/`session`,注释「未来生长点」删除),并在函数体内 `get` 之后补 `post`/`streamChat`:
 
@@ -3166,12 +3166,12 @@ git commit -m "feat(ai): 写工具人工确认流(pending/confirm_required/appro
 
 import 区补:`import { parseSseStream } from './chat/sse';` 与 `import type { ChatSseEvent, ChatStreamBody, ConversationDto, ChatMessageDto } from './chat/types';`(index.ts 同文件 re-export 已有,直接用相对路径 import)。
 
-- [ ] **Step 2: shared 全量测试回归**
+- [x] **Step 2: shared 全量测试回归**
 
 Run: `pnpm --filter @navbook/shared test`
 Expected: PASS(纯类型改动 + 新增方法,无既有用例破坏;web build 在 Task 15 一并验证)
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add shared/src/index.ts
@@ -3184,7 +3184,7 @@ git commit -m "feat(shared): createApiClient 补 FormData post 与 ai_chat SSE �
 - Create: `themes/compass/src/components/AssistantBubble.tsx`
 - Modify: `themes/compass/src/App.tsx`(挂载)
 
-- [ ] **Step 1: 气泡组件**
+- [x] **Step 1: 气泡组件**
 
 ```tsx
 // themes/compass/src/components/AssistantBubble.tsx
@@ -3336,7 +3336,7 @@ function Item({ item }: { item: UiItem }) {
 
 (若 compass 的 tailwind 配置无 `h-13/w-13`、`bg-input`、`text-destructive` 等 token,按 `themes/compass/tailwind.config` 实际有的 token 就近替换——原则:只用 compass 既有 token,不新增。)
 
-- [ ] **Step 2: App.tsx 挂载**
+- [x] **Step 2: App.tsx 挂载**
 
 `themes/compass/src/App.tsx`:import 区补 `import AssistantBubble from './components/AssistantBubble';`,JSX 最外层 `<div className="min-h-screen">` 的末尾(Footer 区块之后、闭合 div 之前)加:
 
@@ -3344,19 +3344,19 @@ function Item({ item }: { item: UiItem }) {
       <AssistantBubble session={session} />
 ```
 
-- [ ] **Step 3: 构建 + 全仓构建验证**
+- [x] **Step 3: 构建 + 全仓构建验证**
 
 Run: `pnpm --filter @navbook/theme-compass build && pnpm build`
 Expected: 成功(aggregate.mjs 自检通过)
 
-- [ ] **Step 4: 手动验证**
+- [x] **Step 4: 手动验证**
 
 `pnpm --filter @navbook/workers dev` 起本地,浏览器开 `http://localhost:8787/`:
 - 未登录:右下角**无**气泡;
 - 登录后回到主页:气泡出现 → 点开 → 续接最近会话 → 发消息 → 流式回答、思考折叠、写操作确认卡可用;
 - 主题页确认的写操作,在管理端链接页能看到数据变化(同一 D1)。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add themes/compass/src
@@ -3365,7 +3365,7 @@ git commit -m "feat(compass): 右下角 AI 助手气泡(仅登录态,单会话�
 
 ### Task 16: 收尾验证与部署
 
-- [ ] **Step 1: 全量测试与构建**
+- [x] **Step 1: 全量测试与构建**
 
 ```bash
 pnpm --filter @navbook/workers test
@@ -3377,14 +3377,14 @@ pnpm build
 
 Expected: 全绿(四包构建聚合到 workers/dist,aggregate 自检通过)
 
-- [ ] **Step 2: 迁移应用到生产 D1 + 部署**(需用户确认后执行)
+- [x] **Step 2: 迁移应用到生产 D1 + 部署**(需用户确认后执行)
 
 ```bash
 pnpm --filter @navbook/workers db:migrate:remote   # on_ai_conversations/on_ai_messages 两表
 pnpm --filter @navbook/workers deploy
 ```
 
-- [ ] **Step 3: 生产验证清单**
+- [x] **Step 3: 生产验证清单**
 
 - https://nav.wenonly.cn/admin → AI 助手/模型配置 菜单可见
 - 配置真实厂商 key → 聊天一轮(含一次搜索工具调用)→ 会话列表出标题
@@ -3392,7 +3392,7 @@ pnpm --filter @navbook/workers deploy
 - 写操作确认/取消各走一遍,核对链接管理页数据
 - 隐私模式开关切换后,游客两态均无入口(助手可见性只随登录态)
 
-- [ ] **Step 4: 提交剩余变更**(如有)
+- [x] **Step 4: 提交剩余变更**(如有)
 
 ```bash
 git status   # 确认无遗漏文件
