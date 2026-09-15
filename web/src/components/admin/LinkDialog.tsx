@@ -9,7 +9,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { topsOf, type CategoryRow } from '@/lib/category-tree';
@@ -113,23 +113,19 @@ export function LinkDialog({ open, onOpenChange, row }: Props) {
                 <SelectValue placeholder="选择分类" />
               </SelectTrigger>
               <SelectContent>
-                {topsOf(allCats).map(top => {
-                  const children = allCats.filter(c => c.fid === top.id);
-                  return (
-                    <SelectGroup key={top.id}>
-                      {children.length > 0 && <SelectLabel>{top.name}</SelectLabel>}
-                      <SelectItem value={String(top.id)}>{top.name}</SelectItem>
-                      {children.map(sub => (
-                        <SelectItem key={sub.id} value={String(sub.id)}>
-                          <span className="inline-flex items-center gap-1">
-                            <CornerDownRight size={12} className="text-ink-faint" />
-                            {sub.name}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  );
-                })}
+                {topsOf(allCats).flatMap(top => [
+                  // 父分类是可选项（链接可直接挂父分类），不再加 SelectLabel 分组标题——
+                  // 否则父分类名会以「标题 + 选项」出现两次；层级由子项 ↳ 图标表达
+                  <SelectItem key={top.id} value={String(top.id)}>{top.name}</SelectItem>,
+                  ...allCats.filter(c => c.fid === top.id).map(sub => (
+                    <SelectItem key={sub.id} value={String(sub.id)}>
+                      <span className="inline-flex items-center gap-1">
+                        <CornerDownRight size={12} className="text-ink-faint" />
+                        {sub.name}
+                      </span>
+                    </SelectItem>
+                  )),
+                ])}
               </SelectContent>
             </Select>
           </div>
