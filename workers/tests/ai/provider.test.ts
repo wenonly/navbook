@@ -68,10 +68,10 @@ describe('OpenAiCompatProvider', () => {
 
   it('请求体含 tools 与 stream:true,鉴权头 Bearer', async () => {
     let captured!: Request;
-    const p = new OpenAiCompatProvider(async (req: RequestInfo, init?: RequestInit) => {
+    const p = new OpenAiCompatProvider((async (req: any, init?: any) => {
       captured = new Request(req, init);
       return sseResponse(['data: [DONE]']);
-    });
+    }) as any);
     await collect(p.streamChat({ ...ARGS, tools: [{ type: 'function', function: { name: 'x', parameters: {} } }] }));
     expect(captured.url).toBe('https://fake/v1/chat/completions');
     expect(captured.headers.get('authorization')).toBe('Bearer sk-x');
