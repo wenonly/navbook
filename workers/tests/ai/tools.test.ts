@@ -70,12 +70,17 @@ describe('read tools', () => {
 });
 
 describe('write tools', () => {
-  it('六个写工具全部注册且 danger=write', () => {
+  it('七个写工具全部注册且 danger=write(顺序固定,batch_write 在末尾)', () => {
     const writes = AI_TOOLS.filter(t => t.danger === 'write').map(t => t.name);
     expect(writes).toEqual([
       'create_link', 'update_link', 'delete_link',
       'create_category', 'update_category', 'delete_category',
+      'batch_write',
     ]);
+    // batch_write 的 action 枚举与单写工具同步(防漂移)
+    const spec: any = findTool('batch_write')!.parameters;
+    expect(spec.properties.operations.items.properties.action.enum)
+      .toEqual(writes.filter(n => n !== 'batch_write'));
   });
 
   it('create_link 落库且 summarize 预执行文案含标题', async () => {
@@ -122,6 +127,85 @@ describe('write tools', () => {
     const cat = await addCategoryHandler(db(), { name: '空', property: 0, weight: 0, description: '', font_icon: '', fid: 0 });
     const res: any = await findTool('delete_category')!.execute(db(), { id: cat.id });
     expect(res.code).toBe(0);
+  });
+});
+
+describe('batch_write', () => {
+  it('多操作全部成功:逐项执行,code=0,ok_count=总数', async () => {
+    const { cat } = await seed();
+    const res: any = await findTool('batch_write')!.execute(db(), { operations: [
+      { action: 'create_category', args: { name: '新分类' } },
+      { action: 'create_link', args: { title: 'V2EX', url: 'https://v2ex.com', category_id: cat.id } },
+    ] });
+    expect(res.code).toBe(0);
+    expect(res.ok_count).toBe(2);
+    expect(res.fail_count).toBe(0);
+    expect(res.results[1].result.code).toBe(0);
+    // D1 实证
+    const cats: any = await findTool('list_categories')!.execute(db(), {});
+    expect(cats.data).toHaveLength(2);
+    const search: any = await findTool('search_links')!.execute(db(), { keyword: 'V2EX' });
+    expect(search.count).toBe(1);
+  });
+
+  it('部分失败不中止:失败项记录错误,后续项继续', async () => {
+    const { catId } = await seed2();
+    const res: any = await findTool('batch_write')!.execute(db(), { operations: [
+      { action: 'delete_category', args: { id: catId } },   // 分类下有链接 → throw
+      { action: 'create_category', args: { name: '兜底' } },
+    ] });
+    expect(res.code).toBe(-1);
+    expect(res.fail_count).toBe(1);
+    expect(res.results[0].ok).toBe(false);
+    expect(res.results[0].error.msg).toContain('此分类下存在链接');
+    expect(res.results[1].ok).toBe(true);
+    const cats: any = await findTool('list_categories')!.execute(db(), {});
+    expect(cats.data).toHaveLength(2);   // 原1 + 兜底1
+  });
+
+  it('非法 action(读工具/嵌套/未知)按单项失败,其余照常', async () => {
+    const res: any = await findTool('batch_write')!.execute(db(), { operations: [
+      { action: 'search_links', args: {} },
+      { action: 'batch_write', args: { operations: [] } },
+      { action: 'nope_tool', args: {} },
+      { action: 'create_category', args: { name: 'X' } },
+    ] });
+    expect(res.results[0].ok).toBe(false);
+    expect(res.results[0].error.msg).toContain('不允许的操作');
+    expect(res.results[1].ok).toBe(false);
+    expect(res.results[2].ok).toBe(false);
+    expect(res.results[3].ok).toBe(true);
+  });
+
+  it('空列表/超 20 项 throw(经 agent 包装为错误 tool 结果)', async () => {
+    const tool = findTool('batch_write')!;
+    await expect(tool.execute(db(), { operations: [] })).rejects.toThrow('不能为空');
+    const ops21 = Array.from({ length: 21 }, () => ({ action: 'create_category', args: { name: 'x' } }));
+    await expect(tool.execute(db(), { operations: ops21 })).rejects.toThrow('最多');
+  });
+
+  it('summarize 预执行:多行编号,复用子工具文案', () => {
+    const s = findTool('batch_write')!.summarize({ operations: [
+      { action: 'create_link', args: { title: 'V2EX', url: 'https://v2ex.com', category_id: 1 } },
+      { action: 'delete_link', args: { id: 2 } },
+      { action: 'search_links', args: {} },
+    ] }, null);
+    expect(s).toContain('\n');
+    expect(s).toContain('1. 新增链接「V2EX」');
+    expect(s).toContain('2. 删除链接 #2');
+    expect(s).toContain('不是可批次执行的写操作');
+  });
+
+  it('summarize 执行后:计数 + 失败明细,且不含「取消」(rejected 误判防护)', async () => {
+    const { catId } = await seed2();
+    const res: any = await findTool('batch_write')!.execute(db(), { operations: [
+      { action: 'delete_category', args: { id: catId } },
+      { action: 'create_category', args: { name: '兜底' } },
+    ] });
+    const s = findTool('batch_write')!.summarize({ operations: [] }, res);
+    expect(s).toContain('1 成功,1 失败');
+    expect(s).toContain('此分类下存在链接');
+    expect(s).not.toContain('取消');
   });
 });
 

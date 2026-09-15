@@ -208,6 +208,65 @@ describe('runAgentTurn(写工具确认流)', () => {
     expect(toolMsg?.content).toContain('rejected');
   });
 
+  it('batch_write → 单张 confirm_required(多行清单),approve 后逐项执行并续跑', async () => {
+    const cat = await addCategoryHandler(db(), { name: '工具', property: 0, weight: 0, description: '', font_icon: '', fid: 0 });
+    const link = await addLinkHandler(db(), { fid: cat.id, title: 'GitHub', url: 'https://github.com', description: '', weight: 0, property: 0, url_standby: '', font_icon: '' });
+    const provider = new FakeProvider([[
+      { type: 'tool_call', call: { id: 'b1', name: 'batch_write', args: JSON.stringify({ operations: [
+        { action: 'update_link', args: { id: link.id, description: '批量改' } },
+        { action: 'delete_link', args: { id: link.id } },
+        { action: 'create_category', args: { name: '批量分类' } },
+      ] }) } },
+      { type: 'finish', reason: 'tool_calls' },
+    ]]);
+    const { createConversation } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    const events = await collectEvents(provider, { message: '清理一下', conversationId: conv.id });
+    // 恰好一张确认卡,summary 为编号多行清单
+    const cards = events.filter(e => e.type === 'confirm_required');
+    expect(cards).toHaveLength(1);
+    const cf = cards[0] as any;
+    expect(cf.name).toBe('batch_write');
+    expect(cf.summary).toContain('\n');
+    expect(cf.summary).toContain('修改链接');
+    expect(cf.summary).toContain('删除链接');
+
+    provider.turns.push([{ type: 'text', delta: '已处理完' }, { type: 'finish', reason: 'stop' }]);
+    const events2 = await collectEvents(provider, { conversationId: conv.id, confirm: { messageId: cf.messageId, action: 'approve' } });
+    const tr = events2.find(e => e.type === 'tool_result') as any;
+    expect(tr.ok).toBe(true);
+    expect(events2.some(e => e.type === 'delta')).toBe(true);
+    // 逐项执行:链接已删,分类已建
+    const { getALinkHandler } = await import('../../src/handlers/link');
+    expect((await getALinkHandler(db(), link.id, true) as any).code).not.toBe(0);
+    const toolMsg = provider.calls.at(-1)!.find(m => m.role === 'tool');
+    expect(toolMsg?.content).toContain('ok_count');
+  });
+
+  it('batch_write 部分失败 approve:tool_result ok=false,失败明细喂回模型', async () => {
+    const cat = await addCategoryHandler(db(), { name: '工具', property: 0, weight: 0, description: '', font_icon: '', fid: 0 });
+    const link = await addLinkHandler(db(), { fid: cat.id, title: 'GitHub', url: 'https://github.com', description: '', weight: 0, property: 0, url_standby: '', font_icon: '' });
+    const provider = new FakeProvider([[
+      { type: 'tool_call', call: { id: 'b1', name: 'batch_write', args: JSON.stringify({ operations: [
+        { action: 'delete_category', args: { id: cat.id } },   // 分类下有链接 → 单项失败
+        { action: 'delete_link', args: { id: link.id } },
+      ] }) } },
+      { type: 'finish', reason: 'tool_calls' },
+    ]]);
+    const { createConversation } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    const events = await collectEvents(provider, { message: '清空分类和链接', conversationId: conv.id });
+    const cf = events.find(e => e.type === 'confirm_required') as any;
+
+    provider.turns.push([{ type: 'text', delta: '部分完成' }, { type: 'finish', reason: 'stop' }]);
+    const events2 = await collectEvents(provider, { conversationId: conv.id, confirm: { messageId: cf.messageId, action: 'approve' } });
+    const tr = events2.find(e => e.type === 'tool_result') as any;
+    expect(tr.ok).toBe(false);
+    expect(tr.summary).toContain('失败');
+    const toolMsg = provider.calls.at(-1)!.find(m => m.role === 'tool');
+    expect(toolMsg?.content).toContain('此分类下存在链接');
+  });
+
   it('confirm 的 messageId 不属于 pending 工具消息 → error', async () => {
     const { createConversation, insertMessage } = await import('../../src/ai/conversations');
     const conv = await createConversation(db(), 't');

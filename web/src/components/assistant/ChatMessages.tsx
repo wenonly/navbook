@@ -89,7 +89,7 @@ function ToolCard({
           </button>
         )}
       </div>
-      {item.summary && <div className="mt-1 text-xs text-muted-foreground">{item.summary}</div>}
+      {item.summary && <div className="mt-1 whitespace-pre-line text-xs text-muted-foreground">{item.summary}</div>}
       {showRaw && (
         <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-muted p-2 text-[11px] leading-relaxed">
           {JSON.stringify({ args: item.args, result: item.data }, null, 2)}

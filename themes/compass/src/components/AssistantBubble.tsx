@@ -132,7 +132,7 @@ function Item({ item }: { item: UiItem }) {
         <span className="font-medium text-fg">{item.name}</span>
         <span className="text-faint">{badge}</span>
       </div>
-      {item.summary && <p className="mt-1 text-faint">{item.summary}</p>}
+      {item.summary && <p className="mt-1 whitespace-pre-line text-faint">{item.summary}</p>}
       {item.status === 'pending' && item.messageId != null && (
         <div className="mt-2 flex gap-2">
           <button className="rounded-input bg-accent px-3 py-1 text-xs font-medium text-white hover:bg-accent-strong"

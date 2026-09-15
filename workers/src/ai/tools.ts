@@ -24,6 +24,11 @@ export interface AiTool {
 
 const int = (v: unknown, dflt = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : dflt);
 
+/** batch_write 可聚合的单写工具名;新增写工具时同步维护(注册表测试防漂移) */
+const BATCH_ACTIONS = ['create_link', 'update_link', 'delete_link',
+  'create_category', 'update_category', 'delete_category'];
+const BATCH_MAX = 20;
+
 export const AI_TOOLS: AiTool[] = [
   {
     name: 'search_links',
@@ -220,6 +225,71 @@ export const AI_TOOLS: AiTool[] = [
     danger: 'write',
     summarize: (a) => `删除分类 #${a.id}`,
     execute: (db, a) => delCategoryHandler(db, int(a.id)),
+  },
+  {
+    name: 'batch_write',
+    description: `批量提交多个写操作,一张确认卡整批执行(≥2 项写操作时优先用本工具,单项写操作仍用对应单工具;最多 ${BATCH_MAX} 项)。operations 按顺序执行,单项失败不影响其余,结果逐项返回。action 只能是六个单写工具名,不能嵌套 batch_write 或包含读工具。`,
+    parameters: {
+      type: 'object',
+      properties: {
+        operations: {
+          type: 'array', minItems: 1, maxItems: BATCH_MAX,
+          description: '按顺序执行的写操作列表',
+          items: {
+            type: 'object',
+            properties: {
+              action: { type: 'string', enum: BATCH_ACTIONS },
+              args: { type: 'object', description: '该写工具的参数对象' },
+            },
+            required: ['action', 'args'],
+          },
+        },
+      },
+      required: ['operations'],
+    },
+    danger: 'write',
+    summarize: (a, r) => {
+      const ops: any[] = Array.isArray(a.operations) ? a.operations : [];
+      if (r == null) {   // 确认卡:编号多行清单,复用子工具 summarize(args, null)
+        const lines = ops.map((op, i) => {
+          const t = BATCH_ACTIONS.includes(op?.action) ? findTool(op.action) : undefined;
+          return `${i + 1}. ${t ? t.summarize(op.args ?? {}, null) : `(${String(op?.action)} 不是可批次执行的写操作)`}`;
+        });
+        return `批量 ${ops.length} 项写操作:\n${lines.join('\n')}`;
+      }
+      const b = r as any;   // 结果卡:计数 + 失败明细
+      const head = `批量 ${b.total ?? ops.length} 项:${b.ok_count ?? 0} 成功,${b.fail_count ?? 0} 失败`;
+      const fails = (b.results ?? []).filter((x: any) => !x.ok)
+        .map((x: any) => `#${x.index + 1} ${x.action} 失败:${x.error?.msg ?? x.result?.msg ?? '未知错误'}`);
+      return [head, ...fails].join('\n');
+    },
+    execute: async (db, a) => {
+      const ops = a.operations;
+      if (!Array.isArray(ops) || ops.length === 0) throw new Error('operations 不能为空');
+      if (ops.length > BATCH_MAX) throw new Error(`单次最多 ${BATCH_MAX} 个操作,请拆分提交`);
+      const results: any[] = [];
+      let okCount = 0;
+      for (let i = 0; i < ops.length; i++) {   // 顺序执行,不并发(D1 写有序、清单编号确定)
+        const op = ops[i] ?? {};
+        const tool = BATCH_ACTIONS.includes(op.action) ? findTool(op.action) : undefined;
+        if (!tool) {   // 非法 action(读工具/嵌套/未知)按单项失败,其余照常
+          results.push({ index: i, action: op.action, ok: false,
+            error: { code: -2000, msg: `不允许的操作:${String(op.action)}(仅限六个写工具,不能嵌套 batch_write)` } });
+          continue;
+        }
+        try {
+          const res = await tool.execute(db, (op.args ?? {}) as Record<string, any>);
+          const ok = !(res && typeof res === 'object' && 'code' in res && (res as any).code !== 0);
+          if (ok) okCount++;
+          results.push({ index: i, action: op.action, ok, result: res });
+        } catch (e) {
+          results.push({ index: i, action: op.action, ok: false,
+            error: { code: -2000, msg: e instanceof Error ? e.message : '执行异常' } });
+        }
+      }
+      return { code: okCount === ops.length ? 0 : -1,   // 部分失败 → 顶层 code=-1,卡片显红"失败"
+        total: ops.length, ok_count: okCount, fail_count: ops.length - okCount, results };
+    },
   },
 ];
 

@@ -139,7 +139,7 @@ interface AiTool {
 }
 ```
 
-第一版 11 个:
+第一版 12 个:
 
 | 工具 | danger | 复用 |
 |---|---|---|
@@ -154,6 +154,7 @@ interface AiTool {
 | `create_category`(名称/私密/父分类) | **write** | add_category |
 | `update_category` | **write** | edit_category |
 | `delete_category`(summary 必须写明波及链接数) | **write** | del_category |
+| `batch_write`(多写操作一次提交、一张确认卡,部分失败逐项报告) | **write** | 聚合上表 6 个写工具(顺序执行,上限 20 项) |
 
 **刻意排除(第一版不做)**:站点全局设置写操作(开关隐私模式、切换主题、轮换 SecretKey、导入导出)——影响整站鉴权与安全面,待框架跑稳后再评估白名单。
 
