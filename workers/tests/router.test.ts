@@ -17,13 +17,13 @@ function makeFakeAssets() {
   const files = new Map<string, string>([
     ['/admin/index.html', '<html>ADMIN_SHELL</html>'],
     ['/themes/manifest.json', JSON.stringify([
-      { id: 'default2', name: 'Default 2', version: '1.0.0', author: 't', description: '', minAppVersion: '1.0.0' },
+      { id: 'compass', name: 'Compass', version: '1.0.0', author: 't', description: '', minAppVersion: '1.0.0' },
       { id: 'minima', name: 'Minima', version: '1.0.0', author: 't', description: '', minAppVersion: '1.0.0' },
       { id: 'broken', name: 'Broken', version: '1.0.0', author: 't', description: '', minAppVersion: '1.0.0' },
     ])],
-    ['/themes/default2/index.html', '<html>THEME_DEFAULT2</html>'],
+    ['/themes/compass/index.html', '<html>THEME_DEFAULT2</html>'],
     ['/themes/minima/index.html', '<html>THEME_MINIMA</html>'],
-    ['/themes/default2/assets/app.js', 'console.log(1)'],
+    ['/themes/compass/assets/app.js', 'console.log(1)'],
     ['/favicon.svg', '<svg/>'],
   ]);
   return {
@@ -267,7 +267,7 @@ describe('router 集成', () => {
     expect(expJson.data.categories[0].links[0].url).toBe('https://github.com');
   });
 
-  it('/ 返回当前主题 HTML（缺省 default2）', async () => {
+  it('/ 返回当前主题 HTML（缺省 compass）', async () => {
     const res = await req('/');
     expect(res.status).toBe(200);
     expect(await res.text()).toContain('THEME_DEFAULT2');
@@ -295,7 +295,7 @@ describe('router 集成', () => {
     expect((await req('/api/themes')).status).toBe(401);
     const res = await req('/api/themes', { headers: { 'X-Token': validToken() } });
     const json = await res.json() as any;
-    expect(json.data.active).toBe('default2');
+    expect(json.data.active).toBe('compass');
     expect(json.data.themes.map((t: any) => t.id)).toContain('minima');
   });
 
@@ -306,20 +306,20 @@ describe('router 集成', () => {
   });
 
   it('主题资产直出 + 未知路径 302 /', async () => {
-    expect((await req('/themes/default2/assets/app.js')).status).toBe(200);
+    expect((await req('/themes/compass/assets/app.js')).status).toBe(200);
     const unknown = await req('/whatever');
     expect(unknown.status).toBe(302);
     expect(unknown.headers.get('Location')).toBe('/');
   });
 
-  it('active 指向不在 manifest 的主题时回落 default2', async () => {
+  it('active 指向不在 manifest 的主题时回落 compass', async () => {
     await env.DB.prepare("INSERT OR REPLACE INTO on_options (key, value) VALUES ('s_themes', ?)")
       .bind('{"active":"ghost"}').run();
     const res = await req('/');
     expect(await res.text()).toContain('THEME_DEFAULT2');
   });
 
-  it('主题 entry 返回 500 时回落 default2（真实 assets 行为回归）', async () => {
+  it('主题 entry 返回 500 时回落 compass（真实 assets 行为回归）', async () => {
     await seedUser();
     await env.DB.prepare("INSERT OR REPLACE INTO on_options (key, value) VALUES ('s_themes', ?)")
       .bind('{"active":"broken"}').run();
@@ -349,7 +349,7 @@ describe('router 集成', () => {
 
   it('隐私模式：public_nav 游客 401，鉴权后正常', async () => {
     await seedUser();
-    await req('/api/set_theme', { ...form({ theme: 'default2' }), headers: { 'X-Token': validToken() } });
+    await req('/api/set_theme', { ...form({ theme: 'compass' }), headers: { 'X-Token': validToken() } });
     await req('/api/set_site', { ...form({ site_private: '1' }), headers: { 'X-Token': validToken() } });
 
     const guest = await req('/api/public_nav');

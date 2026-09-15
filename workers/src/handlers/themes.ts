@@ -2,14 +2,14 @@ import { eq } from 'drizzle-orm';
 import type { DB } from '../db/client';
 import * as schema from '../db/schema';
 
-export const DEFAULT_THEME = 'default2';
+export const DEFAULT_THEME = 'compass';
 
 export interface ThemeManifestEntry {
   id: string; name: string; version: string;
   author: string; description: string; minAppVersion: string;
 }
 
-/** s_themes.active：缺省 default2（代码常量，无需部署时写库） */
+/** s_themes.active：缺省 compass（代码常量，无需部署时写库） */
 export async function getActiveTheme(db: DB): Promise<string> {
   const row = await db.select().from(schema.options).where(eq(schema.options.key, 's_themes')).get();
   if (!row?.value) return DEFAULT_THEME;

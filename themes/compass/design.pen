@@ -145,6 +145,19 @@
           "fontFamily": "$font-body",
           "fontSize": 12,
           "fontWeight": "normal"
+        },
+        {
+          "type": "icon",
+          "id": "w0K8RT",
+          "x": 0,
+          "y": 0,
+          "name": "ExpandChevron",
+          "enabled": false,
+          "width": 14,
+          "height": 14,
+          "icon": "chevron-down",
+          "library": "lucide",
+          "fill": "$text-faint"
         }
       ]
     },
@@ -453,8 +466,77 @@
                         },
                         "bVGLp": {
                           "content": "34"
+                        },
+                        "w0K8RT": {
+                          "enabled": true
                         }
                       }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XfGwZ",
+                      "name": "SideChildren-开发工具",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "id": "fhI3F",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-前端框架",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "前端框架"
+                            },
+                            "nG5DM": {
+                              "content": "12"
+                            }
+                          }
+                        },
+                        {
+                          "id": "ksW59",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-后端与数据库",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "后端与数据库"
+                            },
+                            "nG5DM": {
+                              "content": "9"
+                            }
+                          }
+                        },
+                        {
+                          "id": "MnbVl",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-DevOps 运维",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "DevOps 运维"
+                            },
+                            "nG5DM": {
+                              "content": "8"
+                            }
+                          }
+                        },
+                        {
+                          "id": "SXfXt",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-浏览器插件",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "浏览器插件"
+                            },
+                            "nG5DM": {
+                              "content": "5"
+                            }
+                          }
+                        }
+                      ]
                     },
                     {
                       "id": "o5eYz9",
@@ -487,8 +569,63 @@
                         },
                         "bVGLp": {
                           "content": "18"
+                        },
+                        "w0K8RT": {
+                          "enabled": true
                         }
                       }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "RWDnf",
+                      "name": "SideChildren-AI 工具",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "id": "mdCqE",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-AI 对话助手",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "AI 对话助手"
+                            },
+                            "nG5DM": {
+                              "content": "8"
+                            }
+                          }
+                        },
+                        {
+                          "id": "TVH0z",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-AI 写作",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "AI 写作"
+                            },
+                            "nG5DM": {
+                              "content": "6"
+                            }
+                          }
+                        },
+                        {
+                          "id": "bnvgs",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-AI 绘画",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "AI 绘画"
+                            },
+                            "nG5DM": {
+                              "content": "4"
+                            }
+                          }
+                        }
+                      ]
                     },
                     {
                       "id": "gyjhN",
@@ -2221,8 +2358,77 @@
                         },
                         "bVGLp": {
                           "content": "34"
+                        },
+                        "w0K8RT": {
+                          "enabled": true
                         }
                       }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "gGHYm",
+                      "name": "SideChildren-开发工具",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "id": "cokqy",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-前端框架",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "前端框架"
+                            },
+                            "nG5DM": {
+                              "content": "12"
+                            }
+                          }
+                        },
+                        {
+                          "id": "MzIDc",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-后端与数据库",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "后端与数据库"
+                            },
+                            "nG5DM": {
+                              "content": "9"
+                            }
+                          }
+                        },
+                        {
+                          "id": "YZ1q0",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-DevOps 运维",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "DevOps 运维"
+                            },
+                            "nG5DM": {
+                              "content": "8"
+                            }
+                          }
+                        },
+                        {
+                          "id": "Z9AVSj",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-浏览器插件",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "浏览器插件"
+                            },
+                            "nG5DM": {
+                              "content": "5"
+                            }
+                          }
+                        }
+                      ]
                     },
                     {
                       "id": "vRP6c",
@@ -2255,8 +2461,63 @@
                         },
                         "bVGLp": {
                           "content": "18"
+                        },
+                        "w0K8RT": {
+                          "enabled": true
                         }
                       }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "AM9Gv",
+                      "name": "SideChildren-AI 工具",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 1,
+                      "children": [
+                        {
+                          "id": "J9Ojnl",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-AI 对话助手",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "AI 对话助手"
+                            },
+                            "nG5DM": {
+                              "content": "8"
+                            }
+                          }
+                        },
+                        {
+                          "id": "X84Mf",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-AI 写作",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "AI 写作"
+                            },
+                            "nG5DM": {
+                              "content": "6"
+                            }
+                          }
+                        },
+                        {
+                          "id": "x89Ve",
+                          "type": "ref",
+                          "ref": "GRhgR",
+                          "name": "Child-AI 绘画",
+                          "descendants": {
+                            "bY1h6": {
+                              "content": "AI 绘画"
+                            },
+                            "nG5DM": {
+                              "content": "4"
+                            }
+                          }
+                        }
+                      ]
                     },
                     {
                       "id": "ubu92",
@@ -3884,50 +4145,15 @@
           "padding": [
             2,
             16,
-            14,
+            8,
             16
           ],
           "alignItems": "center",
           "children": [
             {
               "type": "frame",
-              "id": "p0SQv",
-              "name": "Chip-Active",
-              "fill": "$accent",
-              "cornerRadius": 999,
-              "gap": 5,
-              "padding": [
-                6,
-                12
-              ],
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "sOwNB",
-                  "name": "ChipIcon",
-                  "width": 12,
-                  "height": 12,
-                  "icon": "star",
-                  "library": "lucide",
-                  "fill": "#FFFFFF"
-                },
-                {
-                  "type": "text",
-                  "id": "pphdL",
-                  "name": "ChipLabel",
-                  "fill": "#FFFFFF",
-                  "content": "常用",
-                  "fontFamily": "$font-body",
-                  "fontSize": 12,
-                  "fontWeight": "500"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "kfjqt",
-              "name": "Chip-开发",
+              "id": "v6W9U",
+              "name": "Chip-常用",
               "fill": "$surface",
               "cornerRadius": 999,
               "stroke": "$border",
@@ -3941,23 +4167,58 @@
               "children": [
                 {
                   "type": "icon",
-                  "id": "yn4wg",
+                  "id": "YBt46",
                   "name": "ChipIcon",
                   "width": 12,
                   "height": 12,
-                  "icon": "terminal",
+                  "icon": "star",
                   "library": "lucide",
                   "fill": "$text-secondary"
                 },
                 {
                   "type": "text",
-                  "id": "SQH9s",
+                  "id": "FDy4p",
                   "name": "ChipLabel",
                   "fill": "$text-primary",
-                  "content": "开发",
+                  "content": "常用",
                   "fontFamily": "$font-body",
                   "fontSize": 12,
                   "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vOOrr",
+              "name": "Chip-Active",
+              "fill": "$accent",
+              "cornerRadius": 999,
+              "gap": 5,
+              "padding": [
+                6,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "Kd8jk",
+                  "name": "ChipIcon",
+                  "width": 12,
+                  "height": 12,
+                  "icon": "terminal",
+                  "library": "lucide",
+                  "fill": "#FFFFFF"
+                },
+                {
+                  "type": "text",
+                  "id": "rSDNn",
+                  "name": "ChipLabel",
+                  "fill": "#FFFFFF",
+                  "content": "开发",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "500"
                 }
               ]
             },
@@ -4064,6 +4325,137 @@
         },
         {
           "type": "frame",
+          "id": "BGZS3",
+          "name": "SubChips",
+          "width": "fill_container",
+          "gap": 6,
+          "padding": [
+            0,
+            16,
+            12,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "bwE1F",
+              "name": "SubChip-全部",
+              "fill": "$accent-soft",
+              "cornerRadius": 999,
+              "padding": [
+                4,
+                10
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "enZ7E",
+                  "name": "SubChipLabel",
+                  "fill": "$accent",
+                  "content": "全部",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "YT60r",
+              "name": "SubChip-前端",
+              "fill": "$field-bg",
+              "cornerRadius": 999,
+              "padding": [
+                4,
+                10
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "YWlLi",
+                  "name": "SubChipLabel",
+                  "fill": "$text-secondary",
+                  "content": "前端",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eMgAG",
+              "name": "SubChip-后端",
+              "fill": "$field-bg",
+              "cornerRadius": 999,
+              "padding": [
+                4,
+                10
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "XKomb",
+                  "name": "SubChipLabel",
+                  "fill": "$text-secondary",
+                  "content": "后端",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VkJZi",
+              "name": "SubChip-运维",
+              "fill": "$field-bg",
+              "cornerRadius": 999,
+              "padding": [
+                4,
+                10
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "yWqEb",
+                  "name": "SubChipLabel",
+                  "fill": "$text-secondary",
+                  "content": "运维",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sYjbo",
+              "name": "SubChip-插件",
+              "fill": "$field-bg",
+              "cornerRadius": 999,
+              "padding": [
+                4,
+                10
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "J12Bzi",
+                  "name": "SubChipLabel",
+                  "fill": "$text-secondary",
+                  "content": "插件",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
           "id": "QFZMy",
           "name": "Content",
           "width": "fill_container",
@@ -4078,7 +4470,7 @@
             {
               "type": "frame",
               "id": "D07BqV",
-              "name": "MSec-常用推荐",
+              "name": "MSec-开发工具",
               "width": "fill_container",
               "layout": "vertical",
               "gap": 10,
@@ -4108,7 +4500,7 @@
                           "name": "SecIcon",
                           "width": 13,
                           "height": 13,
-                          "icon": "star",
+                          "icon": "terminal",
                           "library": "lucide",
                           "fill": "$tone-blue-fg"
                         }
@@ -4119,7 +4511,7 @@
                       "id": "paKnw",
                       "name": "SecTitle",
                       "fill": "$text-primary",
-                      "content": "常用推荐",
+                      "content": "开发工具",
                       "fontFamily": "$font-body",
                       "fontSize": 15,
                       "fontWeight": "600"
@@ -4129,7 +4521,7 @@
                       "id": "q5rb6e",
                       "name": "SecCount",
                       "fill": "$text-faint",
-                      "content": "· 12",
+                      "content": "· 34",
                       "fontFamily": "$font-body",
                       "fontSize": 11,
                       "fontWeight": "normal"
@@ -4388,7 +4780,7 @@
               "padding": [
                 4,
                 0,
-                10,
+                6,
                 0
               ],
               "justifyContent": "center",
@@ -4888,6 +5280,91 @@
         },
         {
           "type": "frame",
+          "id": "dXxOD",
+          "name": "Row-SidebarChild",
+          "width": "fill_container",
+          "gap": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "msllL",
+              "name": "Unit",
+              "width": 260,
+              "layout": "vertical",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "EN9Cc",
+                  "type": "ref",
+                  "ref": "GRhgR",
+                  "name": "Child-Default",
+                  "width": "fill_container",
+                  "descendants": {
+                    "bY1h6": {
+                      "content": "前端框架"
+                    },
+                    "nG5DM": {
+                      "content": "12"
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "CiZS3",
+                  "name": "Caption",
+                  "fill": "$text-secondary",
+                  "content": "二级 · 默认",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Mp0Sa",
+              "name": "Unit",
+              "width": 260,
+              "layout": "vertical",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "T4Iry",
+                  "type": "ref",
+                  "ref": "GRhgR",
+                  "name": "Child-Active",
+                  "width": "fill_container",
+                  "fill": "$accent-soft",
+                  "descendants": {
+                    "bY1h6": {
+                      "content": "后端与数据库",
+                      "fill": "$accent",
+                      "fontWeight": "500"
+                    },
+                    "nG5DM": {
+                      "content": "9",
+                      "fill": "$accent"
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "n21Os",
+                  "name": "Caption",
+                  "fill": "$text-secondary",
+                  "content": "二级 · 选中",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
           "id": "A5uut",
           "name": "Row-Search",
           "width": "fill_container",
@@ -5264,6 +5741,48 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "GRhgR",
+      "x": 340,
+      "y": 96,
+      "name": "SidebarChild",
+      "reusable": true,
+      "width": "fill_container(212)",
+      "cornerRadius": 6,
+      "gap": 6,
+      "padding": [
+        5,
+        10,
+        5,
+        36
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "bY1h6",
+          "name": "Label",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "子分类",
+          "fontFamily": "$font-body",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "nG5DM",
+          "name": "Count",
+          "fill": "$text-faint",
+          "content": "0",
+          "fontFamily": "$font-body",
+          "fontSize": 11,
+          "fontWeight": "normal"
         }
       ]
     }

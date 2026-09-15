@@ -12,7 +12,7 @@ export interface PreviewPalette {
 }
 
 const PALETTES: Record<string, PreviewPalette> = {
-  default2: {
+  compass: {
     bg: '#F4F5F8', header: '#FFFFFF', pill: '#E2E5EC',
     side: '#FFFFFF', sideItem: '#E2E5EC', card: '#FFFFFF', bar: '#E2E5EC', accent: '#4F46E5',
   },
@@ -30,7 +30,7 @@ const PALETTES: Record<string, PreviewPalette> = {
   },
 };
 
-const FALLBACK = PALETTES.default2;
+const FALLBACK = PALETTES.compass;
 
 export function paletteFor(themeId: string): PreviewPalette {
   return PALETTES[themeId] ?? FALLBACK;

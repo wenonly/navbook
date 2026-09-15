@@ -33,7 +33,7 @@ function mockApi(): Plugin {
 
 export default defineConfig({
   plugins: [react(), mockApi()],
-  base: '/themes/default2/',
+  base: '/themes/compass/',
   build: { outDir: 'dist', emptyOutDir: true },
   server: {
     port: 5174,

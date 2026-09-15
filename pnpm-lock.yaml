@@ -14,7 +14,7 @@ importers:
 
   shared: {}
 
-  themes/default2:
+  themes/compass:
     dependencies:
       '@navbook/shared':
         specifier: workspace:^

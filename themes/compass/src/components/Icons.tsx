@@ -62,6 +62,12 @@ export const IconEnter = (p: { size?: number; className?: string }) => (
   </Svg>
 );
 
+export const IconChevron = (p: { size?: number; className?: string }) => (
+  <Svg {...p}>
+    <path d="m6 9 6 6 6-6" />
+  </Svg>
+);
+
 export const IconCompass = (p: { size?: number; className?: string }) => (
   <Svg {...p}>
     <circle cx="12" cy="12" r="10" />

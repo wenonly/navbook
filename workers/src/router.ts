@@ -318,7 +318,7 @@ export function createApp() {
       return c.env.ASSETS.fetch(assetReq(c, '/admin/index.html'));
     }
 
-    // 首页：当前主题（降级链：配置主题 → default2 → 302 /admin）
+    // 首页：当前主题（降级链：配置主题 → compass → 302 /admin）
     if (path === '/') {
       // 隐私模式：未登录先跳登录（主题 HTML 也不给看）
       if (await isPrivateAndGuest(c.get('db'), false)) {
@@ -344,7 +344,7 @@ export function createApp() {
           if (fb.ok) return fb;
         }
       }
-      // default2 也没有（异常部署）→ 管理壳；不能 302 到 / 自环
+      // compass 也没有（异常部署）→ 管理壳；不能 302 到 / 自环
       return new Response(null, { status: 302, headers: { Location: '/admin' } });
     }
 
