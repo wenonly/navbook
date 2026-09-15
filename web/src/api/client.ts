@@ -71,4 +71,7 @@ export const api = {
   // AI 助手
   aiConfig: () => get('/api/ai_config'),
   saveAiConfig: (payload: unknown) => postJson('/api/ai_config', payload),
+  aiConversations: () => get('/api/ai_conversations'),
+  delAiConversation: (id: number) => post('ai_del_conversation', { id }),
+  aiMessages: (cid: number) => get(`/api/ai_messages?cid=${cid}`),
 };

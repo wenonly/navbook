@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import {
   Bookmark, Folder, Link as LinkIcon, ArrowLeftRight,
-  KeyRound, Palette, Settings2, LogOut, Bot,
+  KeyRound, Palette, Settings2, LogOut, Bot, Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/stores/auth';
@@ -29,6 +29,7 @@ const NAV_SECTIONS: Array<{ label: string; items: Array<{ to: string; label: str
   {
     label: 'AI 助手',
     items: [
+      { to: '/admin/assistant', label: 'AI 助手', icon: Sparkles },
       { to: '/admin/ai-config', label: '模型配置', icon: Bot },
     ],
   },

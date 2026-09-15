@@ -28,8 +28,11 @@ export class ChatMachine {
   private listeners = new Set<() => void>();
   private controller: AbortController | null = null;
   private state: ChatSnapshot = { conversationId: null, items: [], streaming: false, error: null };
+  private transport: ChatTransport;
 
-  constructor(private transport: ChatTransport) {}
+  constructor(transport: ChatTransport) {
+    this.transport = transport;
+  }
 
   subscribe = (fn: () => void) => {
     this.listeners.add(fn);
