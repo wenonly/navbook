@@ -14,7 +14,7 @@ const full = {
   providers: [{
     id: 'p1', name: 'DeepSeek', preset: 'deepseek',
     baseUrl: 'https://api.deepseek.com/v1', apiKey: 'sk-secret-1234',
-    model: 'deepseek-chat', enabled: true,
+    model: 'deepseek-chat',
   }],
   activeProviderId: 'p1',
   systemPrompt: '',
@@ -57,16 +57,18 @@ describe('ai config', () => {
     expect(rotated.providers[0].apiKey).toBe('sk-new-5678');
   });
 
-  it('resolveActiveProvider:取启用中的激活厂商', async () => {
+  it('resolveActiveProvider:取激活厂商;activeProviderId 悬空 → null', async () => {
     await saveAiConfig(db(), full);
     const got = resolveActiveProvider(await loadAiConfig(db()))!;
     expect(got.id).toBe('p1');
-    // 激活厂商被禁用 → null
-    await saveAiConfig(db(), {
-      ...full, providers: [{ ...full.providers[0], enabled: false }],
-    });
-    expect(resolveActiveProvider(await loadAiConfig(db()))).toBeNull();
+    expect(resolveActiveProvider({ ...full, activeProviderId: 'nope' })).toBeNull();
     expect(resolveActiveProvider(DEFAULT_AI_CONFIG)).toBeNull();
+  });
+
+  it('存量 enabled 字段读取时剥离(字段已废弃)', async () => {
+    await saveAiConfig(db(), { ...full, providers: [{ ...full.providers[0], enabled: true } as any] });
+    const loaded = await loadAiConfig(db());
+    expect(loaded).toEqual(full);   // enabled 不再出现
   });
 
   it('预设表含关键厂商且自定义项存在', () => {

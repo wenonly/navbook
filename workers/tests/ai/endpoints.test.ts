@@ -31,7 +31,7 @@ describe('GET/POST /api/ai_config', () => {
     const payload = {
       providers: [{ id: 'p1', name: 'DeepSeek', preset: 'deepseek',
         baseUrl: 'https://api.deepseek.com/v1', apiKey: 'sk-secret-1234',
-        model: 'deepseek-chat', enabled: true }],
+        model: 'deepseek-chat' }],
       activeProviderId: 'p1', systemPrompt: '',
     };
     const save = await authed('/api/ai_config', {
@@ -98,7 +98,7 @@ describe('AI 会话端点与 ai_chat SSE', () => {
   it('POST /api/ai_chat:厂商不可达 → conversation 后 error 事件(流式链路全通)', async () => {
     const payload = {
       providers: [{ id: 'p1', name: 'X', preset: 'custom',
-        baseUrl: 'http://127.0.0.1:9/v1', apiKey: 'sk-x', model: 'm', enabled: true }],
+        baseUrl: 'http://127.0.0.1:9/v1', apiKey: 'sk-x', model: 'm' }],
       activeProviderId: 'p1', systemPrompt: '',
     };
     await authed('/api/ai_config', {

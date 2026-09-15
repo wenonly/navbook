@@ -88,7 +88,6 @@ export const aiProviderSchema = z.object({
   baseUrl: z.url().max(256),
   apiKey: z.string().max(256),   // 允许回显的打码占位(含 ***),保存时合并回原值
   model: z.string().min(1).max(128),
-  enabled: z.boolean(),
 });
 
 export const aiConfigSchema = z.object({

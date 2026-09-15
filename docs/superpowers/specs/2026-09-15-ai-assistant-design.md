@@ -59,7 +59,7 @@ DO + WebSocket Hibernation 解决的是**持久双向连接**(连接挂数小时
     {"id": "p_xxx", "name": "DeepSeek", "preset": "deepseek",
      "baseUrl": "https://api.deepseek.com/v1",
      "apiKey": "sk-...", "model": "deepseek-chat",
-     "enabled": true, "toolCallFixes": {}}
+     "toolCallFixes": {}}
   ],
   "activeProviderId": "p_xxx",
   "systemPrompt": "可选自定义人设"
@@ -187,7 +187,7 @@ shared/src/chat/
 
 | 路由 | 内容 |
 |---|---|
-| `/admin/ai-config` | 厂商列表(预设下拉自动填 baseUrl/模型名,可改)+ 新增自定义 + 启用开关 + 设为当前 + 系统提示词;key 输入框密码态、回显打码 |
+| `/admin/ai-config` | 厂商列表(预设下拉自动填 baseUrl/模型名,可改)+ 新增自定义 + 设为当前(单选) + 系统提示词;key 输入框密码态、回显打码 |
 
 内置预设厂商:DeepSeek、通义千问、Kimi、智谱、豆包、OpenAI、Anthropic(兼容端点)、Gemini(兼容端点)、自定义。
 | `/admin/assistant` | 左侧会话列表(可折叠/删除)+ 右侧消息流 + 输入框;shadcn 风格 |
@@ -216,7 +216,7 @@ shared/src/chat/
 | 层 | 情况 | 处理 |
 |---|---|---|
 | 鉴权 | cookie 失效 | 流开始前 401 JSON,前端跳登录 |
-| 配置 | 未配 provider/无启用 | 明确文案引导去 `/admin/ai-config` |
+| 配置 | 未配 provider/未选当前 | 明确文案引导去 `/admin/ai-config` |
 | 厂商 | 401/402(key 失效/欠费)、429 限流 | `error` 事件带分类文案;已生成文本保留 |
 | 厂商 | 流中断/网络错误 | `error` 事件;前端「重试」重发本轮 |
 | 工具 | 业务错误(code≠0) | 不算错误——作为 tool result 喂回模型自愈 |

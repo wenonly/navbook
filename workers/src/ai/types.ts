@@ -10,7 +10,6 @@ export interface AiProviderConfig {
   baseUrl: string;
   apiKey: string;
   model: string;
-  enabled: boolean;
 }
 
 export interface AiConfig {

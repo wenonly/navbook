@@ -6,13 +6,12 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface Provider {
   id: string; name: string; preset: string;
-  baseUrl: string; apiKey: string; model: string; enabled: boolean;
+  baseUrl: string; apiKey: string; model: string;
 }
 interface Preset { id: string; name: string; baseUrl: string; models: string[] }
 
@@ -49,8 +48,13 @@ export function AdminAiConfig() {
   const addProvider = () => {
     const id = crypto.randomUUID();
     setProviders(prev => [...prev, {
-      id, name: '', preset: 'custom', baseUrl: '', apiKey: '', model: '', enabled: true,
+      id, name: '', preset: 'custom', baseUrl: '', apiKey: '', model: '',
     }]);
+  };
+
+  const removeProvider = (id: string) => {
+    setProviders(prev => prev.filter(x => x.id !== id));
+    if (activeId === id) setActiveId(null);   // 删的是当前厂商 → 清空选中,避免悬空引用
   };
 
   const save = async () => {
@@ -71,7 +75,7 @@ export function AdminAiConfig() {
       <PageHeader title="模型配置" subtitle="对接 OpenAI 兼容厂商,Key 仅管理员可见(回显打码,留打码值不变即不修改)" />
 
       {providers.map(p => (
-        <Card key={p.id} className={!p.enabled ? 'opacity-60' : ''}>
+        <Card key={p.id} className={activeId === p.id ? 'border-primary/60' : ''}>
           <CardContent className="grid gap-4 p-5">
             <div className="flex items-center gap-3">
               <Select value={p.preset} onValueChange={v => applyPreset(p.id, v)}>
@@ -84,15 +88,11 @@ export function AdminAiConfig() {
               </Select>
               <Input className="flex-1" placeholder="显示名称" value={p.name}
                 onChange={e => patch(p.id, { name: e.target.value })} />
-              <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Switch checked={p.enabled} onCheckedChange={v => patch(p.id, { enabled: v })} />启用
-              </label>
               <label className="flex items-center gap-2 text-sm">
                 <input type="radio" name="active-provider" checked={activeId === p.id}
                   onChange={() => setActiveId(p.id)} />当前
               </label>
-              <Button variant="ghost" size="icon" onClick={() =>
-                setProviders(prev => prev.filter(x => x.id !== p.id))}>
+              <Button variant="ghost" size="icon" onClick={() => removeProvider(p.id)}>
                 <Trash2 size={16} className="text-destructive" />
               </Button>
             </div>
@@ -123,7 +123,7 @@ export function AdminAiConfig() {
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={addProvider}><Plus size={16} />新增厂商</Button>
-        <Button onClick={save} disabled={!providers.some(p => p.enabled)}>
+        <Button onClick={save}>
           <Save size={16} />保存配置
         </Button>
       </div>

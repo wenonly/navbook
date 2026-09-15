@@ -12,7 +12,7 @@ const db = () => getDb(env.DB);
 // Fake 场景也要有"激活厂商",否则 runAgentTurn 在 resolveActiveProvider 处 fail-fast
 const ACTIVE = {
   id: 'p1', name: 'X', preset: 'custom',
-  baseUrl: 'https://fake/v1', apiKey: 'sk-x', model: 'm', enabled: true,
+  baseUrl: 'https://fake/v1', apiKey: 'sk-x', model: 'm',
 };
 const EMPTY_CFG = { providers: [ACTIVE], activeProviderId: 'p1', systemPrompt: '' };
 const NO_PROVIDER_CFG = { providers: [], activeProviderId: null, systemPrompt: '' };

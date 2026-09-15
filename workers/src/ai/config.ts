@@ -24,7 +24,10 @@ export async function loadAiConfig(db: WorkerDB): Promise<AiConfig> {
   try {
     const p = JSON.parse(row.value);
     return {
-      providers: Array.isArray(p?.providers) ? p.providers : [],
+      // enabled 字段已废弃(与 activeProviderId 单选语义冗余);存量值读取时剥离
+      providers: Array.isArray(p?.providers)
+        ? p.providers.map(({ enabled: _legacy, ...rest }: any) => rest)
+        : [],
       activeProviderId: typeof p?.activeProviderId === 'string' ? p.activeProviderId : null,
       systemPrompt: typeof p?.systemPrompt === 'string' ? p.systemPrompt : '',
     };
@@ -62,8 +65,7 @@ export function mergeMaskedKeys(existing: AiConfig, incoming: AiConfig): AiConfi
   };
 }
 
-/** 激活厂商必须存在且 enabled,否则 null(调用方给出"请到模型配置"引导) */
+/** 激活厂商必须存在,否则 null(调用方给出"请到模型配置"引导) */
 export function resolveActiveProvider(cfg: AiConfig): AiProviderConfig | null {
-  const p = cfg.providers.find(x => x.id === cfg.activeProviderId);
-  return p && p.enabled ? p : null;
+  return cfg.providers.find(x => x.id === cfg.activeProviderId) ?? null;
 }
