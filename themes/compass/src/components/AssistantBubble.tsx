@@ -1,7 +1,10 @@
 // 仅登录管理员可见(session.username 存在才渲染);compass 自有 token 体系,不引 shadcn。
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, lazy, Suspense } from 'react';
 import { ChatMachine, createApiClient } from '@navbook/shared';
 import type { ChatMessageDto, ChatSseEvent, SessionInfo, UiItem } from '@navbook/shared';
+
+// markdown 库较重,懒加载分包(见 Markdown.tsx 头注释)
+const Markdown = lazy(() => import('./Markdown'));
 
 const api = createApiClient({ onUnauthorized: false });
 
@@ -117,8 +120,10 @@ function Item({ item }: { item: UiItem }) {
         </details>
       )}
       {(item.text || item.streaming) && (
-        <div className="max-w-[85%] rounded-2xl bg-field px-3.5 py-2 text-sm text-fg whitespace-pre-wrap">
-          {item.text || '…'}
+        <div className="max-w-[85%] rounded-2xl bg-field px-3.5 py-2 text-sm text-fg">
+          {item.text
+            ? <Suspense fallback={<span className="whitespace-pre-wrap">{item.text}</span>}><Markdown text={item.text} /></Suspense>
+            : '…'}
         </div>
       )}
     </div>;

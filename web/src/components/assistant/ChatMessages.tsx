@@ -1,5 +1,7 @@
 // 纯渲染:吃 ChatSnapshot.items,输出聊天气泡/思考折叠块/工具卡/确认卡。
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { ChevronDown, ChevronRight, Wrench, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
 import type { UiItem } from '@navbook/shared';
 import { Button } from '@/components/ui/button';
@@ -53,9 +55,35 @@ function AssistantBubble({ item }: { item: Extract<UiItem, { kind: 'assistant' }
           )}
         </div>
       )}
-      <div className="max-w-[85%] rounded-2xl bg-muted px-4 py-2.5 text-sm whitespace-pre-wrap">
-        {item.text || (item.streaming ? '…' : '')}
+      <div className="max-w-[85%] rounded-2xl bg-muted px-4 py-2.5">
+        {item.text ? <Markdown text={item.text} /> : (item.streaming ? '…' : '')}
       </div>
+    </div>
+  );
+}
+
+/** assistant 消息 Markdown 渲染(react-markdown 默认不渲染原始 HTML,无 XSS 面) */
+function Markdown({ text }: { text: string }) {
+  return (
+    <div className="text-sm leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          a: (props) => <a href={props.href} target="_blank" rel="noreferrer"
+            className="text-primary underline underline-offset-2">{props.children}</a>,
+          p: ({ children }) => <p className="mb-2">{children}</p>,
+          ul: ({ children }) => <ul className="mb-2 list-disc pl-5 [&_li]:mt-0.5">{children}</ul>,
+          ol: ({ children }) => <ol className="mb-2 list-decimal pl-5 [&_li]:mt-0.5">{children}</ol>,
+          h1: ({ children }) => <h1 className="mb-2 text-base font-semibold">{children}</h1>,
+          h2: ({ children }) => <h2 className="mb-2 text-sm font-semibold">{children}</h2>,
+          h3: ({ children }) => <h3 className="mb-2 text-sm font-semibold">{children}</h3>,
+          blockquote: ({ children }) => <blockquote className="mb-2 border-l-2 border-border pl-3 text-muted-foreground">{children}</blockquote>,
+          table: ({ children }) => <table className="mb-2 w-full border-collapse text-xs [&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-border [&_th]:px-2 [&_th]:py-1">{children}</table>,
+          pre: ({ children }) => <pre className="mb-2 max-w-full overflow-x-auto rounded-md bg-background p-2.5 text-xs [&_code]:bg-transparent [&_code]:p-0">{children}</pre>,
+          code: ({ children }) => <code className="rounded bg-background px-1 py-0.5 font-mono text-[13px]">{children}</code>,
+          hr: () => <hr className="my-2 border-border" />,
+        }}
+      >{text}</ReactMarkdown>
     </div>
   );
 }
