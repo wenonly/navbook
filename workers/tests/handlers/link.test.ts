@@ -122,3 +122,66 @@ describe('link_list / q_category_link（游客可见性）', () => {
     expect(res.data[0].description).toBe('d&e');
   });
 });
+
+describe('link_list keyword / property 筛选', () => {
+  it('keyword 模糊匹配标题', async () => {
+    const cat = await seedCat();
+    await addLinkHandler(db(), linkInput(cat.id, 'https://github.com'));
+    await addLinkHandler(db(), { ...linkInput(cat.id, 'https://zhihu.com'), title: '知乎' });
+    const res = await linkListHandler(db(), 1, 10, true, { keyword: 'git' });
+    expect(res.count).toBe(1);
+    expect(res.data[0].title).toBe('GitHub');
+  });
+
+  it('keyword 匹配 URL 与描述', async () => {
+    const cat = await seedCat();
+    await addLinkHandler(db(), linkInput(cat.id, 'https://zhihu.com'));
+    await addLinkHandler(db(), { ...linkInput(cat.id, 'https://a.com'), description: '程序员搜索工具' });
+    const byUrl = await linkListHandler(db(), 1, 10, true, { keyword: 'zhihu' });
+    expect(byUrl.count).toBe(1);
+    expect(byUrl.data[0].url).toBe('https://zhihu.com');
+    const byDesc = await linkListHandler(db(), 1, 10, true, { keyword: '搜索' });
+    expect(byDesc.count).toBe(1);
+    expect(byDesc.data[0].url).toBe('https://a.com');
+  });
+
+  it('keyword 首尾空格被忽略', async () => {
+    const cat = await seedCat();
+    await addLinkHandler(db(), linkInput(cat.id, 'https://github.com'));
+    const res = await linkListHandler(db(), 1, 10, true, { keyword: '  git  ' });
+    expect(res.count).toBe(1);
+  });
+
+  it('keyword 与分类筛选叠加', async () => {
+    const cat1 = await seedCat();
+    const cat2 = await addCategoryHandler(db(), { name: '阅读', property: 0, weight: 0, description: '', font_icon: '', fid: 0 });
+    await addLinkHandler(db(), linkInput(cat1.id, 'https://github.com'));
+    await addLinkHandler(db(), linkInput(cat2.id, 'https://gist.github.com'));
+    const res = await linkListHandler(db(), 1, 10, true, { keyword: 'github', categoryId: cat1.id });
+    expect(res.count).toBe(1);
+    expect(res.data[0].url).toBe('https://github.com');
+  });
+
+  it('property=1 只返回私有链接', async () => {
+    const cat = await seedCat();
+    await addLinkHandler(db(), linkInput(cat.id, 'https://a.com'));
+    await addLinkHandler(db(), { ...linkInput(cat.id, 'https://b.com'), property: 1 });
+    const priv = await linkListHandler(db(), 1, 10, true, { property: 1 });
+    expect(priv.count).toBe(1);
+    expect(priv.data[0].url).toBe('https://b.com');
+    const pub = await linkListHandler(db(), 1, 10, true, { property: 0 });
+    expect(pub.count).toBe(1);
+    expect(pub.data[0].url).toBe('https://a.com');
+  });
+
+  it('游客 keyword 搜索不泄露私有链接', async () => {
+    const cat = await seedCat();
+    await addLinkHandler(db(), linkInput(cat.id, 'https://github.com'));
+    await addLinkHandler(db(), { ...linkInput(cat.id, 'https://gist.github.com'), property: 1 });
+    const guest = await linkListHandler(db(), 1, 10, false, { keyword: 'github' });
+    expect(guest.count).toBe(1);
+    expect(guest.data[0].url).toBe('https://github.com');
+    const admin = await linkListHandler(db(), 1, 10, true, { keyword: 'github' });
+    expect(admin.count).toBe(2);
+  });
+});

@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Plus } from 'lucide-react';
-import { useLinks, useDelLink } from '@/api/hooks';
+import { CornerDownRight, Plus, Search, X } from 'lucide-react';
+import { useAllCategories, useLinks, useDelLink } from '@/api/hooks';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { TableCell, TableHead, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LetterAvatar } from '@/components/admin/LetterAvatar';
@@ -10,12 +14,39 @@ import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { DataTableCard } from '@/components/admin/DataTableCard';
 import { LinkDialog, type LinkRow } from '@/components/admin/LinkDialog';
 import { TablePagination } from '@/components/admin/TablePagination';
+import { topsOf, type CategoryRow } from '@/lib/category-tree';
 
 const PAGE_SIZE = 20;
 
+/** 'all' = 不筛选；分类为字符串以配合 Select value（shadcn Select 不接受空串值） */
+const CAT_ALL = 'all';
+const PROP_ALL = 'all';
+
 export function AdminLinks() {
   const [page, setPage] = useState(1);
-  const { data: linkData, isFetching } = useLinks(page, PAGE_SIZE);
+  // 搜索：input 即时态 + 防抖 300ms 提交态（回车立即提交）
+  const [search, setSearch] = useState('');
+  const [keyword, setKeyword] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setKeyword(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+  const commitSearch = () => setKeyword(search.trim());
+
+  const [catFilter, setCatFilter] = useState(CAT_ALL);
+  const [propFilter, setPropFilter] = useState(PROP_ALL);
+  const hasFilter = keyword !== '' || catFilter !== CAT_ALL || propFilter !== PROP_ALL;
+
+  // 筛选变化回到第 1 页（含挂载时一次无害的 setPage(1)）
+  useEffect(() => { setPage(1); }, [keyword, catFilter, propFilter]);
+
+  const { data: linkData, isFetching } = useLinks(page, PAGE_SIZE, {
+    ...(keyword ? { keyword } : {}),
+    ...(catFilter !== CAT_ALL ? { categoryId: Number(catFilter) } : {}),
+    ...(propFilter === 'public' ? { property: 0 } : propFilter === 'private' ? { property: 1 } : {}),
+  });
+  const { data: catData } = useAllCategories();
+  const allCats: CategoryRow[] = catData?.data ?? [];
   const del = useDelLink();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -30,6 +61,12 @@ export function AdminLinks() {
   const links: LinkRow[] = linkData?.data ?? [];
   const total = linkData?.count ?? 0;
 
+  function resetFilters() {
+    setSearch('');
+    setCatFilter(CAT_ALL);
+    setPropFilter(PROP_ALL);
+  }
+
   return (
     <div className="flex h-full flex-col">
       <PageHeader
@@ -40,6 +77,66 @@ export function AdminLinks() {
           </Button>
         }
       />
+
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="relative w-64 max-w-full">
+          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+          <Input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') commitSearch(); }}
+            placeholder="搜索标题 / URL / 描述"
+            aria-label="搜索链接"
+            className="pl-8 pr-8"
+          />
+          {search !== '' && (
+            <button
+              type="button"
+              aria-label="清空搜索"
+              onClick={() => { setSearch(''); setKeyword(''); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-ink-faint hover:bg-row-hover hover:text-ink"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <Select value={catFilter} onValueChange={setCatFilter}>
+          <SelectTrigger className="w-44" aria-label="按分类筛选">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={CAT_ALL}>全部分类</SelectItem>
+            {topsOf(allCats).flatMap(top => [
+              // 层级展示与 LinkDialog 分类下拉一致：父分类平铺，子项 ↳ 图标
+              <SelectItem key={top.id} value={String(top.id)}>{top.name}</SelectItem>,
+              ...allCats.filter(c => c.fid === top.id).map(sub => (
+                <SelectItem key={sub.id} value={String(sub.id)}>
+                  <span className="inline-flex items-center gap-1">
+                    <CornerDownRight size={12} className="text-ink-faint" />
+                    {sub.name}
+                  </span>
+                </SelectItem>
+              )),
+            ])}
+          </SelectContent>
+        </Select>
+
+        <Select value={propFilter} onValueChange={setPropFilter}>
+          <SelectTrigger className="w-28" aria-label="按属性筛选">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={PROP_ALL}>全部属性</SelectItem>
+            <SelectItem value="public">公开</SelectItem>
+            <SelectItem value="private">私有</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {hasFilter && (
+          <Button variant="ghost" size="sm" onClick={resetFilters}>重置</Button>
+        )}
+      </div>
 
       <DataTableCard
         cols={[64, 260, 320, 128, 0]}
@@ -57,7 +154,9 @@ export function AdminLinks() {
       >
         {links.length === 0 && !isFetching && (
           <TableRow>
-            <TableCell colSpan={5} className="py-10 text-center text-ink-faint">暂无链接，点击右上角「新增链接」添加</TableCell>
+            <TableCell colSpan={5} className="py-10 text-center text-ink-faint">
+              {hasFilter ? '没有匹配的链接，试试调整搜索词或筛选条件' : '暂无链接，点击右上角「新增链接」添加'}
+            </TableCell>
           </TableRow>
         )}
         {links.map(l => (

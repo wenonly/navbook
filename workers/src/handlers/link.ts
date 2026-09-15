@@ -84,13 +84,33 @@ export async function delLinkHandler(db: DB, id: number): Promise<{ code: 0; msg
   return { code: 0, msg: 'successful' };
 }
 
+/** link_list 筛选参数（后台管理搜索/筛选用，均可选、可叠加） */
+export interface LinkListFilters {
+  categoryId?: number;
+  /** 模糊匹配标题/URL/备用URL/描述（对齐 globalSearchHandler 的 LIKE 范围） */
+  keyword?: string;
+  /** 0 公开 / 1 私有 */
+  property?: number;
+}
+
 export async function linkListHandler(
-  db: DB, page: number, limit: number, isAuthed: boolean, categoryId?: number,
+  db: DB, page: number, limit: number, isAuthed: boolean, filters: LinkListFilters = {},
 ): Promise<{ code: 0; msg: ''; count: number; data: LinkRow[] }> {
   const offset = (page - 1) * limit;
   const conds = [];
   if (!isAuthed) conds.push(guestLinkWhere(db));
-  if (categoryId) conds.push(eq(schema.links.fid, categoryId));
+  if (filters.categoryId) conds.push(eq(schema.links.fid, filters.categoryId));
+  const kw = filters.keyword?.trim();
+  if (kw) {
+    const pattern = `%${kw}%`;
+    conds.push(or(
+      like(schema.links.title, pattern),
+      like(schema.links.url, pattern),
+      like(schema.links.urlStandby, pattern),
+      like(schema.links.description, pattern),
+    ));
+  }
+  if (filters.property !== undefined) conds.push(eq(schema.links.property, filters.property));
   const where = conds.length ? and(...conds) : undefined;
 
   const countRow = await db.select({ c: sql<number>`count(*)` }).from(schema.links).where(where).get();
@@ -123,7 +143,7 @@ export async function qCategoryLinkHandler(
   db: DB, fid: number, page: number, limit: number, isAuthed: boolean,
 ): Promise<{ code: number; msg: string; count: number; data: LinkRow[] }> {
   if (!fid) return { code: -2000, msg: '分类ID不能为空！', count: 0, data: [] };
-  return linkListHandler(db, page, limit, isAuthed, fid);
+  return linkListHandler(db, page, limit, isAuthed, { categoryId: fid });
 }
 
 /** 模糊搜索：标题/URL/备用链接/描述（PHP global_search 对齐，插件搜索框用）。

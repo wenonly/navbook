@@ -46,8 +46,12 @@ export const api = {
   editCategory: (data: Record<string, unknown>) => post('edit_category', data),
   delCategory: (id: number) => post('del_category', { id }),
 
-  listLinks: (page = 1, limit = 100, category_id?: number) =>
-    post(`link_list?page=${page}&limit=${limit}`, { category_id }),
+  // 后端从 URL query 读 page/limit（上限 100），从 body 读筛选：category_id/keyword/property
+  listLinks: (
+    page = 1,
+    limit = 100,
+    filters: { category_id?: number; keyword?: string; property?: number } = {},
+  ) => post(`link_list?page=${page}&limit=${limit}`, filters),
   addLink: (data: Record<string, unknown>) => post('add_link', data),
   editLink: (data: Record<string, unknown>) => post('edit_link', data),
   delLink: (id: number) => post('del_link', { id }),

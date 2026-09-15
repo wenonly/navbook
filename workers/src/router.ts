@@ -148,7 +148,14 @@ export function createApp() {
     const page = Math.max(1, parseInt(q.page ?? '1', 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(q.limit ?? '10', 10) || 10));
     const categoryId = body.category_id ? parseInt(String(body.category_id), 10) : undefined;
-    return c.json(await linkListHandler(c.get('db'), page, limit, c.get('isAuthed'), categoryId));
+    const keyword = body.keyword ? String(body.keyword) : undefined;
+    const property = body.property !== undefined && body.property !== null && String(body.property) !== ''
+      ? parseInt(String(body.property), 10) : undefined;
+    return c.json(await linkListHandler(c.get('db'), page, limit, c.get('isAuthed'), {
+      categoryId: Number.isNaN(categoryId as number) ? undefined : categoryId,
+      keyword,
+      property: Number.isNaN(property) || property !== 0 && property !== 1 ? undefined : property,
+    }));
   });
 
   app.on(['GET', 'POST'], '/api/q_category_link', optionalAuthMiddleware, async c => {

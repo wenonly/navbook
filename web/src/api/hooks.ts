@@ -24,10 +24,21 @@ export function useAllCategories() {
   });
 }
 
-export function useLinks(page: number, limit: number) {
+/** 链接筛选条件（后台工具栏）；undefined 字段不发给后端 */
+export interface LinkFilters {
+  keyword?: string;
+  categoryId?: number;
+  property?: number;
+}
+
+export function useLinks(page: number, limit: number, filters: LinkFilters = {}) {
   return useQuery({
-    queryKey: ['links', page, limit],
-    queryFn: () => api.listLinks(page, limit),
+    queryKey: ['links', page, limit, filters],
+    queryFn: () => api.listLinks(page, limit, {
+      ...(filters.keyword ? { keyword: filters.keyword } : {}),
+      ...(filters.categoryId ? { category_id: filters.categoryId } : {}),
+      ...(filters.property !== undefined ? { property: filters.property } : {}),
+    }),
     placeholderData: keepPreviousData,
   });
 }
