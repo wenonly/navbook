@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ChevronRight, Plus } from 'lucide-react';
 import {
   createColumnHelper,
@@ -33,6 +33,10 @@ export function AdminCategories() {
   const [delTarget, setDelTarget] = useState<CategoryRow | null>(null);
 
   const all: CategoryRow[] = data?.data ?? [];
+  // v8 铁律：传给 useReactTable 的引用必须稳定。data 每次渲染新数组会在 React 19 下
+  // 把整棵树的渲染调度搞挂（症状：离开本页后路由 URL 变了但视图冻结、无任何报错）
+  const topRows = useMemo(() => topsOf(all), [all]);
+  const subRowsOf = useCallback((row: CategoryRow) => all.filter(c => c.fid === row.id), [all]);
 
   const columns = useMemo(() => [
     col.accessor('id', {
@@ -89,9 +93,9 @@ export function AdminCategories() {
 
   const table = useReactTable({
     // 树模式要求顶层只传父行：子行若同时出现在 data 顶层会重复渲染（React duplicate key）
-    data: topsOf(all),
+    data: topRows,
     columns,
-    getSubRows: row => all.filter(c => c.fid === row.id),
+    getSubRows: subRowsOf,
     getRowId: row => String(row.id),
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
