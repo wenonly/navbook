@@ -16,7 +16,8 @@ function classifyHttpError(status: number, body: string): string {
 }
 
 export class OpenAiCompatProvider implements ProviderClient {
-  constructor(private fetchFn: typeof fetch = fetch) {}
+  // 全局 fetch 是原生方法,直接取值会丢 this(线上报 Illegal invocation),必须 bind
+  constructor(private fetchFn: typeof fetch = fetch.bind(globalThis)) {}
 
   async *streamChat(p: {
     baseUrl: string; apiKey: string; model: string;
