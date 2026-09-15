@@ -10,7 +10,7 @@ export default function PageSkeleton() {
         <div className="skeleton-block hidden h-9.5 w-[26rem] rounded-input md:block" />
         <div className="skeleton-block h-9 w-9 rounded-lg" />
       </div>
-      <div className="flex">
+      <div className="flex min-h-[calc(100vh_-_60px)]">
         {/* 侧栏 */}
         <aside className="hidden w-60 shrink-0 border-r border-border bg-surface p-4 lg:block">
           <div className="skeleton-block mb-4 h-3 w-14" />
