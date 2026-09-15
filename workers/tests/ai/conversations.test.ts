@@ -22,9 +22,10 @@ describe('conversations', () => {
 
   it('首条消息自动落标题 + touch 更新 updated_at', async () => {
     const c = await createConversation(db(), '');
-    await insertMessage(db(), c.id, 'user', { text: '帮我找一个 GitHub 仓库,要能管理书签的那种' });
+    const text = '帮我找一个 GitHub 仓库,要能管理书签的那种';
+    await insertMessage(db(), c.id, 'user', { text });
     const list = await listConversations(db());
-    expect(list[0].title).toBe('帮我找一个 GitHub 仓库,要能管理书');
+    expect(list[0].title).toBe(text.slice(0, 20));   // 前 20 个 UTF-16 单元
     expect(list[0].updatedAt).toBeGreaterThan(0);
   });
 
