@@ -62,6 +62,8 @@ export interface ProviderMessage {
   content: string | null;
   tool_calls?: Array<{ id: string; type: 'function'; function: { name: string; arguments: string } }>;
   tool_call_id?: string;
+  /** DeepSeek 思考模式要求:带 tool_calls 的 assistant 历史消息必须回传,否则 400 */
+  reasoning_content?: string;
 }
 
 export type ProviderStreamEvent =

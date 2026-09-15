@@ -228,7 +228,13 @@ function toProviderMessage(id: number, role: 'user' | 'assistant' | 'tool', cont
           function: { name: String(t.name), arguments: JSON.stringify(t.args ?? {}) },
         }))
       : undefined;
-    return { role: 'assistant', content: c?.text || null, ...(calls ? { tool_calls: calls } : {}) };
+    return {
+      role: 'assistant', content: c?.text || null,
+      ...(calls ? { tool_calls: calls } : {}),
+      // DeepSeek 思考模式:带 tool_calls 的 assistant 消息必须回传 reasoning_content,否则
+      // 400 "The reasoning_content in the thinking mode must be passed back to the API"
+      ...(calls && c?.reasoning ? { reasoning_content: c.reasoning } : {}),
+    };
   }
   return {
     role: 'tool',

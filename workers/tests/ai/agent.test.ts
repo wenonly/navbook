@@ -170,6 +170,24 @@ describe('runAgentTurn(写工具确认流)', () => {
     expect((await getALinkHandler(db(), link.id, true) as any).code).not.toBe(0);
   });
 
+  it('approve 续跑:带 tool_calls 的 assistant 历史必须回传 reasoning_content(DeepSeek 思考模式 400 回归)', async () => {
+    const provider = new FakeProvider([[
+      { type: 'reasoning', delta: '用户要删除,先确认目标' },
+      { type: 'tool_call', call: { id: 'c1', name: 'delete_link', args: '{"id":1}' } },
+      { type: 'finish', reason: 'tool_calls' },
+    ]]);
+    const { createConversation } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    const events = await collectEvents(provider, { message: '删掉链接1', conversationId: conv.id });
+    const cf = events.find(e => e.type === 'confirm_required') as any;
+
+    provider.turns.push([{ type: 'text', delta: '已处理' }, { type: 'finish', reason: 'stop' }]);
+    await collectEvents(provider, { conversationId: conv.id, confirm: { messageId: cf.messageId, action: 'approve' } });
+    const msgs = provider.calls.at(-1)!;
+    const asst = msgs.find(m => m.role === 'assistant' && m.tool_calls);
+    expect(asst?.reasoning_content).toBe('用户要删除,先确认目标');
+  });
+
   it('reject:pending → rejected,模型收到拒绝并继续对话', async () => {
     const provider = new FakeProvider([[
       { type: 'tool_call', call: { id: 'c1', name: 'delete_link', args: '{"id":1}' } },
