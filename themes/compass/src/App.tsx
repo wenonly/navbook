@@ -10,6 +10,7 @@ import MobileChips from './components/MobileChips';
 import SearchBox from './components/SearchBox';
 import CategorySection from './components/CategorySection';
 import Footer from './components/Footer';
+import AssistantBubble from './components/AssistantBubble';
 
 export default function App({ data }: { data: NavData }) {
   const [mode, toggleTheme] = useTheme();
@@ -58,6 +59,7 @@ export default function App({ data }: { data: NavData }) {
           </div>
         </main>
       </div>
+      <AssistantBubble session={session} />
     </div>
   );
 }
