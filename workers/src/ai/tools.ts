@@ -3,8 +3,13 @@
 import { eq, gt, desc, sql } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import type { WorkerDB } from './types';
-import { linkListHandler, getALinkHandler } from '../handlers/link';
-import { categoryListHandler, getACategoryHandler } from '../handlers/category';
+import {
+  linkListHandler, getALinkHandler, addLinkHandler, editLinkHandler, delLinkHandler,
+} from '../handlers/link';
+import {
+  categoryListHandler, getACategoryHandler,
+  addCategoryHandler, editCategoryHandler, delCategoryHandler,
+} from '../handlers/category';
 import { getSiteConfig, siteConfigData } from '../handlers/site';
 
 export interface AiTool {
@@ -16,6 +21,8 @@ export interface AiTool {
   summarize(args: Record<string, any>, result: unknown): string;
   execute(db: WorkerDB, args: Record<string, any>): Promise<unknown>;
 }
+
+const int = (v: unknown, dflt = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : dflt);
 
 export const AI_TOOLS: AiTool[] = [
   {
@@ -96,6 +103,124 @@ export const AI_TOOLS: AiTool[] = [
     summarize: () => '读取站点设置',
     execute: async (db) => siteConfigData(await getSiteConfig(db)),
   },
+
+  // ---- 写操作(danger:'write'):执行由 agent 走人工确认流,execute 只在被确认后调用 ----
+  {
+    name: 'create_link',
+    description: '新增书签链接。需要标题、URL、分类 id(可先用 list_categories 查)。',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        url: { type: 'string' },
+        category_id: { type: 'number' },
+        description: { type: 'string', description: '备注,可选' },
+        property: { type: 'number', enum: [0, 1], description: '0=公开(默认) 1=私密' },
+      },
+      required: ['title', 'url', 'category_id'],
+    },
+    danger: 'write',
+    summarize: (a, r) => r && typeof r === 'object' && 'id' in r
+      ? `已新增链接「${a.title}」(#${(r as any).id})`
+      : `新增链接「${a.title}」→ ${a.url}${a.property === 1 ? '(私密)' : ''}`,
+    execute: (db, a) => addLinkHandler(db, {
+      fid: int(a.category_id, 1), title: String(a.title ?? ''), url: String(a.url ?? ''),
+      description: String(a.description ?? ''), weight: 0, property: int(a.property),
+      url_standby: '', font_icon: '',
+    }),
+  },
+  {
+    name: 'update_link',
+    description: '修改链接。只传要改的字段,未传字段保持原值(id 必传)。',
+    parameters: {
+      type: 'object',
+      properties: {
+        id: { type: 'number' },
+        title: { type: 'string' }, url: { type: 'string' },
+        category_id: { type: 'number' }, description: { type: 'string' },
+        property: { type: 'number', enum: [0, 1] },
+      },
+      required: ['id'],
+    },
+    danger: 'write',
+    summarize: (a) => `修改链接 #${a.id}:${[a.title && '标题', a.url && 'URL', a.category_id && '分类', a.description && '描述', a.property !== undefined && '属性'].filter(Boolean).join('/') || '(无变更)'}`,
+    execute: async (db, a) => {
+      const cur: any = await getALinkHandler(db, int(a.id), true);
+      if (cur.code !== 0 || !cur.data) return cur;
+      const r = cur.data;
+      return editLinkHandler(db, int(a.id), {
+        fid: a.category_id !== undefined ? int(a.category_id) : r.fid,
+        title: a.title !== undefined ? String(a.title) : r.title,
+        url: a.url !== undefined ? String(a.url) : r.url,
+        description: a.description !== undefined ? String(a.description) : (r.description ?? ''),
+        weight: r.weight ?? 0,
+        property: a.property !== undefined ? int(a.property) : r.property,
+        url_standby: r.urlStandby ?? '', font_icon: r.fontIcon ?? '',
+      });
+    },
+  },
+  {
+    name: 'delete_link',
+    description: '删除链接(不可恢复,需用户确认)。',
+    parameters: { type: 'object', properties: { id: { type: 'number' } }, required: ['id'] },
+    danger: 'write',
+    summarize: (a) => `删除链接 #${a.id}`,
+    execute: (db, a) => delLinkHandler(db, int(a.id)),
+  },
+  {
+    name: 'create_category',
+    description: '新增分类。parent_id 为父分类 id(顶级省略或 0)。',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        description: { type: 'string' },
+        property: { type: 'number', enum: [0, 1] },
+        parent_id: { type: 'number', description: '父分类 id,顶级省略' },
+      },
+      required: ['name'],
+    },
+    danger: 'write',
+    summarize: (a) => `新增分类「${a.name}」${a.parent_id ? `(父分类 #${a.parent_id})` : ''}${a.property === 1 ? '(私密)' : ''}`,
+    execute: (db, a) => addCategoryHandler(db, {
+      name: String(a.name ?? ''), property: int(a.property), weight: 0,
+      description: String(a.description ?? ''), font_icon: '', fid: a.parent_id !== undefined ? int(a.parent_id) : 0,
+    }),
+  },
+  {
+    name: 'update_category',
+    description: '修改分类。只传要改的字段(id 必传)。',
+    parameters: {
+      type: 'object',
+      properties: {
+        id: { type: 'number' }, name: { type: 'string' },
+        description: { type: 'string' }, property: { type: 'number', enum: [0, 1] },
+      },
+      required: ['id'],
+    },
+    danger: 'write',
+    summarize: (a) => `修改分类 #${a.id}:${a.name ? `改名为「${a.name}」` : '更新字段'}`,
+    execute: async (db, a) => {
+      const cur: any = await getACategoryHandler(db, int(a.id), true);
+      if (cur.code !== 0 || !cur.data) return cur;
+      const r = cur.data;
+      return editCategoryHandler(db, int(a.id), {
+        name: a.name !== undefined ? String(a.name) : r.name,
+        property: a.property !== undefined ? int(a.property) : r.property,
+        weight: r.weight ?? 0,
+        description: a.description !== undefined ? String(a.description) : (r.description ?? ''),
+        font_icon: r.fontIcon ?? '', fid: r.fid ?? 0,
+      });
+    },
+  },
+  {
+    name: 'delete_category',
+    description: '删除分类。要求其下无子分类且无链接(否则会失败并告知原因)。',
+    parameters: { type: 'object', properties: { id: { type: 'number' } }, required: ['id'] },
+    danger: 'write',
+    summarize: (a) => `删除分类 #${a.id}`,
+    execute: (db, a) => delCategoryHandler(db, int(a.id)),
+  },
 ];
 
 export function findTool(name: string): AiTool | undefined {
@@ -110,5 +235,3 @@ export function toolSpecs(): unknown[] {
   }));
 }
 
-// Task 12(写工具)将向 AI_TOOLS 追加 6 个写工具;此处 re-export 为其过渡。
-export { getACategoryHandler };

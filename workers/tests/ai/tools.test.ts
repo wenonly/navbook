@@ -68,3 +68,66 @@ describe('read tools', () => {
     expect(findTool('nope')).toBeUndefined();
   });
 });
+
+describe('write tools', () => {
+  it('六个写工具全部注册且 danger=write', () => {
+    const writes = AI_TOOLS.filter(t => t.danger === 'write').map(t => t.name);
+    expect(writes).toEqual([
+      'create_link', 'update_link', 'delete_link',
+      'create_category', 'update_category', 'delete_category',
+    ]);
+  });
+
+  it('create_link 落库且 summarize 预执行文案含标题', async () => {
+    const { cat } = await seed();
+    const tool = findTool('create_link')!;
+    expect(tool.summarize({ title: 'V2EX', url: 'https://v2ex.com', category_id: cat.id }, null))
+      .toContain('V2EX');
+    const res: any = await tool.execute(db(), { title: 'V2EX', url: 'https://v2ex.com', category_id: cat.id });
+    expect(res.code).toBe(0);
+  });
+
+  it('update_link 部分字段:未提供的字段保持原值', async () => {
+    const { cat, linkId } = await seed();
+    const before: any = await findTool('get_link')!.execute(db(), { id: linkId });
+    const res: any = await findTool('update_link')!.execute(db(), { id: linkId, description: '全球最大同性交友平台' });
+    expect(res.code).toBe(0);
+    const after: any = await findTool('get_link')!.execute(db(), { id: linkId });
+    expect(after.data.description).toBe('全球最大同性交友平台');
+    expect(after.data.title).toBe(before.data.title);   // 未传 title 不变
+    void cat;
+  });
+
+  it('delete_link 删除后查无', async () => {
+    const { linkId } = await seed();
+    const res: any = await findTool('delete_link')!.execute(db(), { id: linkId });
+    expect(res.code).toBe(0);
+    const gone: any = await findTool('get_link')!.execute(db(), { id: linkId });
+    expect(gone.code).not.toBe(0);
+  });
+
+  it('update_category 改名', async () => {
+    const { cat } = await seed();
+    const up: any = await findTool('update_category')!.execute(db(), { id: cat.id, name: '开发工具' });
+    expect(up.code).toBe(0);
+  });
+
+  it('delete_category 有链接时 throw(经 agent 包装为错误 tool 结果)', async () => {
+    const { catId } = await seed2();
+    await expect(findTool('delete_category')!.execute(db(), { id: catId }))
+      .rejects.toThrow('此分类下存在链接');
+  });
+
+  it('delete_category 空分类可删', async () => {
+    const cat = await addCategoryHandler(db(), { name: '空', property: 0, weight: 0, description: '', font_icon: '', fid: 0 });
+    const res: any = await findTool('delete_category')!.execute(db(), { id: cat.id });
+    expect(res.code).toBe(0);
+  });
+});
+
+// 独立建第二个分类+链接(delete_category throw 用例需要拿真实 id)
+async function seed2() {
+  const cat = await addCategoryHandler(db(), { name: '工具2', property: 0, weight: 0, description: '', font_icon: '', fid: 0 });
+  const link = await addLinkHandler(db(), { fid: cat.id, title: 'X', url: 'https://x.example.com', description: '', weight: 0, property: 0, url_standby: '', font_icon: '' });
+  return { catId: cat.id, linkId: link.id };
+}
