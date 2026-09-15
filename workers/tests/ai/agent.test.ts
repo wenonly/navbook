@@ -127,3 +127,79 @@ describe('runAgentTurn(只读阶段)', () => {
     expect(msgs.at(-1)!.content).toBe('new'); // 最新的用户消息必然在内
   });
 });
+
+describe('runAgentTurn(写工具确认流)', () => {
+  it('写工具 → confirm_required(不执行),pending 消息落库', async () => {
+    const provider = new FakeProvider([[
+      { type: 'tool_call', call: { id: 'c1', name: 'delete_link', args: '{"id":1}' } },
+      { type: 'finish', reason: 'tool_calls' },
+    ]]);
+    const { createConversation } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    const events = await collectEvents(provider, { message: '删掉链接1', conversationId: conv.id });
+    const cf = events.find(e => e.type === 'confirm_required') as any;
+    expect(cf).toBeTruthy();
+    expect(cf.name).toBe('delete_link');
+    expect(cf.summary).toContain('删除链接 #1');
+    // 库里是 pending(未执行任何写)
+    const msgs = await (await import('../../src/ai/conversations')).listMessages(db(), conv.id);
+    const toolMsg = msgs.find(m => m.role === 'tool')!;
+    expect((toolMsg.content as any).status).toBe('pending');
+  });
+
+  it('approve:执行工具 → tool_result → 循环继续到最终回答', async () => {
+    const cat = await addCategoryHandler(db(), { name: '工具', property: 0, weight: 0, description: '', font_icon: '', fid: 0 });
+    const link = await addLinkHandler(db(), { fid: cat.id, title: 'GitHub', url: 'https://github.com', description: '', weight: 0, property: 0, url_standby: '', font_icon: '' });
+    const provider = new FakeProvider([[
+      { type: 'tool_call', call: { id: 'c1', name: 'delete_link', args: JSON.stringify({ id: link.id }) } },
+      { type: 'finish', reason: 'tool_calls' },
+    ]]);
+    const { createConversation } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    const events = await collectEvents(provider, { message: '删掉那条链接', conversationId: conv.id });
+    const cf = events.find(e => e.type === 'confirm_required') as any;
+
+    // 确认:新一轮(provider 提供最终回答)
+    provider.turns.push([{ type: 'text', delta: '已删除' }, { type: 'finish', reason: 'stop' }]);
+    const events2 = await collectEvents(provider, { conversationId: conv.id, confirm: { messageId: cf.messageId, action: 'approve' } });
+    const tr = events2.find(e => e.type === 'tool_result') as any;
+    expect(tr.ok).toBe(true);
+    expect(events2.some(e => e.type === 'delta')).toBe(true);
+    // 链接真的没了
+    const { getALinkHandler } = await import('../../src/handlers/link');
+    expect((await getALinkHandler(db(), link.id, true) as any).code).not.toBe(0);
+  });
+
+  it('reject:pending → rejected,模型收到拒绝并继续对话', async () => {
+    const provider = new FakeProvider([[
+      { type: 'tool_call', call: { id: 'c1', name: 'delete_link', args: '{"id":1}' } },
+      { type: 'finish', reason: 'tool_calls' },
+    ]]);
+    const { createConversation } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    const events = await collectEvents(provider, { message: '删掉链接1', conversationId: conv.id });
+    const cf = events.find(e => e.type === 'confirm_required') as any;
+
+    provider.turns.push([{ type: 'text', delta: '好的,不删了' }, { type: 'finish', reason: 'stop' }]);
+    const events2 = await collectEvents(provider, { conversationId: conv.id, confirm: { messageId: cf.messageId, action: 'reject' } });
+    const tr = events2.find(e => e.type === 'tool_result') as any;
+    expect(tr.ok).toBe(false);
+    expect(tr.summary).toContain('取消');
+    // 模型侧第二轮上下文里有 rejected 结果
+    const toolMsg = provider.calls.at(-1)!.find(m => m.role === 'tool');
+    expect(toolMsg?.content).toContain('rejected');
+  });
+
+  it('confirm 的 messageId 不属于 pending 工具消息 → error', async () => {
+    const { createConversation, insertMessage } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    const u = await insertMessage(db(), conv.id, 'user', { text: 'x' });
+    const events: ChatSseEvent[] = [];
+    await runAgentTurn({ db: db(), provider: new FakeProvider([]) }, EMPTY_CFG, {
+      conversationId: conv.id,
+      confirm: { messageId: u.id, action: 'approve' },
+      emit: async e => { events.push(e); },
+    });
+    expect(events.some(e => e.type === 'error')).toBe(true);
+  });
+});
