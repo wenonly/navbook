@@ -76,8 +76,9 @@ export class ChatMachine {
   ) {
     this.controller = new AbortController();
     const assistant: UiItem = { kind: 'assistant', id: null, text: '', reasoning: '', streaming: true };
+    // 追加而非替换:confirm 续流时必须保留既有 items(含待确认卡)
     this.set({
-      items: seed(assistant),
+      items: [...this.state.items, ...seed(assistant)],
       streaming: true,
       error: null,
     });
