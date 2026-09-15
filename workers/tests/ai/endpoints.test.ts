@@ -63,3 +63,53 @@ describe('GET/POST /api/ai_config', () => {
     expect((await res.json() as any).code).not.toBe(0);
   });
 });
+
+describe('AI 会话端点与 ai_chat SSE', () => {
+  it('GET /api/ai_conversations 未登录 401 / 登录返回列表', async () => {
+    const noauth = await createApp().request(new Request('http://x/api/ai_conversations'), undefined, env as any);
+    expect(noauth.status).toBe(401);
+    const res = await authed('/api/ai_conversations');
+    expect((await res.json() as any).code).toBe(0);
+  });
+
+  it('GET /api/ai_messages?cid= 缺参报业务错误', async () => {
+    const res = await authed('/api/ai_messages');
+    expect((await res.json() as any).code).not.toBe(0);
+  });
+
+  it('POST /api/ai_chat:未登录 401(流开始前)', async () => {
+    const res = await createApp().request(new Request('http://x/api/ai_chat', { method: 'POST' }), undefined, env as any);
+    expect(res.status).toBe(401);
+  });
+
+  it('POST /api/ai_chat:未配置厂商 → 流开始前即 error 事件(不建会话不留垃圾行)', async () => {
+    const fd = new FormData();
+    fd.append('cid', '0');
+    fd.append('message', 'hi');
+    const res = await authed('/api/ai_chat', { method: 'POST', body: fd });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/event-stream');
+    const text = await new Response(res.body).text();
+    expect(text).toContain('event: error');
+    expect(text).toContain('模型配置');
+    expect(text).not.toContain('event: conversation');   // 失败前不建会话
+  });
+
+  it('POST /api/ai_chat:厂商不可达 → conversation 后 error 事件(流式链路全通)', async () => {
+    const payload = {
+      providers: [{ id: 'p1', name: 'X', preset: 'custom',
+        baseUrl: 'http://127.0.0.1:9/v1', apiKey: 'sk-x', model: 'm', enabled: true }],
+      activeProviderId: 'p1', systemPrompt: '',
+    };
+    await authed('/api/ai_config', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload),
+    });
+    const fd = new FormData();
+    fd.append('cid', '0');
+    fd.append('message', 'hi');
+    const res = await authed('/api/ai_chat', { method: 'POST', body: fd });
+    const text = await new Response(res.body).text();
+    expect(text).toContain('event: conversation');
+    expect(text).toContain('event: error');
+  });
+});

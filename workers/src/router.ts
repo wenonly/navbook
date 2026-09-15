@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
+import { streamSSE } from 'hono/streaming';
 import type { AppEnv } from './types';
 import { getDb } from './db/client';
 import { corsMiddleware } from './middleware/cors';
@@ -25,9 +26,16 @@ import {
   addLinkSchema, editLinkSchema, delLinkSchema, getALinkSchema, qCategoryLinkSchema,
   globalSearchSchema,
   initSchema, loginSchema, setSiteSchema,
-  aiConfigSchema,
+  aiConfigSchema, aiChatSchema, aiMessagesSchema, aiDelConversationSchema,
 } from './lib/validate';
-import { getAiConfigHandler, saveAiConfigHandler } from './handlers/ai';
+import {
+  getAiConfigHandler, saveAiConfigHandler,
+  listAiConversationsHandler, deleteAiConversationHandler, listAiMessagesHandler,
+} from './handlers/ai';
+import { runAgentTurn, TURN_TIMEOUT_MS } from './ai/agent';
+import { OpenAiCompatProvider } from './ai/provider';
+import { loadAiConfig } from './ai/config';
+import type { ChatSseEvent } from './ai/types';
 
 /** body 解析统一入口：非法/缺失 body 一律落空对象，交给 Zod 报具体字段错误 */
 async function parseBody(c: Context<AppEnv>): Promise<Record<string, unknown>> {
@@ -309,6 +317,60 @@ export function createApp() {
     });
     const parsed = aiConfigSchema.parse(payload);
     return c.json(await saveAiConfigHandler(c.get('db'), parsed));
+  });
+
+  app.get('/api/ai_conversations', authMiddleware, async c => {
+    return c.json(await listAiConversationsHandler(c.get('db')));
+  });
+
+  app.post('/api/ai_del_conversation', authMiddleware, async c => {
+    const body = await parseBody(c);
+    const p = aiDelConversationSchema.parse(body);
+    return c.json(await deleteAiConversationHandler(c.get('db'), p.id));
+  });
+
+  app.get('/api/ai_messages', authMiddleware, async c => {
+    const p = aiMessagesSchema.parse({ cid: c.req.query('cid'), token: c.req.query('token') });
+    return c.json(await listAiMessagesHandler(c.get('db'), p.cid));
+  });
+
+  // SSE 主端点:鉴权在流开始前(zod 错误走 onError 出 JSON,非流)。
+  // 心跳:静默期每 15s 写注释行,防边缘节点掐空闲连接;整轮上限 180s。
+  app.post('/api/ai_chat', authMiddleware, async c => {
+    const body = await parseBody(c);
+    const p = aiChatSchema.parse(body);
+    const db = c.get('db');
+    const signal = AbortSignal.any([c.req.raw.signal, AbortSignal.timeout(TURN_TIMEOUT_MS)]);
+
+    return streamSSE(c, async stream => {
+      let closed = false;
+      stream.onAbort(() => { closed = true; });
+      const hb = setInterval(() => { if (!closed) void stream.write(': hb\n\n').catch(() => {}); }, 15_000);
+      const emit = async (ev: ChatSseEvent) => {
+        if (closed) return;
+        await stream.writeSSE({ event: ev.type, data: JSON.stringify(ev) });
+      };
+      try {
+        const cfg = await loadAiConfig(db);
+        await runAgentTurn(
+          { db, provider: new OpenAiCompatProvider() }, cfg,
+          {
+            conversationId: p.cid,
+            ...(p.message !== undefined ? { message: p.message } : {}),
+            ...(p.confirm_message_id ? { confirm: { messageId: p.confirm_message_id, action: p.confirm_action ?? 'approve' } } : {}),
+            emit,
+            signal,
+          },
+        );
+      } catch (e) {
+        // 客户端断开后的写入失败忽略;真正的业务错误仍要送达
+        try {
+          await emit({ type: 'error', code: -2000, msg: e instanceof Error ? e.message : 'AI 服务异常' });
+        } catch { /* 流已关 */ }
+      } finally {
+        clearInterval(hb);
+      }
+    });
   });
 
   // ---------- 伺服路由（放最后） ----------

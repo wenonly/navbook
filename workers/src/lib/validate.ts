@@ -97,3 +97,23 @@ export const aiConfigSchema = z.object({
   activeProviderId: z.string().max(64).nullable(),
   systemPrompt: z.string().max(4000).optional().default(''),
 });
+
+export const aiChatSchema = z.object({
+  token: z.string().optional(),
+  cid: z.coerce.number().int().min(0).optional().default(0),
+  message: z.string().max(8192).optional(),
+  confirm_message_id: z.coerce.number().int().positive().optional(),
+  confirm_action: z.enum(['approve', 'reject']).optional(),
+}).refine(v => (v.message && v.message.trim()) || v.confirm_message_id, {
+  message: 'message 与 confirm 二选一',
+});
+
+export const aiMessagesSchema = z.object({
+  token: z.string().optional(),
+  cid: z.coerce.number().int().positive(),
+});
+
+export const aiDelConversationSchema = z.object({
+  token: z.string().optional(),
+  id: z.coerce.number().int().positive(),
+});
