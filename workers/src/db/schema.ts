@@ -86,3 +86,23 @@ export const clicks = sqliteTable('on_clicks', {
   index('on_clicks_link_id_idx').on(t.linkId),
   index('on_clicks_ts_idx').on(t.ts),
 ]);
+
+export const aiConversations = sqliteTable('on_ai_conversations', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  title: text('title').notNull().default(''),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, (t) => [
+  index('on_ai_conversations_updated_at_idx').on(t.updatedAt),
+]);
+
+export const aiMessages = sqliteTable('on_ai_messages', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  conversationId: integer('conversation_id').notNull(),
+  // 'user' | 'assistant' | 'tool';content 为 JSON 字符串(形状见 ai/types.ts)
+  role: text('role').notNull(),
+  content: text('content').notNull(),
+  createdAt: integer('created_at').notNull(),
+}, (t) => [
+  index('on_ai_messages_conversation_id_idx').on(t.conversationId),
+]);
