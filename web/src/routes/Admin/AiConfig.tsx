@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2, Save, Bot } from 'lucide-react';
+import { Plus, Trash2, Save, Bot, Globe } from 'lucide-react';
 import { api } from '@/api/client';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -14,12 +14,16 @@ interface Provider {
   baseUrl: string; apiKey: string; model: string;
 }
 interface Preset { id: string; name: string; baseUrl: string; models: string[] }
+interface McpServer {
+  id: string; name: string; url: string; apiKey: string; trust: 'confirm' | 'auto';
+}
 
 export function AdminAiConfig() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [presets, setPresets] = useState<Preset[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [systemPrompt, setSystemPrompt] = useState('');
+  const [mcpServers, setMcpServers] = useState<McpServer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,6 +32,7 @@ export function AdminAiConfig() {
       setPresets(res.data.presets);
       setActiveId(res.data.config.activeProviderId);
       setSystemPrompt(res.data.config.systemPrompt ?? '');
+      setMcpServers(res.data.config.mcpServers ?? []);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -57,12 +62,21 @@ export function AdminAiConfig() {
     if (activeId === id) setActiveId(null);   // 删的是当前厂商 → 清空选中,避免悬空引用
   };
 
+  const patchMcp = (id: string, p: Partial<McpServer>) =>
+    setMcpServers(prev => prev.map(x => (x.id === id ? { ...x, ...p } : x)));
+
+  const addMcp = () => {
+    if (mcpServers.length >= 5) return;
+    setMcpServers(prev => [...prev, { id: crypto.randomUUID(), name: '', url: '', apiKey: '', trust: 'confirm' }]);
+  };
+
   const save = async () => {
     try {
-      await api.saveAiConfig({ providers, activeProviderId: activeId, systemPrompt });
+      await api.saveAiConfig({ providers, activeProviderId: activeId, systemPrompt, mcpServers });
       toast.success('已保存');
       const res: any = await api.aiConfig();
       setProviders(res.data.config.providers);
+      setMcpServers(res.data.config.mcpServers ?? []);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : '保存失败');
     }
@@ -127,6 +141,49 @@ export function AdminAiConfig() {
           <Save size={16} />保存配置
         </Button>
       </div>
+
+      <Card>
+        <CardContent className="space-y-4 p-5">
+          <div className="space-y-0.5">
+            <Label className="flex items-center gap-2"><Globe size={16} />MCP 服务器(Streamable HTTP)</Label>
+            <p className="text-xs text-muted-foreground">
+              接入外部工具生态(联网搜索/读网页等),最多 5 个。示例:Tavily(key 拼在 URL 里、信任选「只读免确认」);智谱/Perplexity(Key 填 API Key,走 Bearer)。「需确认」的工具执行前会出确认卡。
+            </p>
+          </div>
+          {mcpServers.map(s => (
+            <div key={s.id} className="grid gap-3 rounded-lg border border-border p-4">
+              <div className="flex items-center gap-3">
+                <Input className="w-44" placeholder="名称,如 Tavily" value={s.name}
+                  onChange={e => patchMcp(s.id, { name: e.target.value })} />
+                <Select value={s.trust} onValueChange={v => patchMcp(s.id, { trust: v as McpServer['trust'] })}>
+                  <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="confirm">需确认</SelectItem>
+                    <SelectItem value="auto">只读免确认</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="ghost" size="icon" onClick={() =>
+                  setMcpServers(prev => prev.filter(x => x.id !== s.id))}>
+                  <Trash2 size={16} className="text-destructive" />
+                </Button>
+              </div>
+              <div className="space-y-1.5">
+                <Label>端点 URL</Label>
+                <Input value={s.url} placeholder="https://mcp.tavily.com/mcp/?tavilyApiKey=…"
+                  onChange={e => patchMcp(s.id, { url: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>API Key(留空 = 不发送,适合 key 拼在 URL 里的服务器)</Label>
+                <Input type="password" value={s.apiKey} placeholder="Bearer Token,可留空"
+                  onChange={e => patchMcp(s.id, { apiKey: e.target.value })} />
+              </div>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" onClick={addMcp} disabled={mcpServers.length >= 5}>
+            <Plus size={14} />添加 MCP 服务器
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="space-y-2 p-5">

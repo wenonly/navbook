@@ -34,6 +34,7 @@ import {
 } from './handlers/ai';
 import { runAgentTurn, TURN_TIMEOUT_MS } from './ai/agent';
 import { OpenAiCompatProvider } from './ai/provider';
+import { McpRegistry } from './ai/mcp';
 import { loadAiConfig } from './ai/config';
 import type { ChatSseEvent } from './ai/types';
 
@@ -353,7 +354,12 @@ export function createApp() {
       try {
         const cfg = await loadAiConfig(db);
         await runAgentTurn(
-          { db, provider: new OpenAiCompatProvider() }, cfg,
+          {
+            db,
+            provider: new OpenAiCompatProvider(),
+            // 未配置 MCP 时不实例化 Registry,行为与无 MCP 完全一致
+            ...(cfg.mcpServers.length ? { mcp: new McpRegistry(cfg.mcpServers) } : {}),
+          }, cfg,
           {
             conversationId: p.cid,
             ...(p.message !== undefined ? { message: p.message } : {}),
