@@ -113,6 +113,21 @@ export class ChatMachine {
     this.set({ items, streaming: false });
   }
 
+  /** 追加到"当前 streaming 的 assistant 气泡";若已被工具卡关闭/不存在,则开新气泡(ReAct 多步交错的关键) */
+  private appendAssistant(items: UiItem[], field: 'text' | 'reasoning', value: string) {
+    let idx = -1;
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (items[i].kind === 'assistant') { idx = i; break; }
+      // 气泡与末尾之间隔着工具卡 → 该气泡已关闭,需要新开
+      if (items[i].kind === 'tool') break;
+    }
+    if (idx < 0 || !(items[idx] as Extract<UiItem, { kind: 'assistant' }>).streaming) {
+      items.push({ kind: 'assistant', id: null, text: '', reasoning: '', streaming: true });
+      idx = items.length - 1;
+    }
+    items[idx] = { ...(items[idx] as any), [field]: (items[idx] as any)[field] + value };
+  }
+
   private reduce(ev: ChatSseEvent) {
     const items = [...this.state.items];
     const lastAssistant = () => {
@@ -125,18 +140,22 @@ export class ChatMachine {
         this.set({ conversationId: ev.cid });
         return;
       case 'delta': {
-        const i = lastAssistant();
-        if (i >= 0) items[i] = { ...(items[i] as any), text: (items[i] as any).text + ev.text };
+        this.appendAssistant(items, 'text', ev.text);
         this.set({ items });
         return;
       }
       case 'reasoning': {
-        const i = lastAssistant();
-        if (i >= 0) items[i] = { ...(items[i] as any), reasoning: (items[i] as any).reasoning + ev.text };
+        this.appendAssistant(items, 'reasoning', ev.text);
         this.set({ items });
         return;
       }
-      case 'tool_call':
+      case 'tool_call': {
+        // 工具卡到达 = 当前 assistant 气泡结束(ReAct 步边界);
+        // 之后的 delta 会开新气泡,工具卡因此交错嵌在聊天流里而非堆到末尾
+        const li = lastAssistant();
+        if (li >= 0 && (items[li] as Extract<UiItem, { kind: 'assistant' }>).streaming) {
+          items[li] = { ...(items[li] as any), streaming: false };
+        }
         items.push({
           kind: 'tool', id: ev.id, name: ev.name, args: ev.args, danger: ev.danger,
           status: ev.danger === 'write' ? 'pending' : 'running', summary: '',
@@ -144,6 +163,7 @@ export class ChatMachine {
         });
         this.set({ items });
         return;
+      }
       case 'tool_result': {
         const i = items.findIndex(x => x.kind === 'tool' && x.id === ev.id);
         if (i >= 0) {

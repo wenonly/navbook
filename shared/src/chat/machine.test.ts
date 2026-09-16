@@ -179,3 +179,55 @@ describe('串行阻塞与活动状态(loading UX)', () => {
     expect(write.startedAt).toBeUndefined();
   });
 });
+
+describe('工具卡交错嵌聊天流(多步 ReAct 直播流)', () => {
+  it('delta → 工具卡 → 新 delta:第二步文本开新气泡,工具卡夹在中间而非堆到末尾', async () => {
+    const t = fakeTransport([[
+      { type: 'conversation', cid: 1, title: '' },
+      { type: 'delta', text: '我先搜一下' },
+      { type: 'tool_call', id: 'c1', name: 'search_links', args: {}, danger: 'read' },
+      { type: 'tool_result', id: 'c1', name: 'search_links', ok: true, summary: '3 条', data: { code: 0 } },
+      { type: 'delta', text: '找到了 3 条' },
+      { type: 'tool_call', id: 'c2', name: 'fetch_url', args: {}, danger: 'read' },
+      { type: 'tool_result', id: 'c2', name: 'fetch_url', ok: true, summary: 's', data: { code: 0 } },
+      { type: 'delta', text: ',总结如下' },
+      { type: 'done', messageIds: [] },
+    ]]);
+    const m = new ChatMachine(t as any);
+    await m.send('搜一下'); await flush();
+    const items = m.snapshot().items;
+    expect(items.map(i => i.kind)).toEqual(['user', 'assistant', 'tool', 'assistant', 'tool', 'assistant']);
+    expect((items[1] as any).text).toBe('我先搜一下');
+    expect((items[3] as any).text).toBe('找到了 3 条');
+    expect((items[5] as any).text).toBe(',总结如下');
+    expect(items.filter(i => i.kind === 'assistant').every(a => !(a as any).streaming)).toBe(true);
+  });
+
+  it('reasoning 同样遵守步边界:工具卡后的思考开新气泡', async () => {
+    const t = fakeTransport([[
+      { type: 'delta', text: '查' },
+      { type: 'tool_call', id: 'c1', name: 'f', args: {}, danger: 'read' },
+      { type: 'tool_result', id: 'c1', name: 'f', ok: true, summary: '', data: null },
+      { type: 'reasoning', text: '再想想' },
+      { type: 'delta', text: '结论' },
+      { type: 'done', messageIds: [] },
+    ]]);
+    const m = new ChatMachine(t as any);
+    await m.send('go'); await flush();
+    const items = m.snapshot().items;
+    expect(items.map(i => i.kind)).toEqual(['user', 'assistant', 'tool', 'assistant']);
+    expect((items[3] as any).reasoning).toBe('再想想');
+  });
+
+  it('刷新回放:历史行序天然交错,与直播流形态一致(反向解析)', async () => {
+    const dto: ChatMessageDto[] = [
+      { id: 1, role: 'user', content: { text: '查' }, created_at: 1 },
+      { id: 2, role: 'assistant', content: { text: '搜一下', reasoning: '', toolCalls: [{ id: 'c1', name: 'search_links', args: {} }] }, created_at: 2 },
+      { id: 3, role: 'tool', content: { toolCallId: 'c1', name: 'search_links', args: {}, status: 'ok', summary: '3 条', result: { code: 0 } }, created_at: 3 },
+      { id: 4, role: 'assistant', content: { text: '找到 3 条', reasoning: '', toolCalls: [] }, created_at: 4 },
+    ];
+    const m = new ChatMachine({ stream: async function* () {}, history: async () => dto } as any);
+    await m.open(9);
+    expect(m.snapshot().items.map(i => i.kind)).toEqual(['user', 'assistant', 'tool', 'assistant']);
+  });
+});

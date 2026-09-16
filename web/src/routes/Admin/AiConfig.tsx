@@ -32,7 +32,8 @@ export function AdminAiConfig() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [systemPrompt, setSystemPrompt] = useState('');
   const [mcpServers, setMcpServers] = useState<McpServer[]>([]);
-  const [toolPolicy, setToolPolicy] = useState<Record<string, '' | 'auto' | 'confirm'>>({});
+  // 'default'=跟随默认(哨兵;Radix Select 的 Item 禁止空串 value,空串会显示成空白)
+  const [toolPolicy, setToolPolicy] = useState<Record<string, 'default' | 'auto' | 'confirm'>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -82,7 +83,7 @@ export function AdminAiConfig() {
 
   const save = async () => {
     try {
-      const policyEntries = Object.fromEntries(Object.entries(toolPolicy).filter(([, v]) => v === 'auto' || v === 'confirm'));
+      const policyEntries = Object.fromEntries(Object.entries(toolPolicy).filter(([, v]) => v !== 'default'));
       await api.saveAiConfig({ providers, activeProviderId: activeId, systemPrompt, mcpServers, toolPolicy: policyEntries });
       toast.success('已保存');
       const res: any = await api.aiConfig();
@@ -209,11 +210,11 @@ export function AdminAiConfig() {
             {TOOL_CANDIDATES.map(([name, label]) => (
               <div key={name} className="flex items-center justify-between gap-2">
                 <span className="text-[13px]">{label}<span className="ml-1 text-[11px] text-muted-foreground">{name}</span></span>
-                <Select value={toolPolicy[name] ?? ''} onValueChange={v =>
-                  setToolPolicy(prev => ({ ...prev, [name]: v as '' | 'auto' | 'confirm' }))}>
+                <Select value={toolPolicy[name] ?? 'default'} onValueChange={v =>
+                  setToolPolicy(prev => ({ ...prev, [name]: v as 'default' | 'auto' | 'confirm' }))}>
                   <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">跟随默认</SelectItem>
+                    <SelectItem value="default">跟随默认</SelectItem>
                     <SelectItem value="auto">直接执行</SelectItem>
                     <SelectItem value="confirm">需确认</SelectItem>
                   </SelectContent>
