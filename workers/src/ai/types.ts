@@ -12,10 +12,20 @@ export interface AiProviderConfig {
   model: string;
 }
 
+/** 远程 MCP 服务器(Streamable HTTP);apiKey 空串 = 不发 Authorization 头(key 拼 URL 的服务器) */
+export interface McpServerConfig {
+  id: string;
+  name: string;
+  url: string;
+  apiKey: string;
+  trust: 'confirm' | 'auto';
+}
+
 export interface AiConfig {
   providers: AiProviderConfig[];
   activeProviderId: string | null;
   systemPrompt: string;
+  mcpServers: McpServerConfig[];
 }
 
 /** 下发给前端的预设厂商(baseUrl/models 自动填充用) */
