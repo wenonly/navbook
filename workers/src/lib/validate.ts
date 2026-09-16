@@ -105,6 +105,7 @@ export const aiConfigSchema = z.object({
   activeProviderId: z.string().max(64).nullable(),
   systemPrompt: z.string().max(4000).optional().default(''),
   mcpServers: z.array(aiMcpServerSchema).max(5).optional().default([]),
+  toolPolicy: z.record(z.string().min(1).max(64), z.enum(['auto', 'confirm'])).optional().default({}),
 });
 
 export const aiChatSchema = z.object({

@@ -26,7 +26,12 @@ export interface AiConfig {
   activeProviderId: string | null;
   systemPrompt: string;
   mcpServers: McpServerConfig[];
+  /** 工具执行策略覆盖(确认口子):key=工具名(内置或 mcp_ 前缀),缺省跟随工具默认/MCP trust */
+  toolPolicy?: ToolPolicy;
 }
+
+/** 'auto'=直接执行;'confirm'=出确认卡 */
+export type ToolPolicy = Record<string, 'auto' | 'confirm'>;
 
 /** 下发给前端的预设厂商(baseUrl/models 自动填充用) */
 export interface AiPreset {

@@ -367,9 +367,10 @@ describe('runAgentTurn(MCP 集成)', () => {
     ]);
     const { events } = await turnWithMcp(provider, fakeRegistry([]), { message: 'hi' });
     expect(events.some(e => e.type === 'error')).toBe(false);
-    // 只有内置工具(13 个,含 fetch_url),无 mcp_ 前缀
+    // 静态 12 + 工厂生成的 batch_read/batch_write = 14,无 mcp_ 前缀
     expect(provider.toolsCalls[0].every(t => !t.name.startsWith('mcp_'))).toBe(true);
-    expect(provider.toolsCalls[0]).toHaveLength(13);
+    expect(provider.toolsCalls[0]).toHaveLength(14);
+    expect(provider.toolsCalls[0].some(t => t.name === 'batch_read')).toBe(true);
     // system 无 MCP 提示行
     expect(provider.calls[0][0].content).not.toContain('另有外部工具');
   });
@@ -431,5 +432,66 @@ describe('上下文窗口与 tool 消息序列合法性(生产 400 回归)', () 
     expect(msgs.filter(m => m.role === 'tool')).toEqual([]);                    // 孤儿被丢
     expect(msgs.some(m => m.role === 'assistant' && m.tool_calls?.length)).toBe(false);   // c9 的 calls 被剥
     assertValidToolSequence(msgs);
+  });
+});
+
+describe('执行策略与同回合并发', () => {
+  it('toolPolicy 覆盖:search_links 设 confirm → 出确认卡;approve 后执行并续跑', async () => {
+    const cat = await addCategoryHandler(db(), { name: '工具', property: 0, weight: 0, description: '', font_icon: '', fid: 0 });
+    await addLinkHandler(db(), { fid: cat.id, title: 'GitHub', url: 'https://github.com', description: '', weight: 0, property: 0, url_standby: '', font_icon: '' });
+    const cfg = { ...EMPTY_CFG, toolPolicy: { search_links: 'confirm' as const } };
+    const provider = new FakeProvider([
+      [{ type: 'tool_call', call: { id: 'c1', name: 'search_links', args: '{"keyword":"git"}' } },
+       { type: 'finish', reason: 'tool_calls' }],
+    ]);
+    const { createConversation } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    const events = await collectEvents(provider, { message: '搜 git', conversationId: conv.id, cfg });
+    const cf = events.find(e => e.type === 'confirm_required') as any;
+    expect(cf).toBeTruthy();                       // 读工具被策略升级为确认
+    expect(cf.name).toBe('search_links');
+
+    provider.turns.push([{ type: 'text', delta: '好了' }, { type: 'finish', reason: 'stop' }]);
+    const events2 = await collectEvents(provider, { conversationId: conv.id, cfg, confirm: { messageId: cf.messageId, action: 'approve' } });
+    expect((events2.find(e => e.type === 'tool_result') as any).ok).toBe(true);
+  });
+
+  it('同回合多个 auto 调用:全部执行、结果都喂回下一轮(并发)', async () => {
+    const cat = await addCategoryHandler(db(), { name: '工具', property: 0, weight: 0, description: '', font_icon: '', fid: 0 });
+    await addLinkHandler(db(), { fid: cat.id, title: 'GitHub', url: 'https://github.com', description: '', weight: 0, property: 0, url_standby: '', font_icon: '' });
+    const provider = new FakeProvider([
+      [{ type: 'tool_call', call: { id: 'c1', name: 'search_links', args: '{"keyword":"git"}' } },
+       { type: 'tool_call', call: { id: 'c2', name: 'list_categories', args: '{}' } },
+       { type: 'finish', reason: 'tool_calls' }],
+      [{ type: 'text', delta: '完成' }, { type: 'finish', reason: 'stop' }],
+    ]);
+    const events = await collectEvents(provider, { message: '查一下' });
+    const trs = events.filter(e => e.type === 'tool_result') as any[];
+    expect(trs).toHaveLength(2);
+    expect(trs.every(t => t.ok)).toBe(true);
+    // 两张卡都是 running 型(danger read),无确认卡
+    expect(events.some(e => e.type === 'confirm_required')).toBe(false);
+    const second = provider.calls[1];
+    expect(second.filter(m => m.role === 'tool')).toHaveLength(2);
+  });
+
+  it('batch_read 集成:模型一次提交两项读操作,结果逐项喂回', async () => {
+    const cat = await addCategoryHandler(db(), { name: '工具', property: 0, weight: 0, description: '', font_icon: '', fid: 0 });
+    await addLinkHandler(db(), { fid: cat.id, title: 'GitHub', url: 'https://github.com', description: '', weight: 0, property: 0, url_standby: '', font_icon: '' });
+    const provider = new FakeProvider([
+      [{ type: 'tool_call', call: { id: 'b1', name: 'batch_read', args: JSON.stringify({ operations: [
+        { action: 'search_links', args: { keyword: 'git' } },
+        { action: 'list_categories', args: {} },
+      ] }) } },
+       { type: 'finish', reason: 'tool_calls' }],
+      [{ type: 'text', delta: '两项都查到了' }, { type: 'finish', reason: 'stop' }],
+    ]);
+    const events = await collectEvents(provider, { message: '搜 git 并列出分类' });
+    const tr = events.find(e => e.type === 'tool_result') as any;
+    expect(tr.ok).toBe(true);
+    expect(tr.summary).toContain('2 项');
+    expect(tr.summary).toContain('2 成功');
+    const toolMsg = provider.calls[1].find(m => m.role === 'tool');
+    expect(toolMsg?.content).toContain('GitHub');
   });
 });

@@ -1,10 +1,10 @@
 // ReAct 循环编排:Reason(模型文本/思考流)→ Act(tool_call)→ Observe(tool result 喂回)。
 // 通过 emit 回调输出线缆事件,不碰 HTTP/SSE(路由层负责);provider 走接口,测试注入 Fake。
 import type {
-  AiConfig, ChatMsgContent, ChatSseEvent, ProviderClient, ProviderMessage, ToolMsgContent, WorkerDB,
+  AiConfig, ChatMsgContent, ChatSseEvent, ProviderClient, ProviderMessage, ToolMsgContent, ToolPolicy, WorkerDB,
 } from './types';
 import { resolveActiveProvider } from './config';
-import { findTool, toolSpecs } from './tools';
+import { AI_TOOLS, findTool, toolSpecs, buildBatchTools, resolveExecPolicy } from './tools';
 import {
   createConversation, insertMessage, listMessages, countMessages, updateMessageContent,
 } from './conversations';
@@ -25,7 +25,7 @@ export const DEFAULT_SYSTEM_PROMPT = [
   '可用能力:搜索/查看链接与分类、点击统计、站点设置,以及新增/修改/删除链接和分类,抓取任意网页内容(fetch_url)。',
   '原则:涉及数据的问题先用工具查询再回答,不确定时调 list_categories 确认 id;',
   '写操作(新增/修改/删除)会请求用户确认,被拒绝时如实告知,不要重复发起同一被拒操作;',
-  '同一回合需执行 2 项及以上写操作时,优先用 batch_write 一次提交(共享一张确认卡,最多 20 项);单项写操作仍用对应单工具;',
+  '同一回合有 2 项及以上独立读操作(如抓取/搜索多个目标)优先用 batch_read 一次并发提交,2 项及以上写操作优先用 batch_write 一次提交(共享一张确认卡);单项操作用对应单工具;',
   '回答用简体中文,简洁直接。',
 ].join('\n');
 
@@ -66,10 +66,15 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
   // approve 时需要已解析好的 wrapper 才能执行工具;缓存命中时此处零网络开销) ----
   const mcpTools = deps.mcp ? await deps.mcp.resolveTools() : [];
   const mcpByName = new Map(mcpTools.map(t => [t.name, t]));
-  const resolveTool = (name: string): AiTool | undefined => findTool(name) ?? mcpByName.get(name);
+  // 执行策略(确认口子):toolPolicy 覆盖 > MCP trust(已映射进 danger)> 工具默认
+  const policy: ToolPolicy = cfg.toolPolicy ?? {};
+  const batchTools = buildBatchTools([...AI_TOOLS, ...mcpTools], policy);
+  const batchByName = new Map(batchTools.map(t => [t.name, t]));
+  const resolveTool = (name: string): AiTool | undefined =>
+    findTool(name) ?? mcpByName.get(name) ?? batchByName.get(name);
   const tools = [
     ...toolSpecs(),
-    ...mcpTools.map(t => ({
+    ...[...mcpTools, ...batchTools].map(t => ({
       type: 'function' as const,
       function: { name: t.name, description: t.description, parameters: t.parameters },
     })),
@@ -154,12 +159,14 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
       return;
     }
 
-    // ---- 执行工具:读直接执行;写走确认流(本轮流终止,前端确认后恢复) ----
+    // ---- 执行工具:auto 直接执行(同回合并发)/ confirm 出确认卡(本轮流终止,前端确认后恢复) ----
+    // 事件里的 danger 表达"执行路径"(write=确认/pending,read=运行/直执),前端据此渲染卡型
     let needConfirm = false;
+    const autoTasks: Promise<void>[] = [];
     for (const call of toolCalls) {
       const tool = resolveTool(call.name);
-      const danger = tool?.danger ?? 'read';
-      await emit({ type: 'tool_call', id: call.id, name: call.name, args: call.args, danger });
+      const isConfirm = tool ? resolveExecPolicy(tool, policy) === 'confirm' : false;
+      await emit({ type: 'tool_call', id: call.id, name: call.name, args: call.args, danger: isConfirm ? 'write' : 'read' });
 
       if (!tool) {
         await persistToolResult(db, cid, emit, messageIds, {
@@ -168,7 +175,7 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
         });
         continue;
       }
-      if (tool.danger === 'write') {
+      if (isConfirm) {
         needConfirm = true;
         await persistToolResult(db, cid, emit, messageIds, {
           toolCallId: call.id, name: call.name, args: call.args,
@@ -176,14 +183,17 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
         }, true);
         continue;
       }
-      const { content } = await execTool(db, tool, call);
-      await persistToolResult(db, cid, emit, messageIds, content, false);
+      autoTasks.push((async () => {
+        const { content } = await execTool(db, tool, call);
+        await persistToolResult(db, cid, emit, messageIds, content, false);
+      })());
     }
-    if (needConfirm) {   // 有一张确认卡即终止本轮(前端确认后恢复)
+    await Promise.all(autoTasks);   // 同回合 auto 类并发(读/抓取彼此独立,无 D1 写竞态)
+    if (needConfirm) {   // 有确认卡即终止本轮(前端确认后恢复)
       await emit({ type: 'done', messageIds });
       return;
     }
-    // 全是读工具 → 结果已在库,进入下一轮(Observe)
+    // 全部 auto → 结果已在库,进入下一轮(Observe)
   }
   await fail(`已达最大工具调用步数(${MAX_STEPS}),请简化请求或拆分操作`);
 }

@@ -19,6 +19,7 @@ const full = {
   activeProviderId: 'p1',
   systemPrompt: '',
   mcpServers: [],
+  toolPolicy: {},
 };
 
 describe('ai config', () => {
@@ -135,5 +136,24 @@ describe('ai config mcpServers', () => {
     const loaded = await loadAiConfig(db());
     expect(loaded.mcpServers).toHaveLength(5);
     expect(loaded.mcpServers[0]).toEqual({ id: 'ok', name: 'A', url: 'https://a.example.com', apiKey: '', trust: 'confirm' });
+  });
+});
+
+describe('ai config toolPolicy(确认口子)', () => {
+  it('保存后可读回;非法值过滤;存量缺省回落 {}', async () => {
+    const cfg = { ...full, toolPolicy: { fetch_url: 'confirm' as const, search_links: 'auto' as const } };
+    await saveAiConfig(db(), cfg);
+    expect((await loadAiConfig(db())).toolPolicy).toEqual({ fetch_url: 'confirm', search_links: 'auto' });
+
+    // 非法值直接写库(绕过校验)→ 读取时过滤
+    await env.DB.prepare("UPDATE on_options SET value=? WHERE key='s_ai'").bind(JSON.stringify({
+      ...cfg, toolPolicy: { fetch_url: 'confirm', bad: 'weird', '': 'auto' },
+    })).run();
+    expect((await loadAiConfig(db())).toolPolicy).toEqual({ fetch_url: 'confirm' });
+
+    // 缺省
+    expect((await loadAiConfig(db())).toolPolicy).toBeDefined();
+    await saveAiConfig(db(), { ...full });
+    expect((await loadAiConfig(db())).toolPolicy).toEqual({});
   });
 });

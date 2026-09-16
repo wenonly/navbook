@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2, Save, Bot, Globe } from 'lucide-react';
+import { Plus, Trash2, Save, Bot, Globe, ShieldCheck } from 'lucide-react';
 import { api } from '@/api/client';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -18,12 +18,21 @@ interface McpServer {
   id: string; name: string; url: string; apiKey: string; trust: 'confirm' | 'auto';
 }
 
+/** 工具确认策略可配置候选(内置工具;MCP 工具跟随服务器 trust) */
+const TOOL_CANDIDATES: Array<[string, string]> = [
+  ['fetch_url', '网页抓取'], ['search_links', '搜索链接'], ['list_categories', '分类列表'],
+  ['get_link', '链接详情'], ['get_click_stats', '点击统计'], ['get_site_config', '站点设置'],
+  ['create_link', '新增链接'], ['update_link', '修改链接'], ['delete_link', '删除链接'],
+  ['create_category', '新增分类'], ['update_category', '修改分类'], ['delete_category', '删除分类'],
+];
+
 export function AdminAiConfig() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [presets, setPresets] = useState<Preset[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [systemPrompt, setSystemPrompt] = useState('');
   const [mcpServers, setMcpServers] = useState<McpServer[]>([]);
+  const [toolPolicy, setToolPolicy] = useState<Record<string, '' | 'auto' | 'confirm'>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +42,7 @@ export function AdminAiConfig() {
       setActiveId(res.data.config.activeProviderId);
       setSystemPrompt(res.data.config.systemPrompt ?? '');
       setMcpServers(res.data.config.mcpServers ?? []);
+      setToolPolicy(res.data.config.toolPolicy ?? {});
     }).finally(() => setLoading(false));
   }, []);
 
@@ -72,11 +82,13 @@ export function AdminAiConfig() {
 
   const save = async () => {
     try {
-      await api.saveAiConfig({ providers, activeProviderId: activeId, systemPrompt, mcpServers });
+      const policyEntries = Object.fromEntries(Object.entries(toolPolicy).filter(([, v]) => v === 'auto' || v === 'confirm'));
+      await api.saveAiConfig({ providers, activeProviderId: activeId, systemPrompt, mcpServers, toolPolicy: policyEntries });
       toast.success('已保存');
       const res: any = await api.aiConfig();
       setProviders(res.data.config.providers);
       setMcpServers(res.data.config.mcpServers ?? []);
+      setToolPolicy(res.data.config.toolPolicy ?? {});
     } catch (e) {
       toast.error(e instanceof Error ? e.message : '保存失败');
     }
@@ -182,6 +194,33 @@ export function AdminAiConfig() {
           <Button variant="outline" size="sm" onClick={addMcp} disabled={mcpServers.length >= 5}>
             <Plus size={14} />添加 MCP 服务器
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-3 p-5">
+          <div className="space-y-0.5">
+            <Label className="flex items-center gap-2"><ShieldCheck size={16} />工具确认策略</Label>
+            <p className="text-xs text-muted-foreground">
+              「需确认」的工具执行前会出确认卡(默认:写操作需确认,读操作直接执行)。把写工具改成「直接执行」会跳过确认,请谨慎。MCP 工具默认跟随其服务器信任设置。
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+            {TOOL_CANDIDATES.map(([name, label]) => (
+              <div key={name} className="flex items-center justify-between gap-2">
+                <span className="text-[13px]">{label}<span className="ml-1 text-[11px] text-muted-foreground">{name}</span></span>
+                <Select value={toolPolicy[name] ?? ''} onValueChange={v =>
+                  setToolPolicy(prev => ({ ...prev, [name]: v as '' | 'auto' | 'confirm' }))}>
+                  <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">跟随默认</SelectItem>
+                    <SelectItem value="auto">直接执行</SelectItem>
+                    <SelectItem value="confirm">需确认</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 

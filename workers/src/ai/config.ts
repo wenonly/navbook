@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema';
-import type { AiConfig, AiPreset, AiProviderConfig, McpServerConfig, WorkerDB } from './types';
+import type { AiConfig, AiPreset, AiProviderConfig, McpServerConfig, ToolPolicy, WorkerDB } from './types';
 
 const KEY = 's_ai';
 
@@ -16,7 +16,17 @@ export const AI_PRESETS: AiPreset[] = [
   { id: 'custom',     name: '自定义',               baseUrl: '',                                                       models: [] },
 ];
 
-export const DEFAULT_AI_CONFIG: AiConfig = { providers: [], activeProviderId: null, systemPrompt: '', mcpServers: [] };
+export const DEFAULT_AI_CONFIG: AiConfig = { providers: [], activeProviderId: null, systemPrompt: '', mcpServers: [], toolPolicy: {} };
+
+/** toolPolicy 兜底:非法值过滤 */
+function sanitizeToolPolicy(raw: unknown): ToolPolicy {
+  if (!raw || typeof raw !== 'object') return {};
+  const out: ToolPolicy = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (k && (v === 'auto' || v === 'confirm')) out[k] = v;
+  }
+  return out;
+}
 
 /** s_ai.mcpServers 兜底清洗:畸形条目丢弃、截 5、trust 非法回落 confirm、apiKey 非串回落空串 */
 function sanitizeMcpServers(raw: unknown): McpServerConfig[] {
@@ -47,6 +57,7 @@ export async function loadAiConfig(db: WorkerDB): Promise<AiConfig> {
       activeProviderId: typeof p?.activeProviderId === 'string' ? p.activeProviderId : null,
       systemPrompt: typeof p?.systemPrompt === 'string' ? p.systemPrompt : '',
       mcpServers: sanitizeMcpServers(p?.mcpServers),
+      toolPolicy: sanitizeToolPolicy(p?.toolPolicy),
     };
   } catch {
     return { ...DEFAULT_AI_CONFIG };
