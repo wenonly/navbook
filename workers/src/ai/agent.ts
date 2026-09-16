@@ -1,7 +1,7 @@
 // ReAct 循环编排:Reason(模型文本/思考流)→ Act(tool_call)→ Observe(tool result 喂回)。
 // 通过 emit 回调输出线缆事件,不碰 HTTP/SSE(路由层负责);provider 走接口,测试注入 Fake。
 import type {
-  AiConfig, ChatSseEvent, ProviderClient, ProviderMessage, ToolMsgContent, WorkerDB,
+  AiConfig, ChatMsgContent, ChatSseEvent, ProviderClient, ProviderMessage, ToolMsgContent, WorkerDB,
 } from './types';
 import { resolveActiveProvider } from './config';
 import { findTool, toolSpecs } from './tools';
@@ -117,11 +117,11 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
 
   for (let step = 0; step < MAX_STEPS; step++) {
     if (opts.signal?.aborted) return;
-    // ---- 组装上下文(最近 50 条映射为 OpenAI 消息) ----
-    const history = (await listMessages(db, cid)).slice(-CONTEXT_MESSAGES);
+    // ---- 组装上下文(最近 50 条,边界对齐 tool 消息组;映射后过合法性防线) ----
+    const history = cutContextWindow(await listMessages(db, cid), CONTEXT_MESSAGES);
     const messages: ProviderMessage[] = [
       { role: 'system', content: systemPrompt },
-      ...history.map(m => toProviderMessage(m.id, m.role, m.content)),
+      ...sanitizeProviderMessages(history.map(m => toProviderMessage(m.id, m.role, m.content))),
     ];
 
     // ---- 流式调用厂商,转发 delta/reasoning ----
@@ -237,6 +237,51 @@ async function persistToolResult(
       ok: content.status === 'ok', summary: content.summary, data: content.result,
     });
   }
+}
+
+/** 上下文窗口:截最后 limit 条,但起点不得落在 tool 消息上——
+ * tool 必须连同其 assistant(tool_calls) 父消息一起进窗口,否则厂商 400
+ * ("Messages with role 'tool' must be a response to a preceding message with 'tool_calls'")。
+ * 回扩后窗口可能比 limit 多几条:合法性优先于条数上限。 */
+function cutContextWindow(
+  history: Array<{ id: number; role: 'user' | 'assistant' | 'tool'; content: ChatMsgContent }>,
+  limit: number,
+) {
+  let start = Math.max(0, history.length - limit);
+  while (start > 0 && history[start].role === 'tool') start--;                    // 回扩到父 assistant
+  while (start < history.length && history[start].role === 'tool') start++;       // 兜底:历史本身以孤儿 tool 开头 → 丢弃
+  return history.slice(start);
+}
+
+/** 组装后的防线(异常数据/中断残留):孤儿 tool 丢弃;应答不完整的 assistant 剥 tool_calls 降级为普通消息 */
+function sanitizeProviderMessages(msgs: ProviderMessage[]): ProviderMessage[] {
+  const keepToolIdx = new Set<number>();
+  const stripIdx = new Set<number>();
+  for (let i = 0; i < msgs.length; i++) {
+    const m = msgs[i];
+    if (m.role !== 'assistant' || !m.tool_calls?.length) continue;
+    const need = new Set(m.tool_calls.map(c => c.id));
+    let j = i + 1;
+    while (j < msgs.length && msgs[j].role === 'tool') {
+      if (need.delete(msgs[j].tool_call_id ?? '')) keepToolIdx.add(j);
+      j++;
+    }
+    if (need.size > 0) {
+      stripIdx.add(i);
+      for (let k = i + 1; k < j; k++) keepToolIdx.delete(k);   // 半套应答不能留(会变成新孤儿)
+    }
+  }
+  const out: ProviderMessage[] = [];
+  for (let i = 0; i < msgs.length; i++) {
+    const m = msgs[i];
+    if (m.role === 'tool' && !keepToolIdx.has(i)) continue;
+    if (stripIdx.has(i)) {
+      out.push({ role: 'assistant', content: m.content ?? '(工具调用未完成,已跳过)' });
+      continue;
+    }
+    out.push(m);
+  }
+  return out;
 }
 
 // ---- 历史消息 → OpenAI wire 消息 ----

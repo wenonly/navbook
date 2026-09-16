@@ -374,3 +374,62 @@ describe('runAgentTurn(MCP 集成)', () => {
     expect(provider.calls[0][0].content).not.toContain('另有外部工具');
   });
 });
+
+describe('上下文窗口与 tool 消息序列合法性(生产 400 回归)', () => {
+  /** 厂商视角的合法性:每条 role:'tool' 的前一条必须是含其 id 的 assistant(tool_calls) */
+  function assertValidToolSequence(msgs: ProviderMessage[]) {
+    for (let i = 0; i < msgs.length; i++) {
+      if (msgs[i].role !== 'tool') continue;
+      const prev = msgs[i - 1];
+      expect(prev, `messages[${i}] (tool) 的前一条不存在`).toBeDefined();
+      expect(prev!.role, `messages[${i}] (tool) 的前一条是 ${prev!.role},应为 assistant`).toBe('assistant');
+      const ids = (prev!.tool_calls ?? []).map(c => c.id);
+      expect(ids, `前一条 assistant 缺少 tool_call_id=${msgs[i].tool_call_id}`).toContain(msgs[i].tool_call_id);
+    }
+  }
+
+  /** 51 条历史:u0 + 25×(assistant(tc)+tool);collectEvents 再补 1 条 user → slice(-50) 起点恰好是 t1(tool) */
+  async function seedLongHistory() {
+    const { createConversation, insertMessage } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    await insertMessage(db(), conv.id, 'user', { text: 'u0' });
+    for (let i = 1; i <= 25; i++) {
+      await insertMessage(db(), conv.id, 'assistant',
+        { text: `查${i}`, reasoning: '', toolCalls: [{ id: `c${i}`, name: 'search_links', args: {} }] });
+      await insertMessage(db(), conv.id, 'tool',
+        { toolCallId: `c${i}`, name: 'search_links', args: {}, status: 'ok', summary: 's', result: { code: 0 } });
+    }
+    return conv.id;
+  }
+
+  it('复现:窗口起点落在 tool 上时,回扩到其 assistant 父消息(修复前此处为 role:tool → 厂商 400)', async () => {
+    const cid = await seedLongHistory();
+    const provider = new FakeProvider([[{ type: 'text', delta: 'ok' }, { type: 'finish', reason: 'stop' }]]);
+    await collectEvents(provider, { message: '继续', conversationId: cid });
+    const msgs = provider.calls[0];
+    // 修复前:msgs[1].role === 'tool'(孤儿)→ 断言失败,即生产报错形态
+    expect(msgs[1].role).not.toBe('tool');
+    expect(msgs[1].role).toBe('assistant');
+    assertValidToolSequence(msgs);
+    // 回扩允许比 50 多几条(合法性优先于条数)
+    expect(msgs.length).toBeLessThanOrEqual(53);
+  });
+
+  it('孤儿 tool 与应答不完整的 assistant:sanitize 后不发给厂商(异常数据防线)', async () => {
+    const { createConversation, insertMessage } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    // 孤儿 tool(无父 assistant)+ 应答缺失的 assistant(tc c9)
+    await insertMessage(db(), conv.id, 'tool',
+      { toolCallId: 'c8', name: 'search_links', args: {}, status: 'ok', summary: 's', result: { code: 0 } });
+    await insertMessage(db(), conv.id, 'user', { text: 'hi' });
+    await insertMessage(db(), conv.id, 'assistant',
+      { text: '', reasoning: '', toolCalls: [{ id: 'c9', name: 'list_categories', args: {} }] });
+    await insertMessage(db(), conv.id, 'user', { text: 'go' });
+    const provider = new FakeProvider([[{ type: 'finish', reason: 'stop' }]]);
+    await collectEvents(provider, { message: 'go', conversationId: conv.id });
+    const msgs = provider.calls[0];
+    expect(msgs.filter(m => m.role === 'tool')).toEqual([]);                    // 孤儿被丢
+    expect(msgs.some(m => m.role === 'assistant' && m.tool_calls?.length)).toBe(false);   // c9 的 calls 被剥
+    assertValidToolSequence(msgs);
+  });
+});
