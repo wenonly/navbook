@@ -20,7 +20,7 @@ export async function saveAiConfigHandler(db: WorkerDB, incoming: unknown) {
 
 export async function listAiConversationsHandler(db: WorkerDB) {
   const rows = await listConversations(db);
-  return { code: 0, data: rows.map(r => ({ id: r.id, title: r.title, updated_at: r.updatedAt })) };
+  return { code: 0, data: rows.map(r => ({ id: r.id, title: r.title, updated_at: r.updatedAt, running: r.running === 1 })) };
 }
 
 export async function deleteAiConversationHandler(db: WorkerDB, id: number) {

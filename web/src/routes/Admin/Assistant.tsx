@@ -12,6 +12,15 @@ import { Plus, Send, Square, Trash2, PanelLeftClose, PanelLeft } from 'lucide-re
 const machine = new ChatMachine({
   history: async (cid: number): Promise<ChatMessageDto[]> =>
     (await api.aiMessages(cid)).data,
+  attach: async function* (cid, signal) {
+    const res = await fetch(`/api/ai_events?cid=${cid}`, { signal });
+    if (res.status === 401) { location.href = '/admin/login'; throw new Error('未登录'); }
+    if (!res.ok || !res.body) throw new Error(`重挂失败(HTTP ${res.status})`);
+    for await (const { event, data } of parseSseStream(res.body)) {
+      if (event === 'hb') continue;
+      yield JSON.parse(data) as ChatSseEvent;
+    }
+  },
   stream: async function* (body, signal) {
     const fd = new FormData();
     fd.append('cid', String(body.cid));
@@ -39,6 +48,7 @@ export function AdminAssistant() {
   const conversations = useQuery({
     queryKey: ['ai-conversations'],
     queryFn: () => api.aiConversations() as Promise<{ data: ConversationDto[] }>,
+    refetchInterval: snap.streaming ? 4000 : false,   // running 徽标随流刷新
   });
 
   // 进入页面:无选中会话时续接最近一个
@@ -89,6 +99,7 @@ export function AdminAssistant() {
                 className={'group flex items-center gap-1 rounded-lg px-2 ' +
                   (snap.conversationId === c.id ? 'bg-primary/10' : 'hover:bg-muted')}>
                 <button className="flex-1 truncate py-2 text-left text-[13px]" onClick={() => onSelect(c.id)}>
+                  {c.running && <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500 align-middle" title="生成中" />}
                   {c.title || '(未命名)'}
                 </button>
                 <button className="opacity-0 transition group-hover:opacity-100" onClick={() => onDelete(c.id)}>
@@ -132,7 +143,12 @@ export function AdminAssistant() {
             }}
           />
           {snap.streaming
-            ? <Button variant="outline" onClick={() => machine.abort()}><Square size={14} />停止</Button>
+            ? <Button variant="outline" onClick={() => {
+                // 服务端停止(后台回合);本地仅断开观看流
+                const cid = snap.conversationId;
+                if (cid != null) void api.aiStop(cid).catch(() => {});
+                machine.abort();
+              }}><Square size={14} />停止</Button>
             : <Button onClick={onSend} disabled={!input.trim() || !!blocked}><Send size={14} />发送</Button>}
         </div>
       </div>

@@ -133,7 +133,18 @@ export function createApiClient(_opts: ApiClientOptions = {}) {
     aiConversations: () => get<{ code: 0; data: ConversationDto[] }>('/api/ai_conversations'),
     aiMessages: (cid: number) => get<{ code: 0; data: ChatMessageDto[] }>(`/api/ai_messages?cid=${cid}`),
     delAiConversation: (id: number) => post('/api/ai_del_conversation', { id }),
+    stopAiConversation: (cid: number) => post('/api/ai_stop', { cid }),
     streamChat,
+    // 重挂:running 会话的事件流(hello→回放本回合→实时续流)
+    attachEvents: async function* (cid: number, signal?: AbortSignal): AsyncGenerator<ChatSseEvent> {
+      const res = await fetch(`/api/ai_events?cid=${cid}`, { signal });
+      if (res.status === 401) { handle401(new ApiError(401, -1002, '未登录')); throw new ApiError(401, -1002, '未登录'); }
+      if (!res.ok || !res.body) throw new ApiError(res.status, -1, `重挂失败(HTTP ${res.status})`);
+      for await (const { event, data } of parseSseStream(res.body)) {
+        if (event === 'hb') continue;
+        yield JSON.parse(data) as ChatSseEvent;
+      }
+    },
   };
 }
 

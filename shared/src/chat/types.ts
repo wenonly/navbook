@@ -8,14 +8,18 @@ export type ChatSseEvent =
   | { type: 'tool_call'; id: string; name: string; args: unknown; danger: 'read' | 'write' }
   | { type: 'tool_result'; id: string; name: string; ok: boolean; summary: string; data: unknown }
   | { type: 'confirm_required'; messageId: number; id: string; name: string; args: unknown; summary: string }
-  | { type: 'done'; messageIds: number[] }
-  | { type: 'error'; code: number; msg: string };
+  | { type: 'done'; messageIds: number[]; stopped?: boolean }
+  | { type: 'error'; code: number; msg: string }
+  | { type: 'hello'; running: boolean }
+  | { type: 'resync' };
 
 export interface UserMsgContent { text: string }
 export interface AssistantMsgContent {
   text: string;
   reasoning: string;
   toolCalls: Array<{ id: string; name: string; args: unknown }>;
+  live?: boolean;
+  truncated?: boolean;
 }
 export type ToolStatus = 'ok' | 'error' | 'pending' | 'rejected';
 export interface ToolMsgContent {
@@ -26,11 +30,12 @@ export interface ToolMsgContent {
   summary: string;
   result: unknown;
 }
-export type ChatMsgContent = UserMsgContent | AssistantMsgContent | ToolMsgContent;
+export interface ErrorMsgContent { text: string }
+export type ChatMsgContent = UserMsgContent | AssistantMsgContent | ToolMsgContent | ErrorMsgContent;
 
 export interface ChatMessageDto {
   id: number;
-  role: 'user' | 'assistant' | 'tool';
+  role: 'user' | 'assistant' | 'tool' | 'error';
   content: ChatMsgContent;
   created_at: number;
 }
@@ -39,6 +44,7 @@ export interface ConversationDto {
   id: number;
   title: string;
   updated_at: number;
+  running?: boolean;
 }
 
 export interface ChatStreamBody {

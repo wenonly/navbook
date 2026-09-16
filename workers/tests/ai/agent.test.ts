@@ -495,3 +495,61 @@ describe('执行策略与同回合并发', () => {
     expect(toolMsg?.content).toContain('GitHub');
   });
 });
+
+describe('中断自愈与渐进落库(DO 后台回合)', () => {
+  it('provider 中途抛错:半截 assistant 标 truncated 落库 + error 行落库 + error 事件', async () => {
+    const provider = new (class extends FakeProvider {
+      constructor() { super([]); }
+      // eslint-disable-next-line require-yield
+      async *streamChat(): AsyncGenerator<ProviderStreamEvent> {
+        yield { type: 'text', delta: '写到一半' };
+        throw new Error('厂商连接断了');
+      }
+    })([]);
+    const { createConversation } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    const events = await collectEvents(provider, { message: 'hi', conversationId: conv.id });
+    expect(events.some(e => e.type === 'error' && e.msg.includes('断了'))).toBe(true);
+    const msgs = await (await import('../../src/ai/conversations')).listMessages(db(), conv.id);
+    const assistant = msgs.find(m => m.role === 'assistant')!;
+    expect(assistant.content).toMatchObject({ text: '写到一半', truncated: true });
+    expect(msgs.some(m => m.role === 'error')).toBe(true);   // error 也是消息
+  });
+
+  it('停止(signal abort):半截标 truncated,done{stopped:true},无 error 行', async () => {
+    const ctl = new AbortController();
+    const provider = new (class extends FakeProvider {
+      constructor() { super([]); }
+      async *streamChat(): AsyncGenerator<ProviderStreamEvent> {
+        yield { type: 'text', delta: '开头' };
+        ctl.abort();
+        throw Object.assign(new Error('aborted'), { name: 'AbortError' });
+      }
+    })([]);
+    const { createConversation, listMessages } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    const events: ChatSseEvent[] = [];
+    await runAgentTurn({ db: db(), provider }, EMPTY_CFG, {
+      conversationId: conv.id, message: 'hi',
+      emit: async e => { events.push(e); },
+      signal: ctl.signal,
+    });
+    const done = events.find(e => e.type === 'done') as any;
+    expect(done?.stopped).toBe(true);
+    expect(events.some(e => e.type === 'error')).toBe(false);
+    const msgs = await listMessages(db(), conv.id);
+    expect((msgs.find(m => m.role === 'assistant')!.content as any).truncated).toBe(true);
+    expect(msgs.some(m => m.role === 'error')).toBe(false);
+  });
+
+  it('正常回合结束:live 标记被清除(前端 open 不再跳过)', async () => {
+    const provider = new FakeProvider([[{ type: 'text', delta: '完整回答' }, { type: 'finish', reason: 'stop' }]]);
+    const { createConversation, listMessages } = await import('../../src/ai/conversations');
+    const conv = await createConversation(db(), 't');
+    await collectEvents(provider, { message: 'hi', conversationId: conv.id });
+    const msgs = await listMessages(db(), conv.id);
+    const assistant = msgs.find(m => m.role === 'assistant')!;
+    expect((assistant.content as any).live).toBeUndefined();
+    expect(assistant.content).toMatchObject({ text: '完整回答' });
+  });
+});

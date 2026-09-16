@@ -24,3 +24,13 @@ binding = "ASSETS"
 run_worker_first = true
 html_handling = "none"
 not_found_handling = "none"
+
+# AI 助手后台回合:每会话一个 DO(断连续跑/重挂续流;Free 计划 SQLite-backed)
+[durable_objects]
+bindings = [
+  { name = "AGENT", class_name = "AgentTurnDO" }
+]
+
+[[migrations]]
+tag = "v1_do_agent"
+new_sqlite_classes = ["AgentTurnDO"]

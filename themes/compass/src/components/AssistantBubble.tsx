@@ -11,6 +11,7 @@ const api = createApiClient({ onUnauthorized: false });
 const machine = new ChatMachine({
   history: async (cid: number): Promise<ChatMessageDto[]> => (await api.aiMessages(cid)).data,
   stream: (body, signal) => api.streamChat(body, signal) as AsyncGenerator<ChatSseEvent>,
+  attach: (cid, signal) => api.attachEvents(cid, signal) as AsyncGenerator<ChatSseEvent>,
 });
 
 const CID_KEY = 'compass-ai-cid';
@@ -105,7 +106,10 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }}
         />
         {snap.streaming
-          ? <button className="rounded-input border border-border px-3 py-1.5 text-xs text-fg" onClick={() => machine.abort()}>停止</button>
+          ? <button className="rounded-input border border-border px-3 py-1.5 text-xs text-fg" onClick={() => {
+              if (snap.conversationId != null) void api.stopAiConversation(snap.conversationId).catch(() => {});
+              machine.abort();
+            }}>停止</button>
           : <button className="rounded-input bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-strong disabled:opacity-50"
               disabled={!!blocked} onClick={send}>发送</button>}
       </div>
@@ -114,6 +118,11 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
 }
 
 function Item({ item }: { item: UiItem }) {
+  if (item.kind === 'error') {
+    return <p className="rounded-input border border-red-300/60 bg-red-50/60 px-3 py-2 text-xs text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-400">
+      {item.text}
+    </p>;
+  }
   if (item.kind === 'user') {
     return <div className="flex justify-end">
       <div className="max-w-[80%] rounded-2xl bg-accent px-3.5 py-2 text-sm text-white whitespace-pre-wrap">{item.text}</div>

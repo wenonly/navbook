@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
-import { streamSSE } from 'hono/streaming';
 import type { AppEnv } from './types';
 import { getDb } from './db/client';
 import { corsMiddleware } from './middleware/cors';
@@ -32,11 +31,7 @@ import {
   getAiConfigHandler, saveAiConfigHandler,
   listAiConversationsHandler, deleteAiConversationHandler, listAiMessagesHandler,
 } from './handlers/ai';
-import { runAgentTurn, TURN_TIMEOUT_MS } from './ai/agent';
-import { OpenAiCompatProvider } from './ai/provider';
-import { McpRegistry } from './ai/mcp';
-import { loadAiConfig } from './ai/config';
-import type { ChatSseEvent } from './ai/types';
+import { createConversation } from './ai/conversations';
 
 /** body 解析统一入口：非法/缺失 body 一律落空对象，交给 Zod 报具体字段错误 */
 async function parseBody(c: Context<AppEnv>): Promise<Record<string, unknown>> {
@@ -335,48 +330,43 @@ export function createApp() {
     return c.json(await listAiMessagesHandler(c.get('db'), p.cid));
   });
 
-  // SSE 主端点:鉴权在流开始前(zod 错误走 onError 出 JSON,非流)。
-  // 心跳:静默期每 15s 写注释行,防边缘节点掐空闲连接;整轮上限 180s。
+  // SSE 主端点:鉴权+Zod 在此;执行转发给会话专属 DO(断连续跑/重挂续流,见 do/AgentTurnDO.ts)。
+  // cid=0 时预建会话(DO id 需要确定 cid);agent 的 conversation 事件会把 cid 带给前端。
   app.post('/api/ai_chat', authMiddleware, async c => {
     const body = await parseBody(c);
     const p = aiChatSchema.parse(body);
     const db = c.get('db');
-    const signal = AbortSignal.any([c.req.raw.signal, AbortSignal.timeout(TURN_TIMEOUT_MS)]);
-
-    return streamSSE(c, async stream => {
-      let closed = false;
-      stream.onAbort(() => { closed = true; });
-      const hb = setInterval(() => { if (!closed) void stream.write(': hb\n\n').catch(() => {}); }, 15_000);
-      const emit = async (ev: ChatSseEvent) => {
-        if (closed) return;
-        await stream.writeSSE({ event: ev.type, data: JSON.stringify(ev) });
-      };
-      try {
-        const cfg = await loadAiConfig(db);
-        await runAgentTurn(
-          {
-            db,
-            provider: new OpenAiCompatProvider(),
-            // 未配置 MCP 时不实例化 Registry,行为与无 MCP 完全一致
-            ...(cfg.mcpServers.length ? { mcp: new McpRegistry(cfg.mcpServers) } : {}),
-          }, cfg,
-          {
-            conversationId: p.cid,
-            ...(p.message !== undefined ? { message: p.message } : {}),
-            ...(p.confirm_message_id ? { confirm: { messageId: p.confirm_message_id, action: p.confirm_action ?? 'approve' } } : {}),
-            emit,
-            signal,
-          },
-        );
-      } catch (e) {
-        // 客户端断开后的写入失败忽略;真正的业务错误仍要送达
-        try {
-          await emit({ type: 'error', code: -2000, msg: e instanceof Error ? e.message : 'AI 服务异常' });
-        } catch { /* 流已关 */ }
-      } finally {
-        clearInterval(hb);
-      }
+    let cid = p.cid;
+    if (!cid) {
+      const conv = await createConversation(db, '');
+      cid = conv.id;
+    }
+    const stub = c.env.AGENT.get(c.env.AGENT.idFromName(`conv-${cid}`));
+    return stub.fetch('https://agent-do/turn', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        cid,
+        ...(p.message !== undefined ? { message: p.message } : {}),
+        ...(p.confirm_message_id ? { confirm: { messageId: p.confirm_message_id, action: p.confirm_action ?? 'approve' } } : {}),
+      }),
     });
+  });
+
+  // 重挂:running 时回放本回合事件流并实时续流;否则 hello+done 即关(前端以 DB 为准)
+  app.get('/api/ai_events', authMiddleware, async c => {
+    const p = aiMessagesSchema.parse({ cid: c.req.query('cid'), token: c.req.query('token') });
+    const stub = c.env.AGENT.get(c.env.AGENT.idFromName(`conv-${p.cid}`));
+    return stub.fetch('https://agent-do/events');
+  });
+
+  // 停止:服务端 abort(断开连接不再有停止语义);幂等
+  app.post('/api/ai_stop', authMiddleware, async c => {
+    const body = await parseBody(c);
+    const p = aiMessagesSchema.parse(body);
+    const stub = c.env.AGENT.get(c.env.AGENT.idFromName(`conv-${p.cid}`));
+    const res = await stub.fetch('https://agent-do/stop', { method: 'POST' });
+    return c.json(await res.json());
   });
 
   // ---------- 伺服路由（放最后） ----------

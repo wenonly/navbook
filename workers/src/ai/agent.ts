@@ -9,7 +9,7 @@ import { buildBatchTools, resolveExecPolicy } from './batch';
 import { assembleProviderMessages } from './context';
 import { loadMemory, MEMORY_MAX_CHARS } from './memory';
 import {
-  createConversation, insertMessage, listMessages, countMessages, updateMessageContent,
+  insertMessage, listMessages, countMessages, updateMessageContent, clearLiveFlags,
 } from './conversations';
 import type { AiTool } from './tools';
 
@@ -51,19 +51,18 @@ export interface AgentTurnOptions {
 export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTurnOptions): Promise<void> {
   const { db, provider } = deps;
   const emit = opts.emit;
+  // 会话由入口预建(router/DO);conversation 事件总发(幂等,前端 send 流靠它拿 cid)
+  const cid = opts.conversationId;
 
-  const fail = async (msg: string) => { await emit({ type: 'error', code: -2000, msg }); };
+  const fail = async (msg: string) => {
+    await insertMessage(db, cid, 'error', { text: msg }).catch(() => {});
+    await emit({ type: 'error', code: -2000, msg });
+  };
 
   const active = resolveActiveProvider(cfg);
   if (!active) return fail('尚未配置可用的模型厂商,请到后台「AI 助手 → 模型配置」添加');
 
-  // 新会话:先建库再发 conversation 事件(前端靠它拿到 cid)
-  let cid = opts.conversationId;
-  if (!cid) {
-    const conv = await createConversation(db, '');
-    cid = conv.id;
-    await emit({ type: 'conversation', cid, title: '' });
-  }
+  await emit({ type: 'conversation', cid, title: '' });
 
   // ---- MCP 工具解析:必须在 confirm 块之前(确认续跑是全新 HTTP 请求,
   // approve 时需要已解析好的 wrapper 才能执行工具;缓存命中时此处零网络开销) ----
@@ -132,17 +131,28 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
     // ---- 组装上下文(窗口切割/映射/合法性防线,见 context.ts) ----
     const messages = assembleProviderMessages(await listMessages(db, cid), systemPrompt);
 
-    // ---- 流式调用厂商,转发 delta/reasoning ----
+    // ---- 流式调用厂商,转发 delta/reasoning;渐进落库(2s 节流,断连/崩溃后半截仍在) ----
     let text = '';
     let reasoning = '';
+    const draftContent = (extra: Record<string, unknown> = {}) =>
+      ({ text, reasoning, toolCalls: [], live: true, ...extra });
+    const draftMsg = await insertMessage(db, cid, 'assistant', draftContent());
+    messageIds.push(draftMsg.id);
+    let lastFlush = 0;
+    const maybeFlush = async () => {
+      const t = Date.now();
+      if (t - lastFlush < 2000) return;
+      lastFlush = t;
+      await updateMessageContent(db, draftMsg.id, draftContent()).catch(() => {});
+    };
     const toolCalls: Array<{ id: string; name: string; args: unknown }> = [];
     try {
       for await (const ev of provider.streamChat({
         baseUrl: active.baseUrl, apiKey: active.apiKey, model: active.model,
         messages, tools, signal: opts.signal,
       })) {
-        if (ev.type === 'text') { text += ev.delta; await emit({ type: 'delta', text: ev.delta }); }
-        else if (ev.type === 'reasoning') { reasoning += ev.delta; await emit({ type: 'reasoning', text: ev.delta }); }
+        if (ev.type === 'text') { text += ev.delta; await emit({ type: 'delta', text: ev.delta }); await maybeFlush(); }
+        else if (ev.type === 'reasoning') { reasoning += ev.delta; await emit({ type: 'reasoning', text: ev.delta }); await maybeFlush(); }
         else if (ev.type === 'tool_call') {
           let args: unknown = {};
           try { args = JSON.parse(ev.call.args || '{}'); } catch { args = { _raw: ev.call.args }; }
@@ -150,14 +160,24 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
         }
       }
     } catch (e) {
-      return fail(e instanceof Error ? e.message : '厂商请求失败');
+      // 中断自愈:半截 assistant 标 truncated 落库;停止(abort)与错误分流
+      const stopped = opts.signal?.aborted
+        || (e instanceof Error && (e.name === 'AbortError' || e.name === 'TimeoutError'));
+      await updateMessageContent(db, draftMsg.id, draftContent({ truncated: true })).catch(() => {});
+      if (stopped) {
+        await clearLiveFlags(db, messageIds).catch(() => {});
+        await emit({ type: 'done', messageIds, stopped: true });
+        return;
+      }
+      await fail(e instanceof Error ? e.message : '厂商请求失败');
+      return;
     }
 
-    // ---- assistant 消息落库(ReAct:中间推理也是消息,历史即思考链) ----
-    const assistantMsg = await insertMessage(db, cid, 'assistant', { text, reasoning, toolCalls });
-    messageIds.push(assistantMsg.id);
+    // ---- assistant 消息定稿(ReAct:中间推理也是消息,历史即思考链;live 留待回合末统一清) ----
+    await updateMessageContent(db, draftMsg.id, { text, reasoning, toolCalls, live: true });
 
     if (toolCalls.length === 0) {
+      await clearLiveFlags(db, messageIds).catch(() => {});
       await emit({ type: 'done', messageIds });
       return;
     }
@@ -193,6 +213,7 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
     }
     await Promise.all(autoTasks);   // 同回合 auto 类并发(读/抓取彼此独立,无 D1 写竞态)
     if (needConfirm) {   // 有确认卡即终止本轮(前端确认后恢复)
+      await clearLiveFlags(db, messageIds).catch(() => {});
       await emit({ type: 'done', messageIds });
       return;
     }

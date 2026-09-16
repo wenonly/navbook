@@ -92,6 +92,9 @@ export const aiConversations = sqliteTable('on_ai_conversations', {
   title: text('title').notNull().default(''),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
+  // DO 后台回合状态:1=回合进行中(跨崩溃可见,alarm 兜底判定用)
+  running: integer('running').notNull().default(0),
+  runningSince: integer('running_since'),
 }, (t) => [
   index('on_ai_conversations_updated_at_idx').on(t.updatedAt),
 ]);

@@ -73,9 +73,11 @@ function toProviderMessage(role: 'user' | 'assistant' | 'tool', content: ChatMsg
 
 /** 唯一入口:库内完整历史 → [system + 合法 wire 消息] */
 export function assembleProviderMessages(history: ChatMessageDto[], systemPrompt: string): ProviderMessage[] {
-  const win = cutContextWindow(history, CONTEXT_LIMIT);
+  // error 行是展示产物(UI 红条),不进厂商上下文
+  const usable = history.filter((m): m is ChatMessageDto & { role: 'user' | 'assistant' | 'tool' } => m.role !== 'error');
+  const win = cutContextWindow(usable, CONTEXT_LIMIT);
   return [
     { role: 'system', content: systemPrompt },
-    ...sanitizeProviderMessages(win.map(m => toProviderMessage(m.role, m.content))),
+    ...sanitizeProviderMessages(win.map(m => toProviderMessage(m.role as 'user' | 'assistant' | 'tool', m.content))),
   ];
 }

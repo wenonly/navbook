@@ -49,8 +49,10 @@ export type ChatSseEvent =
   | { type: 'tool_call'; id: string; name: string; args: unknown; danger: 'read' | 'write' }
   | { type: 'tool_result'; id: string; name: string; ok: boolean; summary: string; data: unknown }
   | { type: 'confirm_required'; messageId: number; id: string; name: string; args: unknown; summary: string }
-  | { type: 'done'; messageIds: number[] }
-  | { type: 'error'; code: number; msg: string };
+  | { type: 'done'; messageIds: number[]; stopped?: boolean }
+  | { type: 'error'; code: number; msg: string }
+  | { type: 'hello'; running: boolean }        // 仅 /events 重挂流首帧
+  | { type: 'resync' };                         // 缓冲超限:前端全量重读 DB
 
 // ---- on_ai_messages.content 的 JSON 形状(镜像 shared ChatMsgContent) ----
 export interface UserMsgContent { text: string }
@@ -58,6 +60,10 @@ export interface AssistantMsgContent {
   text: string;
   reasoning: string;
   toolCalls: Array<{ id: string; name: string; args: unknown }>;
+  /** 渐进落库标记:回合进行中的行;回合结束清除。前端 running 时跳过该行(由事件流呈现) */
+  live?: boolean;
+  /** 中断标记(停止/网络断/崩溃残留) */
+  truncated?: boolean;
 }
 export type ToolStatus = 'ok' | 'error' | 'pending' | 'rejected';
 export interface ToolMsgContent {
@@ -68,7 +74,8 @@ export interface ToolMsgContent {
   summary: string;
   result: unknown;
 }
-export type ChatMsgContent = UserMsgContent | AssistantMsgContent | ToolMsgContent;
+export interface ErrorMsgContent { text: string }
+export type ChatMsgContent = UserMsgContent | AssistantMsgContent | ToolMsgContent | ErrorMsgContent;
 
 // ---- Provider 抽象(agent 只见接口,测试注入 Fake) ----
 export interface ProviderMessage {

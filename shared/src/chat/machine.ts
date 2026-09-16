@@ -5,10 +5,13 @@ import type { ChatMessageDto, ChatSseEvent, ChatStreamBody } from './types';
 export interface ChatTransport {
   history(cid: number): Promise<ChatMessageDto[]>;
   stream(body: ChatStreamBody, signal?: AbortSignal): AsyncGenerator<ChatSseEvent>;
+  /** 重挂:running 会话的事件流(hello→回放→实时);无 attach 能力则跳过 */
+  attach?(cid: number, signal?: AbortSignal): AsyncGenerator<ChatSseEvent>;
 }
 
 export type UiItem =
   | { kind: 'user'; text: string }
+  | { kind: 'error'; text: string }
   | { kind: 'assistant'; id: number | null; text: string; reasoning: string; streaming: boolean }
   | {
       kind: 'tool'; id: string; name: string; args: unknown;
@@ -45,7 +48,7 @@ export class ChatMachine {
     for (const l of this.listeners) l();
   }
 
-  /** 载入历史(或 cid=null 开新会话清空) */
+  /** 载入历史(或 cid=null 开新会话清空);running 会话自动重挂续流(事件流呈现回合,跳过 live 行) */
   async open(cid: number | null) {
     this.abort();
     if (cid == null) {
@@ -53,7 +56,33 @@ export class ChatMachine {
       return;
     }
     const msgs = await this.transport.history(cid);
-    this.set({ conversationId: cid, items: msgs.map(toItem), streaming: false, error: null });
+    const items = msgs
+      .filter(m => !(m.role === 'assistant' && (m.content as any)?.live))
+      .map(toItem);
+    this.set({ conversationId: cid, items, streaming: false, error: null });
+    void this.attachLoop(cid);
+  }
+
+  /** 重挂循环:hello{running}→回放+实时;hello{!running}/done 即收 */
+  private async attachLoop(cid: number) {
+    if (!this.transport.attach) return;
+    this.controller = new AbortController();
+    try {
+      for await (const ev of this.transport.attach(cid, this.controller.signal)) {
+        if (ev.type === 'hello') {
+          if (!ev.running) break;
+          this.set({ streaming: true });
+          continue;
+        }
+        if (ev.type === 'resync') {
+          this.set({ error: '直播缓冲超限,已截断;刷新页面可查看完整记录' });
+          continue;
+        }
+        this.reduce(ev);
+        if (ev.type === 'done') break;
+      }
+    } catch { /* 重挂连接断:保持当前状态 */ }
+    this.finishStreaming();
   }
 
   async send(text: string) {
@@ -216,6 +245,7 @@ export function activityLabel(s: Pick<ChatSnapshot, 'items' | 'streaming'>): str
 
 function toItem(m: ChatMessageDto): UiItem {
   const c = m.content as any;
+  if (m.role === 'error') return { kind: 'error', text: c.text ?? '' };
   if (m.role === 'user') return { kind: 'user', text: c.text ?? '' };
   if (m.role === 'assistant') {
     return { kind: 'assistant', id: m.id, text: c.text ?? '', reasoning: c.reasoning ?? '', streaming: false };

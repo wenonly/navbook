@@ -231,3 +231,57 @@ describe('工具卡交错嵌聊天流(多步 ReAct 直播流)', () => {
     expect(m.snapshot().items.map(i => i.kind)).toEqual(['user', 'assistant', 'tool', 'assistant']);
   });
 });
+
+describe('重挂续流(DO 后台回合)', () => {
+  function attachableTransport(script: ChatSseEvent[][], historyDtos: ChatMessageDto[] = []) {
+    let call = 0;
+    return {
+      stream: async function* (): AsyncGenerator<ChatSseEvent> {
+        yield* script[call++] ?? [{ type: 'done', messageIds: [] }];
+      },
+      history: async () => historyDtos,
+      attach: async function* (cid: number): AsyncGenerator<ChatSseEvent> {
+        void cid;
+        yield* script[call++] ?? [{ type: 'done', messageIds: [] }];
+      },
+    };
+  }
+
+  it('open:running 会话跳过 live 行并重挂(hello→重放→done 与直播同形态)', async () => {
+    const history: ChatMessageDto[] = [
+      { id: 1, role: 'user', content: { text: '查' }, created_at: 1 },
+      { id: 2, role: 'assistant', content: { text: '半截', reasoning: '', toolCalls: [], live: true }, created_at: 2 },   // live 行→跳过
+    ];
+    const t = attachableTransport([[
+      { type: 'hello', running: true },
+      { type: 'delta', text: '半截' },        // 回放:从回合前状态重放,半截由事件流重建
+      { type: 'delta', text: '续写完成' },
+      { type: 'done', messageIds: [] },
+    ]], history);
+    const m = new ChatMachine(t as any);
+    await m.open(7); await flush();
+    expect(m.snapshot().conversationId).toBe(7);
+    const items = m.snapshot().items;
+    expect(items.map(i => i.kind)).toEqual(['user', 'assistant']);   // live 行未重复
+    expect((items[1] as any).text).toBe('半截续写完成');
+    expect(m.snapshot().streaming).toBe(false);
+  });
+
+  it('open:非 running 会话 hello 后即收,不加气泡', async () => {
+    const t = attachableTransport([[{ type: 'hello', running: false }, { type: 'done', messageIds: [] }]]);
+    const m = new ChatMachine(t as any);
+    await m.open(3); await flush();
+    expect(m.snapshot().items).toEqual([]);
+    expect(m.snapshot().streaming).toBe(false);
+  });
+
+  it('open:error 行映射为 error 红条', async () => {
+    const history: ChatMessageDto[] = [
+      { id: 1, role: 'user', content: { text: 'hi' }, created_at: 1 },
+      { id: 2, role: 'error', content: { text: '厂商接口错误' }, created_at: 2 },
+    ];
+    const m = new ChatMachine({ stream: async function* () {}, history: async () => history } as any);
+    await m.open(5);
+    expect(m.snapshot().items[1]).toEqual({ kind: 'error', text: '厂商接口错误' });
+  });
+});
