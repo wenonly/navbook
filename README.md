@@ -1,33 +1,100 @@
 # NavBook
 
-跑在 Cloudflare Workers 上的书签导航站 + AI 管理助手。单用户自部署:一个 D1 数据库、一个 Worker,免费额度内即可运行。API 兼容 OneNav 浏览器插件(X-Token)与 `onenav.bookmarks` 导入导出格式(PHP 原版互通)。
+跑在 Cloudflare Workers 上的书签导航站 + AI 管理助手。单用户自部署:一个 D1 数据库、一个 Worker、一个 Durable Object,免费额度内即可运行。数据兼容 OneNav(PHP 版)——导入导出互通、浏览器插件直接可用。
 
 ![首页](docs/screenshots/home.png)
 
-## 功能
+## 本应用特色
 
-**书签导航**
-- 两级分类 + 链接管理,公开/私密属性,关键字搜索与筛选,点击统计
-- 多主题(卡片网格 compass / 紧凑列表 minima),后台一键切换;主题是独立 SPA,复制目录即可开发新主题
-- 隐私模式:游客连首页都不可见(302 登录)
+与通用导航站/书签服务相比,NavBook 的差异点:
 
-**AI 助手(管理端全功能,主题页登录态气泡同款)**
-- OpenAI 兼容多厂商(DeepSeek/通义/Kimi/智谱/豆包/OpenAI/Claude/Gemini/自定义),预设一键填充,Key 打码回显
-- **ReAct 工具调用**:13 个内置工具直连站内数据——搜索/分类/详情/点击统计/站点设置/网页抓取(fetch_url,HTMLRewriter 提取正文)/增删改链接与分类/记忆更新;工具卡交错嵌在聊天流中,spinner + 计时
-- **统一批量协议**:`batch_read`(≤10 项并发)/ `batch_write`(≤20 项聚合一张确认卡),action 枚举按当前工具集动态生成,新工具零代码自动可嵌
-- **执行策略**:`toolPolicy` 按工具覆盖确认行为(如把 fetch_url 设为"需确认"),配置 > MCP trust > 工具默认,单一决策点收口
-- **写操作人工确认**:确认卡(后端生成操作摘要),确认/取消后恢复对话;pending 卡阻塞新消息(Claude 权限提示式串行)
-- **远程 MCP**(Streamable HTTP):后台可配 ≤5 个服务器,工具自动发现(缓存 10 分钟)并入 agent,联网搜索/读网页即插即用
-- **长期记忆**:单文档(≤4000 字符)每轮注入 system prompt,模型经 `memory_write` 自维护;升级路径预留 CF Agent Memory
-- **思考流**(reasoning_content)折叠展示,Markdown 渲染
+1. **AI 助手直接操作站内数据,而非只会聊天**——13 个内置工具直连业务层(搜索/分类/链接增删改/点击统计/网页抓取),你说"帮我把 GitHub 改成私密,再抓一下它首页简介补到描述里",它查、改、抓、填一气呵成;所有写操作出人工确认卡,后端生成操作摘要,点确认才执行
+2. **统一的批量工具协议**——`batch_read`(≤10 项并发)/`batch_write`(≤20 项共享一张确认卡),action 枚举按当前工具集动态生成,以后加任何工具零代码自动可嵌;每个工具的"直接执行/需确认"行为可在配置页单独覆盖
+3. **后台回合不断线**——聊天回合跑在会话专属 Durable Object 里:关闭页面继续生成,重开自动重挂续流(事件流重放,无轮询),渐进落库 + alarm 崩溃自愈,多会话物理隔离;空闲零计费
+4. **外部能力即插即用**——远程 MCP(Streamable HTTP)后台可配,工具自动发现并入 agent,联网搜索/读网页配个 URL 就有
+5. **长期记忆**——单文档(≤4000 字符)每轮注入,模型自己增删改压缩;跨会话记得你的偏好
+6. **主题即插件**——主题是独立 SPA,复制目录改改就是新主题,后台一键切换;聊天核心(状态机/SSE 协议)在 shared 包,管理端与主题气泡共用一份逻辑
+7. **单用户自部署,成本为零**——无注册体系、无多租户复杂度;Cloudflare 免费额度(D1/Workers/DO)覆盖个人用量绰绰有余,数据主权完全在自己手里
 
 ![AI 助手](docs/screenshots/assistant.png)
 
-**后台回合(Durable Object)**
-- 聊天回合在会话专属 DO 内运行:**关闭页面继续生成**,重开自动重挂续流(事件流重放,无轮询);多会话物理隔离
-- 渐进落库(2s 节流)+ 断点标记 + alarm 崩溃自愈;服务端停止按钮;空闲零计费(免费额度内)
+## 为什么部署在 Cloudflare
+
+- **零运维**:不用买服务器、不用装数据库、不用管 TLS 续期和进程守护。`pnpm deploy` 一条命令,应用、静态资源、数据库、后台任务全部上线;更新 = 再跑一次 deploy
+- **免费额度真实够用**:Workers 10 万请求/天、D1 5GB 存储、Durable Objects 13,000 GB-s/天(本项目用量约为额度的 1%,实测)——个人导航站 + 日常 AI 对话基本 $0
+- **全栈一体**:D1(SQLite,单库即真相源)+ Durable Object(后台回合的物理载体)+ Workers(边缘 API/静态伺服)在一个平台闭环,不需要额外拼 Redis/队列/向量库
+- **全球边缘网络**:自定义域名走 Cloudflare 节点,国内外访问延迟都可接受(workers.dev 域名在国内不可达,所以要用自定义域名,见部署第 4 步)
+- **架构上限高**:SSE 流式、Durable Object 单写者、cron/queue 生态——本项目"断连续跑 + 重挂"的架构只有 DO 这类原语能干净地做出来,而它就在免费额度里
+
+## 部署到 Cloudflare(完整步骤)
+
+前提:一个 Cloudflare 账号(免费即可);本机装有 Node 20+ 与 pnpm;域名一个(可选但推荐,见第 4 步)。
+
+### 1. 登录 wrangler
+
+```bash
+pnpm install
+npx wrangler login      # 浏览器跳转授权
+```
+
+### 2. 建数据库并应用迁移
+
+```bash
+npx wrangler d1 create navbook
+# 输出的 database_id 填到下一步 wrangler.toml
+
+pnpm -C workers db:migrate:remote     # 应用全部迁移(表结构 + DO 所需列)
+```
+
+### 3. 配置 wrangler.toml
+
+把 `database_id` 换成第 2 步输出的值。若暂不用自定义域名,先注释掉 `routes` 段(用 workers.dev 域名,国内不可达,仅测试用)。
+
+### 4. 绑定自定义域名(推荐)
+
+在你的域名 DNS( ideally 托管在 Cloudflare)加一条指向站点的记录,然后配置 routes:
+
+```toml
+routes = [
+  { pattern = "nav.example.com", custom_domain = true }
+]
+```
+
+deploy 时 Cloudflare 会自动为该域名签发证书。
+
+### 5. 构建并部署
+
+```bash
+pnpm deploy     # 构建三端(compass/minima/web)→ 聚合 → wrangler deploy
+```
+
+首次部署会自动创建 Durable Object(SQLite-backed,免费计划支持,无需手动操作)。
+
+### 6. 初始化
+
+浏览器打开 `https://你的域名/admin`,按引导设置管理员密码,即进入后台。然后:
+
+- **模型配置**(AI 助手用):选预设厂商(DeepSeek/通义/Kimi/智谱/OpenAI/Claude/Gemini…)填 API Key,设为当前;可选配 MCP 服务器(如 Tavily,Key 拼进 URL)、调整工具确认策略
+- **导入旧数据**:从 OneNav(PHP)导出的 JSON 在「导入导出」页直接导入(格式 `onenav.bookmarks`,同名分类合并、重复 URL 跳过)
+
+### 7. 日常更新
+
+```bash
+git pull && pnpm install && pnpm deploy
+pnpm -C workers db:migrate:remote    # 有新迁移时执行(deploy 日志会提示)
+```
+
+> **计划建议**:免费计划即可跑通全部功能;AI 长对话回合在 Workers 免费版 10ms CPU 上限下偶尔紧张,**重度使用 AI 助手建议 Workers Paid($5/月)**,DO 用量折算约 $0.06/月,可忽略。
 
 ![主题页气泡](docs/screenshots/bubble.png)
+
+## 浏览器插件
+
+**本项目当前没有自带浏览器插件**,但**完全兼容 OneNav 的浏览器插件**(Chrome/Edge 商店搜索 OneNav 安装)。用法:
+
+1. 后台「Token 管理」页生成 SecretKey,页面上会给出可直接复制的 **X-Token**(`md5(用户名 + SecretKey)`)
+2. 插件设置里填站点地址(如 `https://nav.example.com`)和该 Token
+3. 即可在浏览器里一键收藏网页到本站(走 `/index.php?c=api&method=...` 兼容入口与 X-Token 鉴权)
 
 ## 结构
 
@@ -46,7 +113,7 @@ shared/   契约包(@navbook/shared):API client + SSE 解析 + 聊天状态机(�
 
 ```bash
 pnpm install
-pnpm -C workers db:migrate:local    # 首次:建本地 D1(可加 --local 演示数据)
+pnpm -C workers db:migrate:local    # 首次:建本地 D1
 pnpm dev                            # workers(8787)+ web(5173)
 pnpm --filter @navbook/theme-compass dev   # 单主题热更
 pnpm test                           # workers 265 测试(真实 D1 + 真实 DO)
@@ -54,18 +121,6 @@ pnpm --filter @navbook/shared test  # 状态机/协议测试
 ```
 
 本地首次访问 `http://localhost:8787/admin` 走初始化流程设置管理员密码。
-
-## 部署
-
-```bash
-pnpm deploy   # 构建全部包 → 聚合到 workers/dist → wrangler deploy
-```
-
-首次部署需:`wrangler d1 create navbook` + `pnpm -C workers db:migrate:remote` + wrangler.toml 配 database_id 与 routes(自定义域名)。Durable Object 随首次 deploy 自动创建(SQLite-backed,免费计划可用)。
-
-## 数据迁移
-
-从旧 OneNav(PHP)导出 JSON → 后台「导入导出」页导入(格式 `onenav.bookmarks` 互通;同名分类合并、重复 URL 跳过)。
 
 ## 兼容契约(勿动)
 
