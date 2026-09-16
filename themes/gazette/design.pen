@@ -1,0 +1,2101 @@
+{
+  "version": "2.14",
+  "children": [
+    {
+      "type": "frame",
+      "id": "Ea4DC",
+      "x": 0,
+      "y": -560,
+      "name": "组件 · 目录条目",
+      "reusable": true,
+      "width": 720,
+      "layout": "vertical",
+      "gap": 2,
+      "padding": [
+        12,
+        0
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "M6UsV",
+          "name": "条目行",
+          "width": "fill_container",
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "xVQsa",
+              "name": "编号",
+              "fill": "$ink-soft",
+              "content": "01",
+              "fontFamily": "$font-serif",
+              "fontSize": 11,
+              "fontWeight": "normal",
+              "letterSpacing": 1
+            },
+            {
+              "type": "text",
+              "id": "kVCoR",
+              "name": "标题",
+              "fill": "$ink",
+              "content": "GitHub",
+              "lineHeight": 1.2,
+              "fontFamily": "$font-serif",
+              "fontSize": 17,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "y4vyK",
+              "name": "引导点",
+              "clip": true,
+              "width": "fill_container",
+              "height": 18,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "o4HR3u",
+                  "name": "点串",
+                  "fill": "$dots",
+                  "content": "············································································································································",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 14,
+                  "fontWeight": "normal",
+                  "letterSpacing": 4
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "E8jEtm",
+              "name": "域名",
+              "fill": "$ink-soft",
+              "content": "github.com",
+              "fontFamily": "$font-serif",
+              "fontSize": 11,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "cgNER",
+              "x": 0,
+              "y": 0,
+              "name": "密章",
+              "enabled": false,
+              "width": 18,
+              "height": 18,
+              "stroke": "$seal-red",
+              "strokeWidth": 1,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "slclS",
+                  "name": "密字",
+                  "fill": "$seal-red",
+                  "content": "密",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 10,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "I5HxW",
+          "name": "描述",
+          "fill": "$ink-soft",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "全球最大的代码托管平台,开源项目的大本营。",
+          "lineHeight": 1.35,
+          "fontFamily": "$font-serif",
+          "fontSize": 12,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "id": "O0WSUL",
+          "name": "条目分隔线",
+          "fill": "$line",
+          "width": "fill_container",
+          "height": 1
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "xbdrd",
+      "x": 820,
+      "y": -560,
+      "name": "组件 · 栏目标题",
+      "reusable": true,
+      "width": 720,
+      "layout": "vertical",
+      "gap": 8,
+      "children": [
+        {
+          "type": "frame",
+          "id": "MKheH",
+          "name": "标题行",
+          "width": "fill_container",
+          "justifyContent": "space_between",
+          "alignItems": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "gy91L",
+              "name": "左组",
+              "gap": 10,
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RNjN5",
+                  "name": "汉字编号",
+                  "fill": "$ink",
+                  "content": "壹",
+                  "lineHeight": 1.15,
+                  "fontFamily": "$font-serif",
+                  "fontSize": 18,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "Z4YVn",
+                  "name": "间隔点",
+                  "fill": "$seal-red",
+                  "content": "·",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "VQLFY",
+                  "name": "栏目名",
+                  "fill": "$ink",
+                  "content": "开发工具",
+                  "lineHeight": 1.15,
+                  "fontFamily": "$font-serif",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "EWZz3",
+                  "name": "英文名",
+                  "fill": "$ink-soft",
+                  "content": "DEVELOPMENT",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 10,
+                  "fontWeight": "normal",
+                  "letterSpacing": 3
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "nQup3",
+              "name": "条数",
+              "fill": "$ink-soft",
+              "content": "共 4 条",
+              "fontFamily": "$font-serif",
+              "fontSize": 10,
+              "fontWeight": "normal",
+              "letterSpacing": 1
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "m9DIB",
+          "name": "标题下划线",
+          "fill": "$ink",
+          "width": "fill_container",
+          "height": 1
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "i2SXGV",
+      "x": 0,
+      "y": 0,
+      "name": "画板1 · 首页 桌面",
+      "clip": true,
+      "width": 1280,
+      "height": 860,
+      "fill": "#F7F3EB",
+      "layout": "vertical",
+      "padding": [
+        28,
+        96,
+        0,
+        96
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "fLc6l",
+          "name": "刊头",
+          "width": "fill_container",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "D5qAEA",
+              "name": "上双线",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 3,
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "CuuXQ",
+                  "name": "上线一",
+                  "fill": "$ink",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "rectangle",
+                  "id": "LdjwP",
+                  "name": "上线二",
+                  "fill": "$ink",
+                  "width": "fill_container",
+                  "height": 1
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "s6NUA",
+              "name": "题区",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                10,
+                0,
+                6,
+                0
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "StfA5",
+                  "name": "站名",
+                  "fill": "$ink",
+                  "content": "NavBook 公报",
+                  "lineHeight": 1.1,
+                  "fontFamily": "$font-serif",
+                  "fontSize": 44,
+                  "fontWeight": "700",
+                  "letterSpacing": 6
+                },
+                {
+                  "type": "text",
+                  "id": "yDP48",
+                  "name": "日期行",
+                  "fill": "$ink-soft",
+                  "content": "第 42 期 · 2026 年 9 月 16 日 · 星期三 · 共 214 条书目",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 12,
+                  "fontWeight": "normal",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "m1upq",
+              "name": "下双线",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 3,
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "hgri2",
+                  "name": "下线一",
+                  "fill": "$ink",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "rectangle",
+                  "id": "tWTrE",
+                  "name": "下线二",
+                  "fill": "$ink",
+                  "width": "fill_container",
+                  "height": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "YOgPj",
+          "name": "栏目索引",
+          "width": "fill_container",
+          "gap": 32,
+          "padding": [
+            10,
+            0,
+            12,
+            0
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "xwb4O",
+              "name": "当前项",
+              "fill": "$ink",
+              "padding": [
+                6,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "soU5Y",
+                  "name": "索引项 全部",
+                  "fill": "#F7F3EB",
+                  "content": "全部",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 12,
+                  "fontWeight": "normal",
+                  "letterSpacing": 4
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "m8MuJ",
+              "name": "索引项 开发工具",
+              "fill": "$ink",
+              "content": "开发工具",
+              "fontFamily": "$font-serif",
+              "fontSize": 12,
+              "fontWeight": "normal",
+              "letterSpacing": 4
+            },
+            {
+              "type": "text",
+              "id": "yXigM",
+              "name": "索引项 AI 工具",
+              "fill": "$ink",
+              "content": "AI 工具",
+              "fontFamily": "$font-serif",
+              "fontSize": 12,
+              "fontWeight": "normal",
+              "letterSpacing": 4
+            },
+            {
+              "type": "text",
+              "id": "oihZp",
+              "name": "索引项 设计资源",
+              "fill": "$ink",
+              "content": "设计资源",
+              "fontFamily": "$font-serif",
+              "fontSize": 12,
+              "fontWeight": "normal",
+              "letterSpacing": 4
+            },
+            {
+              "type": "text",
+              "id": "AHKlz",
+              "name": "索引项 学习社区",
+              "fill": "$ink",
+              "content": "学习社区",
+              "fontFamily": "$font-serif",
+              "fontSize": 12,
+              "fontWeight": "normal",
+              "letterSpacing": 4
+            },
+            {
+              "type": "text",
+              "id": "HZrum",
+              "name": "索引项 云服务",
+              "fill": "$ink",
+              "content": "云服务",
+              "fontFamily": "$font-serif",
+              "fontSize": 12,
+              "fontWeight": "normal",
+              "letterSpacing": 4
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "nPP0v",
+          "name": "主体",
+          "width": "fill_container",
+          "height": "fill_container",
+          "children": [
+            {
+              "type": "frame",
+              "id": "gYNte",
+              "name": "主栏",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 18,
+              "padding": [
+                0,
+                44,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "d9Fb6",
+                  "name": "栏目 · 开发工具",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "id": "n0Gzg",
+                      "type": "ref",
+                      "ref": "xbdrd",
+                      "name": "栏头 开发工具",
+                      "width": "fill_container",
+                      "descendants": {
+                        "RNjN5": {
+                          "content": "壹"
+                        },
+                        "VQLFY": {
+                          "content": "开发工具"
+                        },
+                        "EWZz3": {
+                          "content": "DEVELOPMENT"
+                        },
+                        "nQup3": {
+                          "content": "共 4 条"
+                        }
+                      }
+                    },
+                    {
+                      "id": "svvxc",
+                      "type": "ref",
+                      "ref": "Ea4DC",
+                      "name": "条目 · GitHub",
+                      "width": "fill_container",
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "descendants": {
+                        "xVQsa": {
+                          "content": "01"
+                        },
+                        "kVCoR": {
+                          "content": "GitHub"
+                        },
+                        "E8jEtm": {
+                          "content": "github.com"
+                        },
+                        "I5HxW": {
+                          "content": "全球最大的代码托管平台,开源项目的大本营。"
+                        }
+                      }
+                    },
+                    {
+                      "id": "eJNXr",
+                      "type": "ref",
+                      "ref": "Ea4DC",
+                      "name": "条目 · VS Code",
+                      "width": "fill_container",
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "descendants": {
+                        "xVQsa": {
+                          "content": "02"
+                        },
+                        "kVCoR": {
+                          "content": "VS Code"
+                        },
+                        "E8jEtm": {
+                          "content": "code.visualstudio.com"
+                        },
+                        "I5HxW": {
+                          "content": "微软出品的免费开源编辑器,插件生态无出其右。"
+                        }
+                      }
+                    },
+                    {
+                      "id": "cL6IV",
+                      "type": "ref",
+                      "ref": "Ea4DC",
+                      "name": "条目 · Vite",
+                      "width": "fill_container",
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "descendants": {
+                        "xVQsa": {
+                          "content": "03"
+                        },
+                        "kVCoR": {
+                          "content": "Vite"
+                        },
+                        "E8jEtm": {
+                          "content": "vitejs.dev"
+                        },
+                        "I5HxW": {
+                          "content": "下一代前端构建工具,以毫秒级冷启动著称。"
+                        }
+                      }
+                    },
+                    {
+                      "id": "u8btN",
+                      "type": "ref",
+                      "ref": "Ea4DC",
+                      "name": "条目 · Cursor",
+                      "width": "fill_container",
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "descendants": {
+                        "xVQsa": {
+                          "content": "04"
+                        },
+                        "kVCoR": {
+                          "content": "Cursor",
+                          "fill": "$seal-red"
+                        },
+                        "E8jEtm": {
+                          "content": "cursor.com"
+                        },
+                        "cgNER": {
+                          "enabled": true
+                        },
+                        "I5HxW": {
+                          "content": "AI 原生代码编辑器,结对编程的新队友。"
+                        },
+                        "O0WSUL": {
+                          "enabled": false
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "TZaLk",
+                  "name": "栏目 · AI 工具",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "id": "W9meio",
+                      "type": "ref",
+                      "ref": "xbdrd",
+                      "name": "栏头 AI 工具",
+                      "width": "fill_container",
+                      "descendants": {
+                        "RNjN5": {
+                          "content": "贰"
+                        },
+                        "VQLFY": {
+                          "content": "AI 工具"
+                        },
+                        "EWZz3": {
+                          "content": "ARTIFICIAL"
+                        },
+                        "nQup3": {
+                          "content": "共 3 条"
+                        }
+                      }
+                    },
+                    {
+                      "id": "ylygp",
+                      "type": "ref",
+                      "ref": "Ea4DC",
+                      "name": "条目 · Claude",
+                      "width": "fill_container",
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "descendants": {
+                        "xVQsa": {
+                          "content": "05"
+                        },
+                        "kVCoR": {
+                          "content": "Claude"
+                        },
+                        "E8jEtm": {
+                          "content": "claude.ai"
+                        },
+                        "I5HxW": {
+                          "content": "Anthropic 出品的 AI 助手,长文与代码皆拿手。"
+                        }
+                      }
+                    },
+                    {
+                      "id": "Q58uqf",
+                      "type": "ref",
+                      "ref": "Ea4DC",
+                      "name": "条目 · DeepSeek",
+                      "width": "fill_container",
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "descendants": {
+                        "xVQsa": {
+                          "content": "06"
+                        },
+                        "kVCoR": {
+                          "content": "DeepSeek"
+                        },
+                        "E8jEtm": {
+                          "content": "deepseek.com"
+                        },
+                        "I5HxW": {
+                          "content": "深度求索出品,开源权重与性价比兼备。"
+                        }
+                      }
+                    },
+                    {
+                      "id": "V4Nbp",
+                      "type": "ref",
+                      "ref": "Ea4DC",
+                      "name": "条目 · OpenAI",
+                      "width": "fill_container",
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "descendants": {
+                        "xVQsa": {
+                          "content": "07"
+                        },
+                        "kVCoR": {
+                          "content": "OpenAI"
+                        },
+                        "E8jEtm": {
+                          "content": "openai.com"
+                        },
+                        "I5HxW": {
+                          "content": "ChatGPT 背后的公司,大模型浪潮的引领者。"
+                        },
+                        "O0WSUL": {
+                          "enabled": false
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "CyBRy",
+                  "name": "栏目 · 前端",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "id": "uIkEE",
+                      "type": "ref",
+                      "ref": "xbdrd",
+                      "name": "栏头 前端",
+                      "width": "fill_container",
+                      "descendants": {
+                        "RNjN5": {
+                          "content": "叁"
+                        },
+                        "VQLFY": {
+                          "content": "前端"
+                        },
+                        "EWZz3": {
+                          "content": "FRAMEWORK"
+                        },
+                        "nQup3": {
+                          "content": "共 3 条"
+                        }
+                      }
+                    },
+                    {
+                      "id": "F4mD8N",
+                      "type": "ref",
+                      "ref": "Ea4DC",
+                      "name": "条目 · React",
+                      "width": "fill_container",
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "descendants": {
+                        "xVQsa": {
+                          "content": "08"
+                        },
+                        "kVCoR": {
+                          "content": "React"
+                        },
+                        "E8jEtm": {
+                          "content": "react.dev"
+                        },
+                        "I5HxW": {
+                          "content": "用于构建用户界面的 JavaScript 库。"
+                        }
+                      }
+                    },
+                    {
+                      "id": "rSyb0",
+                      "type": "ref",
+                      "ref": "Ea4DC",
+                      "name": "条目 · Vue",
+                      "width": "fill_container",
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "descendants": {
+                        "xVQsa": {
+                          "content": "09"
+                        },
+                        "kVCoR": {
+                          "content": "Vue"
+                        },
+                        "E8jEtm": {
+                          "content": "vuejs.org"
+                        },
+                        "I5HxW": {
+                          "content": "渐进式 JavaScript 框架,中文文档一流。"
+                        }
+                      }
+                    },
+                    {
+                      "id": "WHyvq",
+                      "type": "ref",
+                      "ref": "Ea4DC",
+                      "name": "条目 · Tailwind CSS",
+                      "width": "fill_container",
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "descendants": {
+                        "xVQsa": {
+                          "content": "10"
+                        },
+                        "kVCoR": {
+                          "content": "Tailwind CSS"
+                        },
+                        "E8jEtm": {
+                          "content": "tailwindcss.com"
+                        },
+                        "I5HxW": {
+                          "content": "原子化 CSS 框架,不离开 HTML 即可完成设计。"
+                        },
+                        "O0WSUL": {
+                          "enabled": false
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "jeRHH",
+              "name": "中缝竖线",
+              "fill": "$line",
+              "width": 1,
+              "height": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "qKJrw",
+              "name": "副栏",
+              "width": 280,
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 30,
+              "padding": [
+                0,
+                0,
+                0,
+                44
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "HsoEr",
+                  "name": "副栏 · 藏书统计",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "w7cA3",
+                      "name": "顶粗线",
+                      "fill": "$ink",
+                      "width": "fill_container",
+                      "height": 2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "MlFcb",
+                      "name": "块头 藏书统计",
+                      "gap": 8,
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "J5ghNQ",
+                          "name": "块题",
+                          "fill": "$ink",
+                          "content": "藏书统计",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "k4azbM",
+                          "name": "块英文",
+                          "fill": "$ink-soft",
+                          "content": "STATISTICS",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 9,
+                          "fontWeight": "normal",
+                          "letterSpacing": 2
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "j1AbiT",
+                      "name": "统计 · 条书目",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "d57yLc",
+                          "name": "数字",
+                          "fill": "$ink",
+                          "content": "214",
+                          "lineHeight": 1.1,
+                          "fontFamily": "$font-serif",
+                          "fontSize": 26,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "onGIc",
+                          "name": "名目",
+                          "fill": "$ink-soft",
+                          "content": "条书目",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "ucpji",
+                      "name": "统计分隔线",
+                      "fill": "$line",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wFzbA",
+                      "name": "统计 · 栏目",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "RcCb8",
+                          "name": "数字",
+                          "fill": "$ink",
+                          "content": "6",
+                          "lineHeight": 1.1,
+                          "fontFamily": "$font-serif",
+                          "fontSize": 26,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ELfJk",
+                          "name": "名目",
+                          "fill": "$ink-soft",
+                          "content": "栏目",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "vDwiG",
+                      "name": "统计分隔线",
+                      "fill": "$line",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "s0nJTF",
+                      "name": "统计 · 本周新增",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "fHLkv",
+                          "name": "数字",
+                          "fill": "$ink",
+                          "content": "5",
+                          "lineHeight": 1.1,
+                          "fontFamily": "$font-serif",
+                          "fontSize": 26,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Q34zV",
+                          "name": "名目",
+                          "fill": "$ink-soft",
+                          "content": "本周新增",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "rWFt0",
+                  "name": "副栏 · 最近收录",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "Ho7Bq",
+                      "name": "顶粗线",
+                      "fill": "$ink",
+                      "width": "fill_container",
+                      "height": 2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "r5qP76",
+                      "name": "块头 最近收录",
+                      "gap": 8,
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Blqio",
+                          "name": "块题",
+                          "fill": "$ink",
+                          "content": "最近收录",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "aHp7T",
+                          "name": "块英文",
+                          "fill": "$ink-soft",
+                          "content": "RECENT",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 9,
+                          "fontWeight": "normal",
+                          "letterSpacing": 2
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZYldA",
+                      "name": "收录 · Resend",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "zIV98",
+                          "name": "收录题",
+                          "fill": "$ink",
+                          "content": "Resend",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wjQeN",
+                          "name": "收录注",
+                          "fill": "$ink-soft",
+                          "content": "resend.com · 09-14",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "QJVso",
+                      "name": "收录分隔线",
+                      "fill": "$line",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "r4AROF",
+                      "name": "收录 · Linear",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "GAvNs",
+                          "name": "收录题",
+                          "fill": "$ink",
+                          "content": "Linear",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "V69qr",
+                          "name": "收录注",
+                          "fill": "$ink-soft",
+                          "content": "linear.app · 09-12",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "G6z1jI",
+                      "name": "收录分隔线",
+                      "fill": "$line",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kgAdY",
+                      "name": "收录 · Excalidraw",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "WF8WX",
+                          "name": "收录题",
+                          "fill": "$ink",
+                          "content": "Excalidraw",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "VFYpL",
+                          "name": "收录注",
+                          "fill": "$ink-soft",
+                          "content": "excalidraw.com · 09-10",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "KR9Q3",
+                  "name": "副栏 · 编者按",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "FvEkT",
+                      "name": "顶粗线",
+                      "fill": "$ink",
+                      "width": "fill_container",
+                      "height": 2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Uox57",
+                      "name": "块头 编者按",
+                      "gap": 8,
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "LHWIH",
+                          "name": "块题",
+                          "fill": "$ink",
+                          "content": "编者按",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "G4QT0i",
+                          "name": "块英文",
+                          "fill": "$ink-soft",
+                          "content": "EDITORS NOTE",
+                          "fontFamily": "$font-serif",
+                          "fontSize": 9,
+                          "fontWeight": "normal",
+                          "letterSpacing": 2
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "J6CQxX",
+                      "name": "按语",
+                      "fill": "$ink-soft",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "「目录贵精不贵多。每一条,都须亲手点开、反复用过,方配登上一期公报。」",
+                      "lineHeight": 1.9,
+                      "fontFamily": "$font-serif",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ccFKJ",
+          "layoutPosition": "absolute",
+          "x": 1176,
+          "y": 756,
+          "name": "藏书印",
+          "width": 52,
+          "height": 52,
+          "cornerRadius": 26,
+          "stroke": "$ink",
+          "strokeWidth": 1,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "LE6eB",
+              "name": "印芯",
+              "width": 42,
+              "height": 42,
+              "fill": "$ink",
+              "cornerRadius": 21,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Mpmra",
+                  "name": "印字",
+                  "fill": "#F7F3EB",
+                  "content": "N",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 22,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "i00kri",
+      "x": 1360,
+      "y": 0,
+      "name": "画板2 · 目录条目 状态",
+      "clip": true,
+      "width": 560,
+      "height": 420,
+      "fill": "#FFFFFF",
+      "stroke": "#D8D0C0",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "gap": 16,
+      "padding": [
+        28,
+        32,
+        26,
+        32
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "njDXd",
+          "name": "题行",
+          "width": "fill_container",
+          "justifyContent": "space_between",
+          "alignItems": "end",
+          "children": [
+            {
+              "type": "text",
+              "id": "SEurn",
+              "name": "题名",
+              "fill": "$ink",
+              "content": "目录条目 · 状态",
+              "fontFamily": "$font-serif",
+              "fontSize": 17,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "idsvN",
+              "name": "题注",
+              "fill": "$ink-soft",
+              "content": "TYPE SPECIMEN",
+              "fontFamily": "$font-serif",
+              "fontSize": 9,
+              "fontWeight": "normal",
+              "letterSpacing": 3
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "NrPCL",
+          "name": "题下线",
+          "fill": "$ink",
+          "width": "fill_container",
+          "height": 1
+        },
+        {
+          "type": "frame",
+          "id": "eI8Jk",
+          "name": "状态组",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 14,
+          "children": [
+            {
+              "type": "frame",
+              "id": "rDT9e",
+              "name": "状态 · 默认",
+              "width": "fill_container",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "K3Rz5",
+                  "name": "标签 默认",
+                  "width": 72,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Z0Zbe",
+                      "name": "标签字",
+                      "fill": "$ink-soft",
+                      "content": "默认",
+                      "fontFamily": "$font-serif",
+                      "fontSize": 10,
+                      "fontWeight": "normal",
+                      "letterSpacing": 2
+                    }
+                  ]
+                },
+                {
+                  "id": "TYILk",
+                  "type": "ref",
+                  "ref": "Ea4DC",
+                  "name": "示例 默认",
+                  "width": "fill_container",
+                  "padding": [
+                    8,
+                    0
+                  ],
+                  "descendants": {
+                    "xVQsa": {
+                      "content": "11"
+                    },
+                    "kVCoR": {
+                      "content": "Figma"
+                    },
+                    "E8jEtm": {
+                      "content": "figma.com"
+                    },
+                    "I5HxW": {
+                      "content": "界面设计工具,组件与实时协作的中心。"
+                    },
+                    "O0WSUL": {
+                      "enabled": false
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "b0ZyVC",
+              "name": "状态 · 悬停",
+              "width": "fill_container",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "voiv1",
+                  "name": "标签 悬停",
+                  "width": 72,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "hVBVZ",
+                      "name": "标签字",
+                      "fill": "$ink-soft",
+                      "content": "悬停",
+                      "fontFamily": "$font-serif",
+                      "fontSize": 10,
+                      "fontWeight": "normal",
+                      "letterSpacing": 2
+                    }
+                  ]
+                },
+                {
+                  "id": "jcCcW",
+                  "type": "ref",
+                  "ref": "Ea4DC",
+                  "name": "示例 悬停",
+                  "width": "fill_container",
+                  "padding": [
+                    10,
+                    14
+                  ],
+                  "fill": "$ink",
+                  "descendants": {
+                    "xVQsa": {
+                      "content": "11",
+                      "fill": "$seal-red"
+                    },
+                    "kVCoR": {
+                      "content": "Figma",
+                      "fill": "#F7F3EB"
+                    },
+                    "o4HR3u": {
+                      "fill": "#575046"
+                    },
+                    "E8jEtm": {
+                      "content": "figma.com",
+                      "fill": "#B8AFA0"
+                    },
+                    "I5HxW": {
+                      "content": "界面设计工具,组件与实时协作的中心。",
+                      "fill": "#B8AFA0"
+                    },
+                    "O0WSUL": {
+                      "enabled": false
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "iCIUT",
+              "name": "状态 · 私密",
+              "width": "fill_container",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "RJUCT",
+                  "name": "标签 私密",
+                  "width": 72,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "dE50l",
+                      "name": "标签字",
+                      "fill": "$ink-soft",
+                      "content": "私密",
+                      "fontFamily": "$font-serif",
+                      "fontSize": 10,
+                      "fontWeight": "normal",
+                      "letterSpacing": 2
+                    }
+                  ]
+                },
+                {
+                  "id": "aQmUR",
+                  "type": "ref",
+                  "ref": "Ea4DC",
+                  "name": "示例 私密",
+                  "width": "fill_container",
+                  "padding": [
+                    8,
+                    0
+                  ],
+                  "descendants": {
+                    "xVQsa": {
+                      "content": "13"
+                    },
+                    "kVCoR": {
+                      "content": "内部文档",
+                      "fill": "$seal-red"
+                    },
+                    "E8jEtm": {
+                      "content": "wiki.navbook.dev"
+                    },
+                    "cgNER": {
+                      "enabled": true
+                    },
+                    "I5HxW": {
+                      "content": "仅团队可见的内部知识库与文档。"
+                    },
+                    "O0WSUL": {
+                      "enabled": false
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Z9vfu7",
+              "name": "状态 · 栏目标题行",
+              "width": "fill_container",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "w7hfol",
+                  "name": "标签 栏目标题行",
+                  "width": 72,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "UJSwp",
+                      "name": "标签字",
+                      "fill": "$ink-soft",
+                      "content": "栏目标题行",
+                      "fontFamily": "$font-serif",
+                      "fontSize": 10,
+                      "fontWeight": "normal",
+                      "letterSpacing": 2
+                    }
+                  ]
+                },
+                {
+                  "id": "oGwKq",
+                  "type": "ref",
+                  "ref": "xbdrd",
+                  "name": "示例 栏头",
+                  "width": "fill_container",
+                  "descendants": {
+                    "RNjN5": {
+                      "content": "贰"
+                    },
+                    "VQLFY": {
+                      "content": "AI 工具"
+                    },
+                    "EWZz3": {
+                      "content": "ARTIFICIAL"
+                    },
+                    "nQup3": {
+                      "content": "共 3 条"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Tu2g5",
+      "x": 2000,
+      "y": 0,
+      "name": "画板3 · 移动端",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "#F7F3EB",
+      "layout": "vertical",
+      "padding": [
+        44,
+        24,
+        0,
+        24
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "yE5UA",
+          "name": "小刊头",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 10,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "eGevl",
+              "name": "站名",
+              "fill": "$ink",
+              "content": "NavBook 公报",
+              "lineHeight": 1.2,
+              "fontFamily": "$font-serif",
+              "fontSize": 24,
+              "fontWeight": "700",
+              "letterSpacing": 3
+            },
+            {
+              "type": "text",
+              "id": "z855O",
+              "name": "日期行",
+              "fill": "$ink-soft",
+              "content": "第 42 期 · 2026 年 9 月 16 日 · 星期三",
+              "fontFamily": "$font-serif",
+              "fontSize": 10,
+              "fontWeight": "normal",
+              "letterSpacing": 1
+            },
+            {
+              "type": "rectangle",
+              "id": "vDzKI",
+              "name": "单细线",
+              "fill": "$ink",
+              "width": "fill_container",
+              "height": 1
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "SuicX",
+          "name": "栏目索引",
+          "clip": true,
+          "width": "fill_container",
+          "gap": 8,
+          "padding": [
+            20,
+            0,
+            10,
+            0
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "ipIxG",
+              "name": "胶囊 · 全部",
+              "fill": "$ink",
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "MZQLH",
+                  "name": "胶囊字",
+                  "fill": "#F7F3EB",
+                  "content": "全部",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 1
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eDaKi",
+              "name": "胶囊 · 开发工具",
+              "stroke": "$ink",
+              "strokeWidth": 1,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CnVht",
+                  "name": "胶囊字",
+                  "fill": "$ink",
+                  "content": "开发工具",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 1
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "c9Uw0",
+              "name": "胶囊 · AI 工具",
+              "stroke": "$ink",
+              "strokeWidth": 1,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "qdlry",
+                  "name": "胶囊字",
+                  "fill": "$ink",
+                  "content": "AI 工具",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 1
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "MH8BT",
+              "name": "胶囊 · 设计资源",
+              "stroke": "$ink",
+              "strokeWidth": 1,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vax8E",
+                  "name": "胶囊字",
+                  "fill": "$ink",
+                  "content": "设计资源",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 1
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lQC8F",
+              "name": "胶囊 · 学习社区",
+              "stroke": "$ink",
+              "strokeWidth": 1,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Abi6x",
+                  "name": "胶囊字",
+                  "fill": "$ink",
+                  "content": "学习社区",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 1
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ZhbXR",
+              "name": "胶囊 · 云服务",
+              "stroke": "$ink",
+              "strokeWidth": 1,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "swIzP",
+                  "name": "胶囊字",
+                  "fill": "$ink",
+                  "content": "云服务",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "m7tWh",
+          "name": "栏目流",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 36,
+          "padding": [
+            16,
+            0,
+            0,
+            0
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "VpDoR",
+              "name": "栏目 · 开发工具",
+              "width": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "id": "Qjp9D",
+                  "type": "ref",
+                  "ref": "xbdrd",
+                  "name": "栏头 开发工具",
+                  "width": "fill_container",
+                  "descendants": {
+                    "RNjN5": {
+                      "content": "壹"
+                    },
+                    "VQLFY": {
+                      "content": "开发工具"
+                    },
+                    "EWZz3": {
+                      "content": "DEVELOPMENT"
+                    },
+                    "nQup3": {
+                      "content": "共 3 条"
+                    }
+                  }
+                },
+                {
+                  "id": "c48DF",
+                  "type": "ref",
+                  "ref": "Ea4DC",
+                  "name": "条目 · GitHub",
+                  "width": "fill_container",
+                  "padding": [
+                    15,
+                    0
+                  ],
+                  "descendants": {
+                    "xVQsa": {
+                      "content": "01"
+                    },
+                    "kVCoR": {
+                      "content": "GitHub"
+                    },
+                    "E8jEtm": {
+                      "content": "github.com"
+                    },
+                    "I5HxW": {
+                      "content": "全球最大的代码托管平台,开源项目的大本营。"
+                    }
+                  }
+                },
+                {
+                  "id": "elF02",
+                  "type": "ref",
+                  "ref": "Ea4DC",
+                  "name": "条目 · VS Code",
+                  "width": "fill_container",
+                  "padding": [
+                    15,
+                    0
+                  ],
+                  "descendants": {
+                    "xVQsa": {
+                      "content": "02"
+                    },
+                    "kVCoR": {
+                      "content": "VS Code"
+                    },
+                    "E8jEtm": {
+                      "content": "code.visualstudio.com"
+                    },
+                    "I5HxW": {
+                      "content": "微软出品的免费开源编辑器,插件生态无出其右。"
+                    }
+                  }
+                },
+                {
+                  "id": "vfWHC",
+                  "type": "ref",
+                  "ref": "Ea4DC",
+                  "name": "条目 · Vite",
+                  "width": "fill_container",
+                  "padding": [
+                    15,
+                    0
+                  ],
+                  "descendants": {
+                    "xVQsa": {
+                      "content": "03"
+                    },
+                    "kVCoR": {
+                      "content": "Vite"
+                    },
+                    "E8jEtm": {
+                      "content": "vitejs.dev"
+                    },
+                    "I5HxW": {
+                      "content": "下一代前端构建工具,以毫秒级冷启动著称。"
+                    },
+                    "O0WSUL": {
+                      "enabled": false
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "iRtOl",
+              "name": "栏目 · AI 工具",
+              "width": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "id": "cGG5z",
+                  "type": "ref",
+                  "ref": "xbdrd",
+                  "name": "栏头 AI 工具",
+                  "width": "fill_container",
+                  "descendants": {
+                    "RNjN5": {
+                      "content": "贰"
+                    },
+                    "VQLFY": {
+                      "content": "AI 工具"
+                    },
+                    "EWZz3": {
+                      "content": "ARTIFICIAL"
+                    },
+                    "nQup3": {
+                      "content": "共 3 条"
+                    }
+                  }
+                },
+                {
+                  "id": "fwg3I",
+                  "type": "ref",
+                  "ref": "Ea4DC",
+                  "name": "条目 · Claude",
+                  "width": "fill_container",
+                  "padding": [
+                    15,
+                    0
+                  ],
+                  "descendants": {
+                    "xVQsa": {
+                      "content": "04"
+                    },
+                    "kVCoR": {
+                      "content": "Claude"
+                    },
+                    "E8jEtm": {
+                      "content": "claude.ai"
+                    },
+                    "I5HxW": {
+                      "content": "Anthropic 出品的 AI 助手,长文与代码皆拿手。"
+                    }
+                  }
+                },
+                {
+                  "id": "hYQ87",
+                  "type": "ref",
+                  "ref": "Ea4DC",
+                  "name": "条目 · DeepSeek",
+                  "width": "fill_container",
+                  "padding": [
+                    15,
+                    0
+                  ],
+                  "descendants": {
+                    "xVQsa": {
+                      "content": "05"
+                    },
+                    "kVCoR": {
+                      "content": "DeepSeek"
+                    },
+                    "E8jEtm": {
+                      "content": "deepseek.com"
+                    },
+                    "I5HxW": {
+                      "content": "深度求索出品,开源权重与性价比兼备。"
+                    }
+                  }
+                },
+                {
+                  "id": "m4pRp",
+                  "type": "ref",
+                  "ref": "Ea4DC",
+                  "name": "条目 · OpenAI",
+                  "width": "fill_container",
+                  "padding": [
+                    15,
+                    0
+                  ],
+                  "descendants": {
+                    "xVQsa": {
+                      "content": "06"
+                    },
+                    "kVCoR": {
+                      "content": "OpenAI"
+                    },
+                    "E8jEtm": {
+                      "content": "openai.com"
+                    },
+                    "I5HxW": {
+                      "content": "ChatGPT 背后的公司,大模型浪潮的引领者。"
+                    },
+                    "O0WSUL": {
+                      "enabled": false
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Wv9WT",
+          "layoutPosition": "absolute",
+          "x": 314,
+          "y": 764,
+          "name": "藏书印",
+          "width": 52,
+          "height": 52,
+          "cornerRadius": 26,
+          "stroke": "$ink",
+          "strokeWidth": 1,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "mK3uz",
+              "name": "印芯",
+              "width": 42,
+              "height": 42,
+              "fill": "$ink",
+              "cornerRadius": 21,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "C8zqT",
+                  "name": "印字",
+                  "fill": "#F7F3EB",
+                  "content": "N",
+                  "fontFamily": "$font-serif",
+                  "fontSize": 22,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "paper": {
+      "type": "color",
+      "value": "#F7F3EB"
+    },
+    "ink": {
+      "type": "color",
+      "value": "#1A1713"
+    },
+    "ink-soft": {
+      "type": "color",
+      "value": "#6F675A"
+    },
+    "seal-red": {
+      "type": "color",
+      "value": "#B3452C"
+    },
+    "line": {
+      "type": "color",
+      "value": "#D8D0C0"
+    },
+    "dots": {
+      "type": "color",
+      "value": "#C9C0B0"
+    },
+    "font-serif": {
+      "type": "string",
+      "value": "Noto Serif SC"
+    }
+  },
+  "fileToken": "948ef59f-016c-4ee4-a38c-18c94b81feb0"
+}
