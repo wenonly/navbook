@@ -12,12 +12,15 @@ import {
 } from '../handlers/category';
 import { getSiteConfig, siteConfigData } from '../handlers/site';
 import { fetchAndExtract } from './fetcher';
+import { saveMemory, MEMORY_MAX_CHARS } from './memory';
 
 export interface AiTool {
   name: string;
   description: string;                 // 给模型看的中文说明
   parameters: Record<string, unknown>; // JSON Schema(OpenAI function calling)
   danger: 'read' | 'write';
+  /** 默认执行策略(缺省按 danger 推导);如 memory_write 语义是写但默认免确认 */
+  defaultPolicy?: 'auto' | 'confirm';
   /** 确认卡(执行前 result=null)与结果卡(执行后)的中文文案,后端生成前端照渲染 */
   summarize(args: Record<string, any>, result: unknown): string;
   execute(db: WorkerDB, args: Record<string, any>): Promise<unknown>;
@@ -127,6 +130,33 @@ export const AI_TOOLS: AiTool[] = [
       } catch (e) {
         return { code: -2000, msg: e instanceof Error ? e.message : '抓取失败' };
       }
+    },
+  },
+
+  {
+    name: 'memory_write',
+    description: `整体替换长期记忆(跨会话持久,当前内容已在系统提示「长期记忆」段展示)。用于记住用户稳定偏好/重要事实,或清理合并过期内容。上限 ${MEMORY_MAX_CHARS} 字符,保持精简;空串=清空。`,
+    parameters: {
+      type: 'object',
+      properties: {
+        content: { type: 'string', description: '完整的新记忆内容(markdown 纯文本,整体替换)' },
+      },
+      required: ['content'],
+    },
+    danger: 'write',
+    defaultPolicy: 'auto',   // 语义是写,但默认免确认("大模型自己更新");配置页可改回
+    summarize: (a, r) => {
+      const n = String(a.content ?? '').length;
+      if (r && typeof r === 'object' && (r as any).code !== 0) return `更新长期记忆失败(${n} 字)`;
+      return r == null ? `更新长期记忆(${n} 字)` : `已更新长期记忆(${(r as any).data?.length ?? n} 字)`;
+    },
+    execute: async (db, a) => {
+      const content = String(a.content ?? '');
+      if (content.length > MEMORY_MAX_CHARS) {
+        return { code: -2000, msg: `记忆 ${content.length} 字符超过上限 ${MEMORY_MAX_CHARS},请压缩合并(剔除过期与冗余)后重写` };
+      }
+      await saveMemory(db, content);
+      return { code: 0, data: { length: content.length } };
     },
   },
 

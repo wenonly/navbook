@@ -77,9 +77,10 @@ describe('read tools', () => {
 });
 
 describe('write tools', () => {
-  it('六个单写工具全部注册且 danger=write(batch 工具由工厂动态生成,不在静态注册表)', () => {
+  it('写工具注册:6 个数据写 + memory_write(默认 auto,见 batch.test);batch 由工厂生成', () => {
     const writes = AI_TOOLS.filter(t => t.danger === 'write').map(t => t.name);
     expect(writes).toEqual([
+      'memory_write',
       'create_link', 'update_link', 'delete_link',
       'create_category', 'update_category', 'delete_category',
     ]);

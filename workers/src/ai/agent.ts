@@ -7,6 +7,7 @@ import { resolveActiveProvider } from './config';
 import { AI_TOOLS, findTool, toolSpecs } from './tools';
 import { buildBatchTools, resolveExecPolicy } from './batch';
 import { assembleProviderMessages } from './context';
+import { loadMemory, MEMORY_MAX_CHARS } from './memory';
 import {
   createConversation, insertMessage, listMessages, countMessages, updateMessageContent,
 } from './conversations';
@@ -27,6 +28,7 @@ export const DEFAULT_SYSTEM_PROMPT = [
   '原则:涉及数据的问题先用工具查询再回答,不确定时调 list_categories 确认 id;',
   '写操作(新增/修改/删除)会请求用户确认,被拒绝时如实告知,不要重复发起同一被拒操作;',
   '同一回合有 2 项及以上独立读操作(如抓取/搜索多个目标)优先用 batch_read 一次并发提交,2 项及以上写操作优先用 batch_write 一次提交(共享一张确认卡);单项操作用对应单工具;',
+  '跨会话记忆:用户的稳定偏好与重要事实主动用 memory_write 记入(整体替换,过期信息及时清理合并,保持精简);',
   '回答用简体中文,简洁直接。',
 ].join('\n');
 
@@ -80,8 +82,12 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
       function: { name: t.name, description: t.description, parameters: t.parameters },
     })),
   ];
+  // 长期记忆(单文档):每轮注入,模型经 memory_write 自维护
+  const memory = await loadMemory(db);
   const systemPrompt = (cfg.systemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT)
-    + (mcpTools.length ? '\n另有外部工具(名称 mcp_ 前缀)来自 MCP 服务器,按其描述与参数调用;失败或为空时如实告知。' : '');
+    + (mcpTools.length ? '\n另有外部工具(名称 mcp_ 前缀)来自 MCP 服务器,按其描述与参数调用;失败或为空时如实告知。' : '')
+    // 长期记忆全量注入(单文档 ≤4000 字符;模型用 memory_write 整体更新,本轮写入下轮生效)
+    + (() => { const mem = memory; return mem ? `\n\n## 长期记忆(跨会话持久;用 memory_write 整体更新,上限 ${MEMORY_MAX_CHARS} 字符,保持精简)\n${mem}` : ''; })();
 
   // ---- 写工具确认恢复:执行/拒绝后带着结果继续循环 ----
   if (opts.confirm) {

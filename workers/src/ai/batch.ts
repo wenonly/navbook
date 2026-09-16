@@ -9,9 +9,12 @@ const BATCH_WRITE_MAX = 20;
 const BATCH_READ_MAX = 10;
 const BATCH_READ_CONCURRENCY = 4;
 
-/** 唯一决策点:所有确认行为收口到这一个纯函数 */
-export function resolveExecPolicy(tool: Pick<AiTool, 'name' | 'danger'>, policy: ToolPolicy): 'auto' | 'confirm' {
-  return policy[tool.name] ?? (tool.danger === 'write' ? 'confirm' : 'auto');
+/** 唯一决策点:所有确认行为收口到这一个纯函数(配置覆盖 > 工具 defaultPolicy > danger 默认) */
+export function resolveExecPolicy(
+  tool: Pick<AiTool, 'name' | 'danger' | 'defaultPolicy'>,
+  policy: ToolPolicy,
+): 'auto' | 'confirm' {
+  return policy[tool.name] ?? tool.defaultPolicy ?? (tool.danger === 'write' ? 'confirm' : 'auto');
 }
 
 /** 简单并发池:最多 limit 个 in-flight,结果保持提交顺序 */

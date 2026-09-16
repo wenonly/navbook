@@ -22,6 +22,7 @@ interface McpServer {
 const TOOL_CANDIDATES: Array<[string, string]> = [
   ['fetch_url', '网页抓取'], ['search_links', '搜索链接'], ['list_categories', '分类列表'],
   ['get_link', '链接详情'], ['get_click_stats', '点击统计'], ['get_site_config', '站点设置'],
+  ['memory_write', '更新记忆'],
   ['create_link', '新增链接'], ['update_link', '修改链接'], ['delete_link', '删除链接'],
   ['create_category', '新增分类'], ['update_category', '修改分类'], ['delete_category', '删除分类'],
 ];

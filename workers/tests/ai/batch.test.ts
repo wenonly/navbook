@@ -106,13 +106,15 @@ describe('batch_write', () => {
 // ---- 统一批量协议与执行策略(工厂) ----
 
 describe('buildBatchTools 动态枚举与策略', () => {
-  it('默认策略:batch_read 枚举=全部读工具,batch_write 枚举=全部写工具(防漂移)', () => {
-    const reads = AI_TOOLS.filter(t => t.danger === 'read').map(t => t.name);
-    const writes = AI_TOOLS.filter(t => t.danger === 'write').map(t => t.name);
+  it('默认策略:枚举=按 resolveExecPolicy 归类(memory_write 默认 auto 归读批,防漂移)', () => {
+    const auto = AI_TOOLS.filter(t => resolveExecPolicy(t, {}) === 'auto').map(t => t.name);
+    const confirm = AI_TOOLS.filter(t => resolveExecPolicy(t, {}) === 'confirm').map(t => t.name);
     const br: any = batchRead()!.parameters;
     const bw: any = batchWrite()!.parameters;
-    expect(br.properties.operations.items.properties.action.enum).toEqual(reads);
-    expect(bw.properties.operations.items.properties.action.enum).toEqual(writes);
+    expect(br.properties.operations.items.properties.action.enum).toEqual(auto);
+    expect(bw.properties.operations.items.properties.action.enum).toEqual(confirm);
+    expect(auto).toContain('memory_write');        // defaultPolicy=auto
+    expect(confirm).not.toContain('memory_write');
   });
 
   it('toolPolicy 覆盖:fetch_url 设 confirm → 移入 batch_write 枚举、移出 batch_read', () => {
