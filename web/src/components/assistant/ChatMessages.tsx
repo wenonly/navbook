@@ -1,9 +1,10 @@
-// 纯渲染:吃 ChatSnapshot.items,输出聊天气泡/思考折叠块/工具卡/确认卡。
-import { useState } from 'react';
+// 纯渲染:吃 ChatSnapshot.items,输出聊天气泡/思考折叠块/工具卡/确认卡 + streaming 状态条。
+import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ChevronDown, ChevronRight, Wrench, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
+import { ChevronDown, ChevronRight, ShieldAlert, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import type { UiItem } from '@navbook/shared';
+import { activityLabel } from '@navbook/shared';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -28,8 +29,13 @@ export function ChatMessages({
         if (item.kind === 'assistant') return <AssistantBubble key={i} item={item} />;
         return <ToolCard key={i} item={item} onConfirm={onConfirm} />;
       })}
-      {streaming && items.at(-1)?.kind !== 'assistant' && (
-        <div className="text-xs text-muted-foreground">思考中…</div>
+      {streaming && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 size={13} className="animate-spin" />
+          <span className="animate-pulse">
+            {activityLabel({ items, streaming })}
+          </span>
+        </div>
       )}
     </div>
   );
@@ -89,12 +95,24 @@ function Markdown({ text }: { text: string }) {
 }
 
 const TOOL_STATUS = {
-  running: { label: '执行中', cls: 'text-muted-foreground', Icon: Wrench },
-  ok: { label: '完成', cls: 'text-emerald-600', Icon: CheckCircle2 },
-  error: { label: '失败', cls: 'text-destructive', Icon: XCircle },
-  rejected: { label: '已取消', cls: 'text-muted-foreground', Icon: XCircle },
-  pending: { label: '待确认', cls: 'text-amber-600', Icon: ShieldAlert },
+  running: { label: '执行中', cls: 'text-muted-foreground', Icon: Loader2, spin: true },
+  ok: { label: '完成', cls: 'text-emerald-600', Icon: CheckCircle2, spin: false },
+  error: { label: '失败', cls: 'text-destructive', Icon: XCircle, spin: false },
+  rejected: { label: '已取消', cls: 'text-muted-foreground', Icon: XCircle, spin: false },
+  pending: { label: '待确认', cls: 'text-amber-600', Icon: ShieldAlert, spin: false },
 } as const;
+
+/** running 卡的秒计时(本地 1s 跳,不打扰 machine) */
+function Elapsed({ startedAt }: { startedAt?: number }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (startedAt == null) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [startedAt]);
+  if (startedAt == null) return null;
+  return <span> · {Math.max(0, Math.floor((now - startedAt) / 1000))}s</span>;
+}
 
 function ToolCard({
   item, onConfirm,
@@ -108,9 +126,12 @@ function ToolCard({
     <div className={cn('max-w-[85%] rounded-xl border px-3.5 py-2.5 text-sm',
       item.status === 'pending' ? 'border-amber-500/60 bg-amber-500/5' : 'border-border bg-background')}>
       <div className="flex items-center gap-2 text-xs">
-        <st.Icon size={14} className={st.cls} />
+        <st.Icon size={14} className={cn(st.cls, st.spin && 'animate-spin')} />
         <span className="font-medium">{item.name}</span>
-        <span className={st.cls}>{st.label}</span>
+        <span className={st.cls}>
+          {st.label}
+          {item.status === 'running' && <Elapsed startedAt={item.startedAt} />}
+        </span>
         {item.status !== 'pending' && (
           <button className="ml-auto text-muted-foreground hover:text-foreground" onClick={() => setShowRaw(v => !v)}>
             {showRaw ? '收起' : '详情'}

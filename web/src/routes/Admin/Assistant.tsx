@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ChatMachine, parseSseStream } from '@navbook/shared';
+import { ChatMachine, parseSseStream, blockedReason } from '@navbook/shared';
 import type { ChatMessageDto, ChatSseEvent, ConversationDto } from '@navbook/shared';
 import { api } from '@/api/client';
 import { Button } from '@/components/ui/button';
@@ -74,6 +74,7 @@ export function AdminAssistant() {
   };
 
   const list = conversations.data?.data ?? [];
+  const blocked = blockedReason(snap);
 
   return (
     <div className="flex h-full gap-5">
@@ -123,7 +124,8 @@ export function AdminAssistant() {
             className="max-h-32 min-h-10 flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
             rows={1}
             value={input}
-            placeholder={snap.conversationId == null ? '开始新对话…' : '输入消息,Enter 发送 / Shift+Enter 换行'}
+            placeholder={blocked
+              ?? (snap.conversationId == null ? '开始新对话…' : '输入消息,Enter 发送 / Shift+Enter 换行')}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void onSend(); }
@@ -131,7 +133,7 @@ export function AdminAssistant() {
           />
           {snap.streaming
             ? <Button variant="outline" onClick={() => machine.abort()}><Square size={14} />停止</Button>
-            : <Button onClick={onSend} disabled={!input.trim()}><Send size={14} />发送</Button>}
+            : <Button onClick={onSend} disabled={!input.trim() || !!blocked}><Send size={14} />发送</Button>}
         </div>
       </div>
     </div>

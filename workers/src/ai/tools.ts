@@ -11,6 +11,7 @@ import {
   addCategoryHandler, editCategoryHandler, delCategoryHandler,
 } from '../handlers/category';
 import { getSiteConfig, siteConfigData } from '../handlers/site';
+import { fetchAndExtract } from './fetcher';
 
 export interface AiTool {
   name: string;
@@ -107,6 +108,31 @@ export const AI_TOOLS: AiTool[] = [
     danger: 'read',
     summarize: () => '读取站点设置',
     execute: async (db) => siteConfigData(await getSiteConfig(db)),
+  },
+  {
+    name: 'fetch_url',
+    description: '抓取任意网页/URL 并提取内容(标题、描述、正文文本、HTTP 状态码、重定向后最终地址)。适合"看看这个链接讲了什么"、检查链接是否可访问。不执行页面 JS:纯客户端渲染的 SPA 页面正文可能为空,此类页面改用 MCP 网页读取工具(如有)。',
+    parameters: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: '完整 URL(含协议)' },
+      },
+      required: ['url'],
+    },
+    danger: 'read',
+    summarize: (a, r) => {
+      let host = String(a.url ?? '');
+      try { host = new URL(host).host; } catch { /* 保留原样 */ }
+      const title = r && typeof r === 'object' && (r as any).data?.title;
+      return title ? `抓取 ${host}:${String(title).slice(0, 40)}` : `抓取 ${host}`;
+    },
+    execute: async (_db, a) => {
+      try {
+        return { code: 0, data: await fetchAndExtract(String(a.url ?? '')) };
+      } catch (e) {
+        return { code: -2000, msg: e instanceof Error ? e.message : '抓取失败' };
+      }
+    },
   },
 
   // ---- 写操作(danger:'write'):执行由 agent 走人工确认流,execute 只在被确认后调用 ----

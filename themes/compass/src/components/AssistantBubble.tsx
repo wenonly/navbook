@@ -1,6 +1,6 @@
 // 仅登录管理员可见(session.username 存在才渲染);compass 自有 token 体系,不引 shadcn。
 import { useEffect, useRef, useState, useSyncExternalStore, lazy, Suspense } from 'react';
-import { ChatMachine, createApiClient } from '@navbook/shared';
+import { ChatMachine, createApiClient, activityLabel, blockedReason } from '@navbook/shared';
 import type { ChatMessageDto, ChatSseEvent, SessionInfo, UiItem } from '@navbook/shared';
 
 // markdown 库较重,懒加载分包(见 Markdown.tsx 头注释)
@@ -41,6 +41,7 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
   const snap = useSyncExternalStore(machine.subscribe, machine.snapshot);
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+  const blocked = blockedReason(snap);
 
   // 打开即续接最近会话(spec:单会话模式,不放会话列表)
   useEffect(() => {
@@ -79,6 +80,12 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
           </p>
         )}
         {snap.items.map((item, i) => <Item key={i} item={item} />)}
+        {snap.streaming && (
+          <div className="flex items-center gap-1.5 px-1 text-xs text-faint">
+            <Spinner />
+            <span className="animate-pulse">{activityLabel(snap)}</span>
+          </div>
+        )}
         {snap.error && (
           <p className="rounded-input border border-red-300/60 bg-red-50/60 px-3 py-2 text-xs text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-400">
             {snap.error}
@@ -93,13 +100,14 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
                      text-sm text-fg outline-none focus:border-accent"
           rows={1}
           value={input}
-          placeholder="输入消息…"
+          placeholder={blocked ?? '输入消息…'}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }}
         />
         {snap.streaming
           ? <button className="rounded-input border border-border px-3 py-1.5 text-xs text-fg" onClick={() => machine.abort()}>停止</button>
-          : <button className="rounded-input bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-strong" onClick={send}>发送</button>}
+          : <button className="rounded-input bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-strong disabled:opacity-50"
+              disabled={!!blocked} onClick={send}>发送</button>}
       </div>
     </div>
   );
@@ -128,14 +136,18 @@ function Item({ item }: { item: UiItem }) {
       )}
     </div>;
   }
-  // tool:pending = 写操作确认卡;其余为执行卡
+  // tool:pending = 写操作确认卡;running = 执行中(spinner + 计时);其余为结果卡
   const badge = { running: '执行中', ok: '完成', error: '失败', rejected: '已取消', pending: '待确认' }[item.status];
   return (
     <div className={'max-w-[85%] rounded-xl border px-3 py-2 text-xs ' +
       (item.status === 'pending' ? 'border-amber-500/60 bg-amber-500/5' : 'border-border')}>
       <div className="flex items-center gap-2">
+        {item.status === 'running' && <Spinner />}
         <span className="font-medium text-fg">{item.name}</span>
-        <span className="text-faint">{badge}</span>
+        <span className="text-faint">
+          {badge}
+          {item.status === 'running' && <Elapsed startedAt={item.startedAt} />}
+        </span>
       </div>
       {item.summary && <p className="mt-1 whitespace-pre-line text-faint">{item.summary}</p>}
       {item.status === 'pending' && item.messageId != null && (
@@ -148,4 +160,26 @@ function Item({ item }: { item: UiItem }) {
       )}
     </div>
   );
+}
+
+/** CSS 旋转 spinner(compass 自有样式,不引 lucide) */
+function Spinner() {
+  return (
+    <svg className="h-3.5 w-3.5 animate-spin text-faint" viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+    </svg>
+  );
+}
+
+/** running 卡的秒计时(本地 1s 跳) */
+function Elapsed({ startedAt }: { startedAt?: number }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (startedAt == null) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [startedAt]);
+  if (startedAt == null) return null;
+  return <span> · {Math.max(0, Math.floor((now - startedAt) / 1000))}s</span>;
 }

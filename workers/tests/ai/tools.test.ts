@@ -61,11 +61,18 @@ describe('read tools', () => {
   });
 
   it('注册表形态:danger 标注 + OpenAI tools 规格 + summarize 中文文案', () => {
-    expect(AI_TOOLS.filter(t => t.danger === 'read')).toHaveLength(5);
+    expect(AI_TOOLS.filter(t => t.danger === 'read')).toHaveLength(6);   // +fetch_url
     const spec = toolSpecs() as any[];
     expect(spec.every(s => s.type === 'function' && s.function.name && s.function.parameters)).toBe(true);
     expect(findTool('search_links')!.summarize({ keyword: 'git' }, null)).toContain('git');
     expect(findTool('nope')).toBeUndefined();
+  });
+
+  it('fetch_url:注册为 read 工具,summarize 提取 host 与标题', () => {
+    const tool = findTool('fetch_url')!;
+    expect(tool.danger).toBe('read');
+    expect(tool.summarize({ url: 'https://example.com/a?x=1' }, null)).toBe('抓取 example.com');
+    expect(tool.summarize({ url: 'https://example.com/a' }, { data: { title: '页面标题' } })).toContain('页面标题');
   });
 });
 

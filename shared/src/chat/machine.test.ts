@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ChatMachine } from './machine';
+import { ChatMachine, blockedReason, activityLabel } from './machine';
 import type { ChatSseEvent, ChatMessageDto, ChatStreamBody } from './types';
 
 function fakeTransport(script: ChatSseEvent[][] = [], log: ChatStreamBody[] = []) {
@@ -105,5 +105,77 @@ describe('ChatMachine', () => {
     await p;
     await flush();
     expect(m.snapshot().streaming).toBe(false);
+  });
+});
+
+describe('串行阻塞与活动状态(loading UX)', () => {
+  it('pending 确认卡存在时 send 被阻塞(transport 不被调用)', async () => {
+    const t = fakeTransport([
+      [{ type: 'tool_call', id: 'c1', name: 'delete_link', args: {}, danger: 'write' },
+       { type: 'confirm_required', messageId: 5, id: 'c1', name: 'delete_link', args: {}, summary: 's' },
+       { type: 'done', messageIds: [] }],
+    ]);
+    const m = new ChatMachine(t as any);
+    await m.send('删');
+    await flush();
+    const callsBefore = t.log.length;
+    await m.send('趁确认卡挂着发新消息');
+    await flush();
+    expect(t.log.length).toBe(callsBefore);   // 未发起流
+  });
+
+  it('blockedReason:streaming / pending / null 三态', async () => {
+    const t = fakeTransport([[{ type: 'delta', text: 'a' }, { type: 'done', messageIds: [] }]]);
+    const m = new ChatMachine(t as any);
+    expect(blockedReason(m.snapshot())).toBeNull();
+    const p = m.send('hi');
+    expect(blockedReason(m.snapshot())).toContain('正在处理');
+    await p; await flush();
+    expect(blockedReason(m.snapshot())).toBeNull();
+
+    const t2 = fakeTransport([
+      [{ type: 'tool_call', id: 'c1', name: 'delete_link', args: {}, danger: 'write' },
+       { type: 'confirm_required', messageId: 9, id: 'c1', name: 'delete_link', args: {}, summary: 's' },
+       { type: 'done', messageIds: [] }],
+    ]);
+    const m2 = new ChatMachine(t2 as any);
+    await m2.send('x'); await flush();
+    expect(blockedReason(m2.snapshot())).toContain('待执行操作');
+  });
+
+  it('activityLabel:思考中 → 调用工具 → 生成回复', async () => {
+    const t = fakeTransport([]);
+    const m = new ChatMachine(t as any);
+    expect(activityLabel(m.snapshot())).toBe('');   // 非 streaming 为空
+    const base = { conversationId: null, error: null } as const;
+    expect(activityLabel({ ...base, streaming: true, items: [] })).toBe('正在思考…');
+    expect(activityLabel({
+      ...base, streaming: true,
+      items: [{ kind: 'tool', id: 'a', name: 'fetch_url', args: {}, danger: 'read', status: 'running', summary: '' }],
+    })).toBe('正在调用 fetch_url…');
+    expect(activityLabel({
+      ...base, streaming: true,
+      items: [{ kind: 'assistant', id: null, text: '生成中', reasoning: '', streaming: true }],
+    })).toBe('正在生成回复…');
+  });
+
+  it('tool_call(read)打 startedAt 时间戳;write 不打(pending 无需计时)', async () => {
+    const t = fakeTransport([
+      [{ type: 'tool_call', id: 'r1', name: 'fetch_url', args: {}, danger: 'read' }, { type: 'done', messageIds: [] }],
+    ]);
+    const m = new ChatMachine(t as any);
+    await m.send('抓'); await flush();
+    const read = m.snapshot().items.find(i => i.kind === 'tool') as any;
+    expect(typeof read.startedAt).toBe('number');
+
+    const t2 = fakeTransport([
+      [{ type: 'tool_call', id: 'w1', name: 'delete_link', args: {}, danger: 'write' },
+       { type: 'confirm_required', messageId: 1, id: 'w1', name: 'delete_link', args: {}, summary: '' },
+       { type: 'done', messageIds: [] }],
+    ]);
+    const m2 = new ChatMachine(t2 as any);
+    await m2.send('删'); await flush();
+    const write = m2.snapshot().items.find(i => i.kind === 'tool') as any;
+    expect(write.startedAt).toBeUndefined();
   });
 });

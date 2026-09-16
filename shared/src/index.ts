@@ -140,5 +140,5 @@ export function createApiClient(_opts: ApiClientOptions = {}) {
 // ---- AI 聊天(纯 TS,web 与 themes 共用;不依赖任何 UI 框架) ----
 export * from './chat/types';
 export { parseSseStream } from './chat/sse';
-export { ChatMachine } from './chat/machine';
+export { ChatMachine, blockedReason, activityLabel } from './chat/machine';
 export type { ChatTransport, UiItem, ChatSnapshot } from './chat/machine';

@@ -367,9 +367,9 @@ describe('runAgentTurn(MCP 集成)', () => {
     ]);
     const { events } = await turnWithMcp(provider, fakeRegistry([]), { message: 'hi' });
     expect(events.some(e => e.type === 'error')).toBe(false);
-    // 只有内置工具(12 个),无 mcp_ 前缀
+    // 只有内置工具(13 个,含 fetch_url),无 mcp_ 前缀
     expect(provider.toolsCalls[0].every(t => !t.name.startsWith('mcp_'))).toBe(true);
-    expect(provider.toolsCalls[0]).toHaveLength(12);
+    expect(provider.toolsCalls[0]).toHaveLength(13);
     // system 无 MCP 提示行
     expect(provider.calls[0][0].content).not.toContain('另有外部工具');
   });

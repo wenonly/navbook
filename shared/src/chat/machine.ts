@@ -15,6 +15,7 @@ export type UiItem =
       danger: 'read' | 'write';
       status: 'running' | 'ok' | 'error' | 'pending' | 'rejected';
       summary: string; data?: unknown; messageId?: number;
+      startedAt?: number;   // running 卡的起始时间戳(UI 计时用;历史回放无此态)
     };
 
 export interface ChatSnapshot {
@@ -57,6 +58,8 @@ export class ChatMachine {
 
   async send(text: string) {
     if (!text.trim() || this.state.streaming) return;
+    // 串行语义:存在待确认操作时阻塞新消息(Claude 权限提示同款);原因由 blockedReason() 供 UI 展示
+    if (this.state.items.some(i => i.kind === 'tool' && i.status === 'pending')) return;
     await this.streamOnce({ text }, item => [
       { kind: 'user', text } as UiItem, item,
     ]);
@@ -137,6 +140,7 @@ export class ChatMachine {
         items.push({
           kind: 'tool', id: ev.id, name: ev.name, args: ev.args, danger: ev.danger,
           status: ev.danger === 'write' ? 'pending' : 'running', summary: '',
+          ...(ev.danger === 'write' ? {} : { startedAt: Date.now() }),
         });
         this.set({ items });
         return;
@@ -167,6 +171,27 @@ export class ChatMachine {
         return;
     }
   }
+}
+
+/** 阻塞原因(streaming 中 / 有待确认操作);null = 可发新消息。UI 据此禁用 composer */
+export function blockedReason(s: ChatSnapshot): string | null {
+  if (s.streaming) return 'AI 正在处理,请稍候…';
+  if (s.items.some(i => i.kind === 'tool' && i.status === 'pending')) {
+    return '请先确认或取消上方的待执行操作';
+  }
+  return null;
+}
+
+/** streaming 期间的状态条文案:正在思考… → 正在调用 <tool>… → 正在生成回复… */
+export function activityLabel(s: Pick<ChatSnapshot, 'items' | 'streaming'>): string {
+  if (!s.streaming) return '';
+  for (let i = s.items.length - 1; i >= 0; i--) {
+    const it = s.items[i];
+    if (it.kind === 'tool' && it.status === 'running') return `正在调用 ${it.name}…`;
+  }
+  const last = s.items.at(-1);
+  if (last?.kind === 'assistant' && (last.text || last.reasoning)) return '正在生成回复…';
+  return '正在思考…';
 }
 
 function toItem(m: ChatMessageDto): UiItem {
