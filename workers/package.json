@@ -10,8 +10,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings --config ../wrangler.toml",
-    "db:migrate:local": "wrangler d1 migrations apply onenav-db --local --config ../wrangler.toml",
-    "db:migrate:remote": "wrangler d1 migrations apply onenav-db --remote --config ../wrangler.toml"
+    "db:migrate:local": "wrangler d1 migrations apply navbook --local --config ../wrangler.toml",
+    "db:migrate:remote": "wrangler d1 migrations apply navbook --remote --config ../wrangler.toml"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

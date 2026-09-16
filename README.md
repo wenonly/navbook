@@ -22,7 +22,7 @@
 
     pnpm deploy        # 构建全部包 + 聚合到 workers/dist + wrangler deploy
 
-首次部署需：`wrangler d1 create onenav-db` + `wrangler d1 migrations apply onenav-db --remote` + wrangler.toml 配 database_id 与 routes（自定义域名）。
+首次部署需：`wrangler d1 create navbook` + `wrangler d1 migrations apply navbook --remote` + wrangler.toml 配 database_id 与 routes（自定义域名）。
 
 ## 数据迁移
 
