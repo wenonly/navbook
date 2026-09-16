@@ -14,16 +14,19 @@ const ACTIVE = {
   id: 'p1', name: 'X', preset: 'custom',
   baseUrl: 'https://fake/v1', apiKey: 'sk-x', model: 'm',
 };
-const EMPTY_CFG = { providers: [ACTIVE], activeProviderId: 'p1', systemPrompt: '' };
-const NO_PROVIDER_CFG = { providers: [], activeProviderId: null, systemPrompt: '' };
+const EMPTY_CFG = { providers: [ACTIVE], activeProviderId: 'p1', systemPrompt: '', mcpServers: [] };
+const NO_PROVIDER_CFG = { providers: [], activeProviderId: null, systemPrompt: '', mcpServers: [] };
 
 /** 脚本化厂商:每次 streamChat 弹出一段事件序列 */
 class FakeProvider implements ProviderClient {
   turns: ProviderStreamEvent[][];
   calls: ProviderMessage[][] = [];
+  toolsCalls: Array<Array<{ name: string }>> = [];
   constructor(turns: ProviderStreamEvent[][]) { this.turns = turns; }
-  async *streamChat(p: { messages: ProviderMessage[] }): AsyncGenerator<ProviderStreamEvent> {
+  async *streamChat(p: { messages: ProviderMessage[]; tools?: unknown[] }): AsyncGenerator<ProviderStreamEvent> {
     this.calls.push(p.messages);
+    this.toolsCalls.push((p.tools as Array<{ function?: { name: string } }> ?? [])
+      .map(t => ({ name: t.function?.name ?? '' })));
     const turn = this.turns.shift() ?? [{ type: 'finish', reason: 'stop' } as ProviderStreamEvent];
     yield* turn;
   }
@@ -278,5 +281,96 @@ describe('runAgentTurn(写工具确认流)', () => {
       emit: async e => { events.push(e); },
     });
     expect(events.some(e => e.type === 'error')).toBe(true);
+  });
+});
+
+describe('runAgentTurn(MCP 集成)', () => {
+  function fakeRegistry(tools: any[], calls: { resolve: number } = { resolve: 0 }) {
+    return {
+      async resolveTools() { calls.resolve++; return tools; },
+    };
+  }
+  const mcpSearchTool = {
+    name: 'mcp_tavily_search',
+    description: '[MCP:Tavily] 联网搜索',
+    parameters: { type: 'object' },
+    danger: 'read',
+    summarize: (_a: any, r: unknown) => r == null ? '调用外部工具 search(Tavily)' : `调用 search(Tavily):${String(r).slice(0, 80)}`,
+    execCount: 0,
+    async execute(_db: any, args: any) { this.execCount++; return { code: 0, data: `搜索结果:${args.q}` }; },
+  } as any;
+
+  async function turnWithMcp(
+    provider: FakeProvider, mcp: any,
+    opts: Partial<Parameters<typeof runAgentTurn>[2]> & { conversationId?: number },
+  ) {
+    const events: ChatSseEvent[] = [];
+    const { createConversation } = await import('../../src/ai/conversations');
+    const cid = opts.conversationId ?? (await createConversation(db(), 't')).id;
+    await runAgentTurn({ db: db(), provider, mcp }, EMPTY_CFG, {
+      ...opts,
+      conversationId: cid,
+      emit: async e => { events.push(e); },
+    } as Parameters<typeof runAgentTurn>[2]);
+    return { events, cid };
+  }
+
+  it('auto 信任:模型调 mcp_ 工具直接执行(无确认卡),结果喂回,system 含 MCP 提示行', async () => {
+    const provider = new FakeProvider([
+      [{ type: 'tool_call', call: { id: 'c1', name: 'mcp_tavily_search', args: '{"q":"最新 TS 版本"}' } },
+       { type: 'finish', reason: 'tool_calls' }],
+      [{ type: 'text', delta: '搜到了' }, { type: 'finish', reason: 'stop' }],
+    ]);
+    const { events } = await turnWithMcp(provider, fakeRegistry([mcpSearchTool]), { message: '搜一下' });
+    // 直接执行,无确认卡
+    expect(events.some(e => e.type === 'confirm_required')).toBe(false);
+    const tr = events.find(e => e.type === 'tool_result') as any;
+    expect(tr.ok).toBe(true);
+    expect(mcpSearchTool.execCount).toBe(1);
+    // 第二轮上下文:tool 消息含执行结果
+    const toolMsg = provider.calls[1].find(m => m.role === 'tool');
+    expect(toolMsg?.content).toContain('搜索结果:最新 TS 版本');
+    // system 首消息含 MCP 提示行;tools 参数含 mcp_ 工具
+    expect(provider.calls[0][0].content).toContain('另有外部工具');
+    expect(provider.toolsCalls[0].some(t => t.name === 'mcp_tavily_search')).toBe(true);
+  });
+
+  it('confirm 信任:出确认卡且未执行;approve 后(新回合重新 resolveTools)执行并续跑', async () => {
+    const confirmTool = { ...mcpSearchTool, name: 'mcp_zhipu_fetch', danger: 'write', execCount: 0 };
+    const provider = new FakeProvider([
+      [{ type: 'tool_call', call: { id: 'c1', name: 'mcp_zhipu_fetch', args: '{"url":"https://x"}' } },
+       { type: 'finish', reason: 'tool_calls' }],
+    ]);
+    const counter = { resolve: 0 };
+    const reg = fakeRegistry([confirmTool], counter);
+    const { events, cid } = await turnWithMcp(provider, reg, { message: '读这个网页' });
+    const cf = events.find(e => e.type === 'confirm_required') as any;
+    expect(cf).toBeTruthy();
+    expect(confirmTool.execCount).toBe(0);   // 确认前绝不执行
+
+    provider.turns.push([{ type: 'text', delta: '读完了' }, { type: 'finish', reason: 'stop' }]);
+    const events2: ChatSseEvent[] = [];
+    await runAgentTurn({ db: db(), provider, mcp: reg }, EMPTY_CFG, {
+      conversationId: cid,
+      confirm: { messageId: cf.messageId, action: 'approve' },
+      emit: async e => { events2.push(e); },
+    });
+    expect(confirmTool.execCount).toBe(1);
+    expect((events2.find(e => e.type === 'tool_result') as any).ok).toBe(true);
+    // 确认续跑是全新 HTTP 请求 → 重新 resolveTools(每回合一次)
+    expect(counter.resolve).toBe(2);
+  });
+
+  it('全部服务器发现失败 → 退化为内置工具集,无 error 事件', async () => {
+    const provider = new FakeProvider([
+      [{ type: 'text', delta: '好的' }, { type: 'finish', reason: 'stop' }],
+    ]);
+    const { events } = await turnWithMcp(provider, fakeRegistry([]), { message: 'hi' });
+    expect(events.some(e => e.type === 'error')).toBe(false);
+    // 只有内置工具(12 个),无 mcp_ 前缀
+    expect(provider.toolsCalls[0].every(t => !t.name.startsWith('mcp_'))).toBe(true);
+    expect(provider.toolsCalls[0]).toHaveLength(12);
+    // system 无 MCP 提示行
+    expect(provider.calls[0][0].content).not.toContain('另有外部工具');
   });
 });

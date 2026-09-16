@@ -54,7 +54,7 @@ describe('read tools', () => {
   });
 
   it('get_site_config 返回站点设置', async () => {
-    await saveAiConfig(db(), { providers: [], activeProviderId: null, systemPrompt: '' });
+    await saveAiConfig(db(), { providers: [], activeProviderId: null, systemPrompt: '', mcpServers: [] });
     const res: any = await findTool('get_site_config')!.execute(db(), {});
     expect(res.site_private).toBe(false);
     expect(res.site_title).toBe('NavBook');

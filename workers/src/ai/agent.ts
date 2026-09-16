@@ -10,6 +10,11 @@ import {
 } from './conversations';
 import type { AiTool } from './tools';
 
+/** MCP 工具注入(结构化最小接口;McpRegistry 结构满足,测试可注入 Fake) */
+export interface AgentMcp {
+  resolveTools(): Promise<AiTool[]>;
+}
+
 export const MAX_STEPS = 8;
 export const CONTEXT_MESSAGES = 50;
 export const MAX_CONVERSATION_MESSAGES = 500;
@@ -27,6 +32,8 @@ export const DEFAULT_SYSTEM_PROMPT = [
 export interface AgentDeps {
   db: WorkerDB;
   provider: ProviderClient;
+  /** 缺省 = 无 MCP(现状行为逐字节一致) */
+  mcp?: AgentMcp;
 }
 
 export interface AgentTurnOptions {
@@ -55,6 +62,21 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
     await emit({ type: 'conversation', cid, title: '' });
   }
 
+  // ---- MCP 工具解析:必须在 confirm 块之前(确认续跑是全新 HTTP 请求,
+  // approve 时需要已解析好的 wrapper 才能执行工具;缓存命中时此处零网络开销) ----
+  const mcpTools = deps.mcp ? await deps.mcp.resolveTools() : [];
+  const mcpByName = new Map(mcpTools.map(t => [t.name, t]));
+  const resolveTool = (name: string): AiTool | undefined => findTool(name) ?? mcpByName.get(name);
+  const tools = [
+    ...toolSpecs(),
+    ...mcpTools.map(t => ({
+      type: 'function' as const,
+      function: { name: t.name, description: t.description, parameters: t.parameters },
+    })),
+  ];
+  const systemPrompt = (cfg.systemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT)
+    + (mcpTools.length ? '\n另有外部工具(名称 mcp_ 前缀)来自 MCP 服务器,按其描述与参数调用;失败或为空时如实告知。' : '');
+
   // ---- 写工具确认恢复:执行/拒绝后带着结果继续循环 ----
   if (opts.confirm) {
     const msgs = await listMessages(db, cid);
@@ -63,7 +85,7 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
     if (msg?.role !== 'tool' || c?.status !== 'pending') {
       return fail('确认目标不存在或已处理,请重新发起');
     }
-    const tool = findTool(c.name);
+    const tool = resolveTool(c.name);
     if (opts.confirm.action === 'approve' && tool) {
       const { content } = await execTool(db, tool, { id: c.toolCallId, name: c.name, args: c.args });
       await updateMessageContent(db, msg.id, content);
@@ -98,7 +120,7 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
     // ---- 组装上下文(最近 50 条映射为 OpenAI 消息) ----
     const history = (await listMessages(db, cid)).slice(-CONTEXT_MESSAGES);
     const messages: ProviderMessage[] = [
-      { role: 'system', content: cfg.systemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT },
+      { role: 'system', content: systemPrompt },
       ...history.map(m => toProviderMessage(m.id, m.role, m.content)),
     ];
 
@@ -109,7 +131,7 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
     try {
       for await (const ev of provider.streamChat({
         baseUrl: active.baseUrl, apiKey: active.apiKey, model: active.model,
-        messages, tools: toolSpecs(), signal: opts.signal,
+        messages, tools, signal: opts.signal,
       })) {
         if (ev.type === 'text') { text += ev.delta; await emit({ type: 'delta', text: ev.delta }); }
         else if (ev.type === 'reasoning') { reasoning += ev.delta; await emit({ type: 'reasoning', text: ev.delta }); }
@@ -135,7 +157,7 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
     // ---- 执行工具:读直接执行;写走确认流(本轮流终止,前端确认后恢复) ----
     let needConfirm = false;
     for (const call of toolCalls) {
-      const tool = findTool(call.name);
+      const tool = resolveTool(call.name);
       const danger = tool?.danger ?? 'read';
       await emit({ type: 'tool_call', id: call.id, name: call.name, args: call.args, danger });
 

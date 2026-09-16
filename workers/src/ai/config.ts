@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema';
-import type { AiConfig, AiPreset, AiProviderConfig, WorkerDB } from './types';
+import type { AiConfig, AiPreset, AiProviderConfig, McpServerConfig, WorkerDB } from './types';
 
 const KEY = 's_ai';
 
@@ -16,7 +16,23 @@ export const AI_PRESETS: AiPreset[] = [
   { id: 'custom',     name: '自定义',               baseUrl: '',                                                       models: [] },
 ];
 
-export const DEFAULT_AI_CONFIG: AiConfig = { providers: [], activeProviderId: null, systemPrompt: '' };
+export const DEFAULT_AI_CONFIG: AiConfig = { providers: [], activeProviderId: null, systemPrompt: '', mcpServers: [] };
+
+/** s_ai.mcpServers 兜底清洗:畸形条目丢弃、截 5、trust 非法回落 confirm、apiKey 非串回落空串 */
+function sanitizeMcpServers(raw: unknown): McpServerConfig[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((s: any) => s && typeof s === 'object' && typeof s.id === 'string' && s.id
+      && typeof s.name === 'string' && s.name && typeof s.url === 'string' && s.url)
+    .slice(0, 5)
+    .map((s: any) => ({
+      id: s.id,
+      name: s.name,
+      url: s.url,
+      apiKey: typeof s.apiKey === 'string' ? s.apiKey : '',
+      trust: s.trust === 'auto' ? 'auto' as const : 'confirm' as const,
+    }));
+}
 
 export async function loadAiConfig(db: WorkerDB): Promise<AiConfig> {
   const row = await db.select().from(schema.options).where(eq(schema.options.key, KEY)).get();
@@ -30,6 +46,7 @@ export async function loadAiConfig(db: WorkerDB): Promise<AiConfig> {
         : [],
       activeProviderId: typeof p?.activeProviderId === 'string' ? p.activeProviderId : null,
       systemPrompt: typeof p?.systemPrompt === 'string' ? p.systemPrompt : '',
+      mcpServers: sanitizeMcpServers(p?.mcpServers),
     };
   } catch {
     return { ...DEFAULT_AI_CONFIG };
@@ -49,14 +66,25 @@ function maskKey(k: string): string {
 }
 
 export function maskConfig(cfg: AiConfig): AiConfig {
-  return { ...cfg, providers: cfg.providers.map(p => ({ ...p, apiKey: maskKey(p.apiKey) })) };
+  return {
+    ...cfg,
+    providers: cfg.providers.map(p => ({ ...p, apiKey: maskKey(p.apiKey) })),
+    // 空串守卫:maskKey('') 会产生 'sk-***' 垃圾占位(key 拼 URL 的服务器 apiKey 为空)
+    mcpServers: (cfg.mcpServers ?? []).map(s => ({ ...s, apiKey: s.apiKey ? maskKey(s.apiKey) : '' })),
+  };
 }
 
 /** 入参 apiKey 是打码占位(含 ***)则沿用 existing 同 id 的原 key */
 export function mergeMaskedKeys(existing: AiConfig, incoming: AiConfig): AiConfig {
   const byId = new Map(existing.providers.map(p => [p.id, p]));
+  const mcpById = new Map((existing.mcpServers ?? []).map(s => [s.id, s]));
   return {
     ...incoming,
+    mcpServers: (incoming.mcpServers ?? []).map(s =>
+      s.apiKey.includes('***') && mcpById.get(s.id)?.apiKey
+        ? { ...s, apiKey: mcpById.get(s.id)!.apiKey }
+        : s,
+    ),
     providers: incoming.providers.map(p =>
       p.apiKey.includes('***') && byId.get(p.id)?.apiKey
         ? { ...p, apiKey: byId.get(p.id)!.apiKey }

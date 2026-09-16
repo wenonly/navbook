@@ -90,11 +90,21 @@ export const aiProviderSchema = z.object({
   model: z.string().min(1).max(128),
 });
 
+// url 必须允许长 URL——Tavily 把 key 拼在里面
+export const aiMcpServerSchema = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().min(1).max(50),
+  url: z.url().max(2048),
+  apiKey: z.string().max(512).optional().default(''),   // 空串 = 不发 Authorization(key 拼 URL 的服务器)
+  trust: z.enum(['confirm', 'auto']).optional().default('confirm'),
+});
+
 export const aiConfigSchema = z.object({
   token: z.string().optional(),
   providers: z.array(aiProviderSchema).max(10),
   activeProviderId: z.string().max(64).nullable(),
   systemPrompt: z.string().max(4000).optional().default(''),
+  mcpServers: z.array(aiMcpServerSchema).max(5).optional().default([]),
 });
 
 export const aiChatSchema = z.object({

@@ -18,6 +18,7 @@ const full = {
   }],
   activeProviderId: 'p1',
   systemPrompt: '',
+  mcpServers: [],
 };
 
 describe('ai config', () => {
@@ -75,5 +76,64 @@ describe('ai config', () => {
     const ids = AI_PRESETS.map(p => p.id);
     for (const need of ['deepseek', 'qwen', 'openai', 'custom']) expect(ids).toContain(need);
     expect(AI_PRESETS.find(p => p.id === 'custom')!.baseUrl).toBe('');
+  });
+});
+
+describe('ai config mcpServers', () => {
+  const withMcp = {
+    ...full,
+    mcpServers: [
+      { id: 'm1', name: 'Tavily', url: 'https://mcp.tavily.com/mcp/?tavilyApiKey=tvly-x', apiKey: '', trust: 'auto' as const },
+      { id: 'm2', name: '智谱', url: 'https://mcp.bigmodel.cn/mcp', apiKey: 'bearer-secret-8888', trust: 'confirm' as const },
+    ],
+  };
+
+  it('保存后可读回', async () => {
+    await saveAiConfig(db(), withMcp);
+    expect(await loadAiConfig(db())).toEqual(withMcp);
+  });
+
+  it('maskConfig:mcp apiKey 打码,空串保持空串(maskKey("") 坑回归)', () => {
+    const masked = maskConfig(withMcp);
+    expect(masked.mcpServers![0].apiKey).toBe('');            // key 拼 URL 的服务器:空串必须原样
+    expect(masked.mcpServers![1].apiKey).toBe('sk-***8888');  // Bearer 场景照常打码
+  });
+
+  it('mergeMaskedKeys:mcp 打码占位沿用原值,真新值覆盖,删除条目生效', async () => {
+    await saveAiConfig(db(), withMcp);
+    const existing = await loadAiConfig(db());
+    const incoming = {
+      ...withMcp,
+      mcpServers: [
+        { ...withMcp.mcpServers[0] },
+        { ...withMcp.mcpServers[1], apiKey: 'sk-***8888' },   // 占位 → 沿用 bearer-secret-8888
+        { id: 'm3', name: '新', url: 'https://n.example.com', apiKey: 'sk-real-9999', trust: 'confirm' as const },
+      ],
+    };
+    const merged = mergeMaskedKeys(existing, incoming);
+    expect(merged.mcpServers![1].apiKey).toBe('bearer-secret-8888');
+    expect(merged.mcpServers![2].apiKey).toBe('sk-real-9999');
+    // 删除条目:incoming 去掉 m1 后合并结果不含 m1
+    const removed = mergeMaskedKeys(existing, { ...withMcp, mcpServers: [incoming.mcpServers[1]] });
+    expect(removed.mcpServers!.map(s => s.id)).toEqual(['m2']);
+  });
+
+  it('loadAiConfig 兜底:畸形条目过滤、>5 截断、trust 非法回落 confirm、apiKey 非串回落空串', async () => {
+    await env.DB.prepare(
+      "INSERT INTO on_options (key, value) VALUES ('s_ai', ?)"
+    ).bind(JSON.stringify({
+      providers: [],
+      activeProviderId: null,
+      systemPrompt: '',
+      mcpServers: [
+        { id: 'ok', name: 'A', url: 'https://a.example.com', apiKey: 123, trust: 'weird' },  // apiKey 非串/trust 非法
+        { id: '', name: 'X', url: 'https://x.example.com' },                                  // 缺 id → 丢弃
+        { no: 'shape' },                                                                        // 畸形 → 丢弃
+        ...Array.from({ length: 6 }, (_, i) => ({ id: `e${i}`, name: `E${i}`, url: `https://e${i}.example.com` })),  // 8 条合法 → 截 5
+      ],
+    })).run();
+    const loaded = await loadAiConfig(db());
+    expect(loaded.mcpServers).toHaveLength(5);
+    expect(loaded.mcpServers[0]).toEqual({ id: 'ok', name: 'A', url: 'https://a.example.com', apiKey: '', trust: 'confirm' });
   });
 });

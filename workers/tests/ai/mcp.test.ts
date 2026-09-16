@@ -151,11 +151,12 @@ describe('McpClient 错误与超时', () => {
 
   it('HTTP 401 → 中文错误,不含 URL 与 key', async () => {
     const c2 = new McpClient(SERVER, (async () => new Response('denied', { status: 401 })) as unknown as typeof fetch);
-    const e2 = await c2.listTools().catch(e => e as Error);
+    let e2: Error | undefined;
+    try { await c2.listTools(); } catch (e) { e2 = e as Error; }
     expect(e2).toBeInstanceOf(McpError);
-    expect(e2.message).toContain('HTTP 401');
-    expect(e2.message).not.toContain('SECRETKEY');
-    expect(e2.message).not.toContain('mcp.example.com');
+    expect(e2!.message).toContain('HTTP 401');
+    expect(e2!.message).not.toContain('SECRETKEY');
+    expect(e2!.message).not.toContain('mcp.example.com');
   });
 
   it('JSON-RPC error 对象 → 错误码与消息透出(无 URL/key)', async () => {
