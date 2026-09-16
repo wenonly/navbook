@@ -1,5 +1,5 @@
 {
-  "version": "2.14",
+  "version": "2.17",
   "children": [
     {
       "type": "frame",
@@ -30,7 +30,7 @@
               "name": "编号",
               "fill": "$ink-soft",
               "content": "01",
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 11,
               "fontWeight": "normal",
               "letterSpacing": 1
@@ -42,7 +42,7 @@
               "fill": "$ink",
               "content": "GitHub",
               "lineHeight": 1.2,
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 17,
               "fontWeight": "normal"
             },
@@ -61,7 +61,7 @@
                   "name": "点串",
                   "fill": "$dots",
                   "content": "············································································································································",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 14,
                   "fontWeight": "normal",
                   "letterSpacing": 4
@@ -74,7 +74,7 @@
               "name": "域名",
               "fill": "$ink-soft",
               "content": "github.com",
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 11,
               "fontWeight": "normal"
             },
@@ -98,7 +98,7 @@
                   "name": "密字",
                   "fill": "$seal-red",
                   "content": "密",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 10,
                   "fontWeight": "normal"
                 }
@@ -115,7 +115,7 @@
           "width": "fill_container",
           "content": "全球最大的代码托管平台,开源项目的大本营。",
           "lineHeight": 1.35,
-          "fontFamily": "$font-serif",
+          "fontFamily": "Noto Serif SC",
           "fontSize": 12,
           "fontWeight": "normal"
         },
@@ -162,7 +162,7 @@
                   "fill": "$ink",
                   "content": "壹",
                   "lineHeight": 1.15,
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 18,
                   "fontWeight": "normal"
                 },
@@ -172,7 +172,7 @@
                   "name": "间隔点",
                   "fill": "$seal-red",
                   "content": "·",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 14,
                   "fontWeight": "normal"
                 },
@@ -183,7 +183,7 @@
                   "fill": "$ink",
                   "content": "开发工具",
                   "lineHeight": 1.15,
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 18,
                   "fontWeight": "700"
                 },
@@ -193,7 +193,7 @@
                   "name": "英文名",
                   "fill": "$ink-soft",
                   "content": "DEVELOPMENT",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 10,
                   "fontWeight": "normal",
                   "letterSpacing": 3
@@ -206,7 +206,7 @@
               "name": "条数",
               "fill": "$ink-soft",
               "content": "共 4 条",
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 10,
               "fontWeight": "normal",
               "letterSpacing": 1
@@ -231,7 +231,7 @@
       "name": "画板1 · 首页 桌面",
       "clip": true,
       "width": 1280,
-      "height": 860,
+      "height": 968,
       "fill": "#F7F3EB",
       "layout": "vertical",
       "padding": [
@@ -296,7 +296,7 @@
                   "fill": "$ink",
                   "content": "NavBook 公报",
                   "lineHeight": 1.1,
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 44,
                   "fontWeight": "700",
                   "letterSpacing": 6
@@ -307,7 +307,7 @@
                   "name": "日期行",
                   "fill": "$ink-soft",
                   "content": "第 42 期 · 2026 年 9 月 16 日 · 星期三 · 共 214 条书目",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 12,
                   "fontWeight": "normal",
                   "letterSpacing": 2
@@ -374,7 +374,7 @@
                   "name": "索引项 全部",
                   "fill": "#F7F3EB",
                   "content": "全部",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 12,
                   "fontWeight": "normal",
                   "letterSpacing": 4
@@ -387,7 +387,7 @@
               "name": "索引项 开发工具",
               "fill": "$ink",
               "content": "开发工具",
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 12,
               "fontWeight": "normal",
               "letterSpacing": 4
@@ -398,7 +398,7 @@
               "name": "索引项 AI 工具",
               "fill": "$ink",
               "content": "AI 工具",
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 12,
               "fontWeight": "normal",
               "letterSpacing": 4
@@ -409,7 +409,7 @@
               "name": "索引项 设计资源",
               "fill": "$ink",
               "content": "设计资源",
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 12,
               "fontWeight": "normal",
               "letterSpacing": 4
@@ -420,7 +420,7 @@
               "name": "索引项 学习社区",
               "fill": "$ink",
               "content": "学习社区",
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 12,
               "fontWeight": "normal",
               "letterSpacing": 4
@@ -431,7 +431,7 @@
               "name": "索引项 云服务",
               "fill": "$ink",
               "content": "云服务",
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 12,
               "fontWeight": "normal",
               "letterSpacing": 4
@@ -464,6 +464,7 @@
                   "id": "d9Fb6",
                   "name": "栏目 · 开发工具",
                   "width": "fill_container",
+                  "height": 418,
                   "layout": "vertical",
                   "children": [
                     {
@@ -593,6 +594,126 @@
                           "enabled": false
                         }
                       }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "NuaCW",
+                      "name": "子栏头 · 前端框架",
+                      "width": "fill_container",
+                      "height": 24,
+                      "justifyContent": "space_between",
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "vXDqs",
+                          "name": "子栏名",
+                          "fill": "$ink",
+                          "content": "— 前端框架",
+                          "fontFamily": "Noto Serif SC",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "CMsfH",
+                          "name": "子栏英文名",
+                          "fill": "$ink-soft",
+                          "content": "F R A M E W O R K",
+                          "fontFamily": "Noto Serif SC",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "N6sWIg",
+                      "name": "子栏 · 前端框架条目区",
+                      "width": "fill_container",
+                      "height": 167,
+                      "layout": "vertical",
+                      "padding": 10,
+                      "children": [
+                        {
+                          "id": "F4mD8N",
+                          "type": "ref",
+                          "ref": "Ea4DC",
+                          "name": "条目 · React",
+                          "width": "fill_container",
+                          "padding": [
+                            4,
+                            0
+                          ],
+                          "descendants": {
+                            "xVQsa": {
+                              "content": "05"
+                            },
+                            "kVCoR": {
+                              "content": "React"
+                            },
+                            "E8jEtm": {
+                              "content": "react.dev"
+                            },
+                            "I5HxW": {
+                              "content": "用于构建用户界面的 JavaScript 库。"
+                            }
+                          }
+                        },
+                        {
+                          "id": "rSyb0",
+                          "type": "ref",
+                          "ref": "Ea4DC",
+                          "name": "条目 · Vue",
+                          "width": "fill_container",
+                          "padding": [
+                            4,
+                            0
+                          ],
+                          "descendants": {
+                            "xVQsa": {
+                              "content": "06"
+                            },
+                            "kVCoR": {
+                              "content": "Vue"
+                            },
+                            "E8jEtm": {
+                              "content": "vuejs.org"
+                            },
+                            "I5HxW": {
+                              "content": "渐进式 JavaScript 框架,中文文档一流。"
+                            }
+                          }
+                        },
+                        {
+                          "id": "WHyvq",
+                          "type": "ref",
+                          "ref": "Ea4DC",
+                          "name": "条目 · Tailwind CSS",
+                          "width": "fill_container",
+                          "padding": [
+                            4,
+                            0
+                          ],
+                          "descendants": {
+                            "xVQsa": {
+                              "content": "07"
+                            },
+                            "kVCoR": {
+                              "content": "Tailwind CSS"
+                            },
+                            "E8jEtm": {
+                              "content": "tailwindcss.com"
+                            },
+                            "I5HxW": {
+                              "content": "原子化 CSS 框架,不离开 HTML 即可完成设计。"
+                            },
+                            "O0WSUL": {
+                              "enabled": false
+                            }
+                          }
+                        }
+                      ]
                     }
                   ]
                 },
@@ -703,114 +824,6 @@
                       }
                     }
                   ]
-                },
-                {
-                  "type": "frame",
-                  "id": "CyBRy",
-                  "name": "栏目 · 前端",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "children": [
-                    {
-                      "id": "uIkEE",
-                      "type": "ref",
-                      "ref": "xbdrd",
-                      "name": "栏头 前端",
-                      "width": "fill_container",
-                      "descendants": {
-                        "RNjN5": {
-                          "content": "叁"
-                        },
-                        "VQLFY": {
-                          "content": "前端"
-                        },
-                        "EWZz3": {
-                          "content": "FRAMEWORK"
-                        },
-                        "nQup3": {
-                          "content": "共 3 条"
-                        }
-                      }
-                    },
-                    {
-                      "id": "F4mD8N",
-                      "type": "ref",
-                      "ref": "Ea4DC",
-                      "name": "条目 · React",
-                      "width": "fill_container",
-                      "padding": [
-                        4,
-                        0
-                      ],
-                      "descendants": {
-                        "xVQsa": {
-                          "content": "08"
-                        },
-                        "kVCoR": {
-                          "content": "React"
-                        },
-                        "E8jEtm": {
-                          "content": "react.dev"
-                        },
-                        "I5HxW": {
-                          "content": "用于构建用户界面的 JavaScript 库。"
-                        }
-                      }
-                    },
-                    {
-                      "id": "rSyb0",
-                      "type": "ref",
-                      "ref": "Ea4DC",
-                      "name": "条目 · Vue",
-                      "width": "fill_container",
-                      "padding": [
-                        4,
-                        0
-                      ],
-                      "descendants": {
-                        "xVQsa": {
-                          "content": "09"
-                        },
-                        "kVCoR": {
-                          "content": "Vue"
-                        },
-                        "E8jEtm": {
-                          "content": "vuejs.org"
-                        },
-                        "I5HxW": {
-                          "content": "渐进式 JavaScript 框架,中文文档一流。"
-                        }
-                      }
-                    },
-                    {
-                      "id": "WHyvq",
-                      "type": "ref",
-                      "ref": "Ea4DC",
-                      "name": "条目 · Tailwind CSS",
-                      "width": "fill_container",
-                      "padding": [
-                        4,
-                        0
-                      ],
-                      "descendants": {
-                        "xVQsa": {
-                          "content": "10"
-                        },
-                        "kVCoR": {
-                          "content": "Tailwind CSS"
-                        },
-                        "E8jEtm": {
-                          "content": "tailwindcss.com"
-                        },
-                        "I5HxW": {
-                          "content": "原子化 CSS 框架,不离开 HTML 即可完成设计。"
-                        },
-                        "O0WSUL": {
-                          "enabled": false
-                        }
-                      }
-                    }
-                  ]
                 }
               ]
             },
@@ -866,7 +879,7 @@
                           "name": "块题",
                           "fill": "$ink",
                           "content": "藏书统计",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 13,
                           "fontWeight": "700"
                         },
@@ -876,7 +889,7 @@
                           "name": "块英文",
                           "fill": "$ink-soft",
                           "content": "STATISTICS",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 9,
                           "fontWeight": "normal",
                           "letterSpacing": 2
@@ -898,7 +911,7 @@
                           "fill": "$ink",
                           "content": "214",
                           "lineHeight": 1.1,
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 26,
                           "fontWeight": "700"
                         },
@@ -908,7 +921,7 @@
                           "name": "名目",
                           "fill": "$ink-soft",
                           "content": "条书目",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 10,
                           "fontWeight": "normal",
                           "letterSpacing": 1
@@ -938,7 +951,7 @@
                           "fill": "$ink",
                           "content": "6",
                           "lineHeight": 1.1,
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 26,
                           "fontWeight": "700"
                         },
@@ -948,7 +961,7 @@
                           "name": "名目",
                           "fill": "$ink-soft",
                           "content": "栏目",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 10,
                           "fontWeight": "normal",
                           "letterSpacing": 1
@@ -978,7 +991,7 @@
                           "fill": "$ink",
                           "content": "5",
                           "lineHeight": 1.1,
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 26,
                           "fontWeight": "700"
                         },
@@ -988,7 +1001,7 @@
                           "name": "名目",
                           "fill": "$ink-soft",
                           "content": "本周新增",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 10,
                           "fontWeight": "normal",
                           "letterSpacing": 1
@@ -1026,7 +1039,7 @@
                           "name": "块题",
                           "fill": "$ink",
                           "content": "最近收录",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 13,
                           "fontWeight": "700"
                         },
@@ -1036,7 +1049,7 @@
                           "name": "块英文",
                           "fill": "$ink-soft",
                           "content": "RECENT",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 9,
                           "fontWeight": "normal",
                           "letterSpacing": 2
@@ -1057,7 +1070,7 @@
                           "name": "收录题",
                           "fill": "$ink",
                           "content": "Resend",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 13,
                           "fontWeight": "600"
                         },
@@ -1067,7 +1080,7 @@
                           "name": "收录注",
                           "fill": "$ink-soft",
                           "content": "resend.com · 09-14",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 10,
                           "fontWeight": "normal",
                           "letterSpacing": 1
@@ -1096,7 +1109,7 @@
                           "name": "收录题",
                           "fill": "$ink",
                           "content": "Linear",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 13,
                           "fontWeight": "600"
                         },
@@ -1106,7 +1119,7 @@
                           "name": "收录注",
                           "fill": "$ink-soft",
                           "content": "linear.app · 09-12",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 10,
                           "fontWeight": "normal",
                           "letterSpacing": 1
@@ -1135,7 +1148,7 @@
                           "name": "收录题",
                           "fill": "$ink",
                           "content": "Excalidraw",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 13,
                           "fontWeight": "600"
                         },
@@ -1145,7 +1158,7 @@
                           "name": "收录注",
                           "fill": "$ink-soft",
                           "content": "excalidraw.com · 09-10",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 10,
                           "fontWeight": "normal",
                           "letterSpacing": 1
@@ -1183,7 +1196,7 @@
                           "name": "块题",
                           "fill": "$ink",
                           "content": "编者按",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 13,
                           "fontWeight": "700"
                         },
@@ -1193,7 +1206,7 @@
                           "name": "块英文",
                           "fill": "$ink-soft",
                           "content": "EDITORS NOTE",
-                          "fontFamily": "$font-serif",
+                          "fontFamily": "Noto Serif SC",
                           "fontSize": 9,
                           "fontWeight": "normal",
                           "letterSpacing": 2
@@ -1209,7 +1222,7 @@
                       "width": "fill_container",
                       "content": "「目录贵精不贵多。每一条,都须亲手点开、反复用过,方配登上一期公报。」",
                       "lineHeight": 1.9,
-                      "fontFamily": "$font-serif",
+                      "fontFamily": "Noto Serif SC",
                       "fontSize": 12,
                       "fontWeight": "normal"
                     }
@@ -1251,7 +1264,7 @@
                   "name": "印字",
                   "fill": "#F7F3EB",
                   "content": "N",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 22,
                   "fontWeight": "700"
                 }
@@ -1297,7 +1310,7 @@
               "name": "题名",
               "fill": "$ink",
               "content": "目录条目 · 状态",
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 17,
               "fontWeight": "700"
             },
@@ -1307,7 +1320,7 @@
               "name": "题注",
               "fill": "$ink-soft",
               "content": "TYPE SPECIMEN",
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 9,
               "fontWeight": "normal",
               "letterSpacing": 3
@@ -1350,7 +1363,7 @@
                       "name": "标签字",
                       "fill": "$ink-soft",
                       "content": "默认",
-                      "fontFamily": "$font-serif",
+                      "fontFamily": "Noto Serif SC",
                       "fontSize": 10,
                       "fontWeight": "normal",
                       "letterSpacing": 2
@@ -1407,7 +1420,7 @@
                       "name": "标签字",
                       "fill": "$ink-soft",
                       "content": "悬停",
-                      "fontFamily": "$font-serif",
+                      "fontFamily": "Noto Serif SC",
                       "fontSize": 10,
                       "fontWeight": "normal",
                       "letterSpacing": 2
@@ -1472,7 +1485,7 @@
                       "name": "标签字",
                       "fill": "$ink-soft",
                       "content": "私密",
-                      "fontFamily": "$font-serif",
+                      "fontFamily": "Noto Serif SC",
                       "fontSize": 10,
                       "fontWeight": "normal",
                       "letterSpacing": 2
@@ -1533,7 +1546,7 @@
                       "name": "标签字",
                       "fill": "$ink-soft",
                       "content": "栏目标题行",
-                      "fontFamily": "$font-serif",
+                      "fontFamily": "Noto Serif SC",
                       "fontSize": 10,
                       "fontWeight": "normal",
                       "letterSpacing": 2
@@ -1575,7 +1588,7 @@
       "name": "画板3 · 移动端",
       "clip": true,
       "width": 390,
-      "height": 844,
+      "height": 1080,
       "fill": "#F7F3EB",
       "layout": "vertical",
       "padding": [
@@ -1601,7 +1614,7 @@
               "fill": "$ink",
               "content": "NavBook 公报",
               "lineHeight": 1.2,
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 24,
               "fontWeight": "700",
               "letterSpacing": 3
@@ -1612,7 +1625,7 @@
               "name": "日期行",
               "fill": "$ink-soft",
               "content": "第 42 期 · 2026 年 9 月 16 日 · 星期三",
-              "fontFamily": "$font-serif",
+              "fontFamily": "Noto Serif SC",
               "fontSize": 10,
               "fontWeight": "normal",
               "letterSpacing": 1
@@ -1658,7 +1671,7 @@
                   "name": "胶囊字",
                   "fill": "#F7F3EB",
                   "content": "全部",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 11,
                   "fontWeight": "normal",
                   "letterSpacing": 1
@@ -1683,7 +1696,7 @@
                   "name": "胶囊字",
                   "fill": "$ink",
                   "content": "开发工具",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 11,
                   "fontWeight": "normal",
                   "letterSpacing": 1
@@ -1708,7 +1721,7 @@
                   "name": "胶囊字",
                   "fill": "$ink",
                   "content": "AI 工具",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 11,
                   "fontWeight": "normal",
                   "letterSpacing": 1
@@ -1733,7 +1746,7 @@
                   "name": "胶囊字",
                   "fill": "$ink",
                   "content": "设计资源",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 11,
                   "fontWeight": "normal",
                   "letterSpacing": 1
@@ -1758,7 +1771,7 @@
                   "name": "胶囊字",
                   "fill": "$ink",
                   "content": "学习社区",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 11,
                   "fontWeight": "normal",
                   "letterSpacing": 1
@@ -1783,7 +1796,7 @@
                   "name": "胶囊字",
                   "fill": "$ink",
                   "content": "云服务",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 11,
                   "fontWeight": "normal",
                   "letterSpacing": 1
@@ -1811,6 +1824,7 @@
               "id": "VpDoR",
               "name": "栏目 · 开发工具",
               "width": "fill_container",
+              "height": 474,
               "layout": "vertical",
               "children": [
                 {
@@ -1911,6 +1925,98 @@
                       "enabled": false
                     }
                   }
+                },
+                {
+                  "type": "frame",
+                  "id": "PPgWa",
+                  "name": "子栏头 · 前端框架(移动)",
+                  "width": "fill_container",
+                  "height": 20,
+                  "justifyContent": "space_between",
+                  "alignItems": "end",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "RKEyE",
+                      "name": "子栏名",
+                      "fill": "$ink",
+                      "content": "— 前端框架",
+                      "fontFamily": "Noto Serif SC",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "DyJGb",
+                      "name": "子栏英文名",
+                      "fill": "$ink-soft",
+                      "content": "FRAMEWORK",
+                      "fontFamily": "Noto Serif SC",
+                      "fontSize": 9,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "c3J3SO",
+                  "name": "子栏条目区(移动)",
+                  "width": "fill_container",
+                  "height": 158,
+                  "layout": "vertical",
+                  "padding": 8,
+                  "children": [
+                    {
+                      "id": "bsQTs",
+                      "type": "ref",
+                      "ref": "Ea4DC",
+                      "name": "条目 · React(移动)",
+                      "width": "fill_container",
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "descendants": {
+                        "xVQsa": {
+                          "content": "04"
+                        },
+                        "kVCoR": {
+                          "content": "React"
+                        },
+                        "E8jEtm": {
+                          "content": "react.dev"
+                        },
+                        "I5HxW": {
+                          "content": "用于构建用户界面的 JavaScript 库。"
+                        }
+                      }
+                    },
+                    {
+                      "id": "nzqeL",
+                      "type": "ref",
+                      "ref": "Ea4DC",
+                      "name": "条目 · Vue(移动)",
+                      "width": "fill_container",
+                      "padding": [
+                        4,
+                        0
+                      ],
+                      "descendants": {
+                        "xVQsa": {
+                          "content": "05"
+                        },
+                        "kVCoR": {
+                          "content": "Vue"
+                        },
+                        "E8jEtm": {
+                          "content": "vuejs.org"
+                        },
+                        "I5HxW": {
+                          "content": "渐进式 JavaScript 框架,中文文档一流。"
+                        }
+                      }
+                    }
+                  ]
                 }
               ]
             },
@@ -2056,7 +2162,7 @@
                   "name": "印字",
                   "fill": "#F7F3EB",
                   "content": "N",
-                  "fontFamily": "$font-serif",
+                  "fontFamily": "Noto Serif SC",
                   "fontSize": 22,
                   "fontWeight": "700"
                 }
