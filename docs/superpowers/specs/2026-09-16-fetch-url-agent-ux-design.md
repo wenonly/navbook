@@ -1,7 +1,7 @@
 # agent 网页抓取能力 + Claude/Cursor 式 Loading/串行 UX
 
 日期:2026-09-16
-状态:已与用户确认,随写随施
+状态:已实施(commit c83f14b;§6 测试全部落地,workers 234 + shared 13 测试全绿)
 前置:2026-09-15-ai-assistant-design.md、2026-09-16-mcp-integration-design.md
 
 ## 1. 目标
