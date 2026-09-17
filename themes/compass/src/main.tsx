@@ -24,6 +24,13 @@ function Root() {
       .catch(err => setState({ kind: 'error', msg: err instanceof Error ? err.message : '加载失败' }));
   }, []);
 
+  // 静默刷新:右键菜单改完数据后原地更新,不闪骨架屏
+  const refresh = React.useCallback(() => {
+    api.publicNav()
+      .then(data => setState(prev => prev.kind === 'ready' ? { ...prev, data } : prev))
+      .catch(() => {});
+  }, []);
+
   React.useEffect(load, [load]);
 
   if (state.kind === 'loading') return <PageSkeleton />;
@@ -43,7 +50,7 @@ function Root() {
       </div>
     );
   }
-  return <App data={state.data} />;
+  return <App data={state.data} onRefresh={refresh} />;
 }
 
 root.render(

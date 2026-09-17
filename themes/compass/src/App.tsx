@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
-import type { NavData } from '@navbook/shared';
+import { useMemo, useState } from 'react';
+import type { MouseEvent } from 'react';
+import type { NavData, NavLink } from '@navbook/shared';
 import { useTheme } from './hooks/useTheme';
 import { useSession } from './hooks/useSession';
 import { useScrollSpy } from './hooks/useScrollSpy';
@@ -11,8 +12,9 @@ import SearchBox from './components/SearchBox';
 import CategorySection from './components/CategorySection';
 import Footer from './components/Footer';
 import AssistantBubble from './components/AssistantBubble';
+import LinkActions, { type LinkMenuState } from './components/LinkActions';
 
-export default function App({ data }: { data: NavData }) {
+export default function App({ data, onRefresh }: { data: NavData; onRefresh?: () => void }) {
   const [mode, toggleTheme] = useTheme();
   const session = useSession();
   const searchIndex = useMemo(() => buildIndex(data.categories), [data]);
@@ -21,6 +23,11 @@ export default function App({ data }: { data: NavData }) {
     [data],
   );
   const activeId = useScrollSpy(sectionIds);
+  const [menu, setMenu] = useState<LinkMenuState | null>(null);
+  const logged = !!session?.username;
+  const openLinkMenu = logged
+    ? (e: MouseEvent, link: NavLink) => setMenu({ link, x: e.clientX, y: e.clientY })
+    : undefined;
   const linkCount = useMemo(
     () => data.categories.reduce(
       (n, c) => n + c.links.length + c.children.reduce((m, s) => m + s.links.length, 0), 0),
@@ -51,7 +58,9 @@ export default function App({ data }: { data: NavData }) {
             </div>
           ) : (
             <div className="space-y-7">
-              {data.categories.map(cat => <CategorySection key={cat.id} cat={cat} />)}
+              {data.categories.map(cat => (
+                <CategorySection key={cat.id} cat={cat} onLinkContextMenu={openLinkMenu} />
+              ))}
             </div>
           )}
           <div className="mt-8">
@@ -60,6 +69,14 @@ export default function App({ data }: { data: NavData }) {
         </main>
       </div>
       <AssistantBubble session={session} />
+      {menu && (
+        <LinkActions
+          state={menu}
+          categories={data.categories}
+          onClose={() => setMenu(null)}
+          onChanged={() => onRefresh?.()}
+        />
+      )}
     </div>
   );
 }

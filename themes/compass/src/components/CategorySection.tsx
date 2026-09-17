@@ -7,7 +7,10 @@ import { IconLock } from './Icons';
 const GRID = 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 const countOf = (c: NavCategory) => c.links.length + c.children.reduce((n, s) => n + s.links.length, 0);
 
-export default function CategorySection({ cat }: { cat: NavCategory }) {
+export default function CategorySection({ cat, onLinkContextMenu }: {
+  cat: NavCategory;
+  onLinkContextMenu?: (e: React.MouseEvent, link: import('@navbook/shared').NavLink) => void;
+}) {
   const total = countOf(cat);
   const empty = total === 0;
   return (
@@ -36,7 +39,7 @@ export default function CategorySection({ cat }: { cat: NavCategory }) {
         <div className="space-y-4">
           {cat.links.length > 0 && (
             <div className={GRID}>
-              {cat.links.map((link, i) => <LinkCard key={link.id} link={link} tone={toneAt(i, cat.id)} />)}
+              {cat.links.map((link, i) => <LinkCard key={link.id} link={link} tone={toneAt(i, cat.id)} onContextMenu={onLinkContextMenu} />)}
             </div>
           )}
           {cat.children.map(sub => (
@@ -51,7 +54,7 @@ export default function CategorySection({ cat }: { cat: NavCategory }) {
                 {sub.private && <IconLock size={10} className="text-faint" />}
               </div>
               <div className={GRID}>
-                {sub.links.map((link, i) => <LinkCard key={link.id} link={link} tone={toneAt(i, sub.id)} />)}
+                {sub.links.map((link, i) => <LinkCard key={link.id} link={link} tone={toneAt(i, sub.id)} onContextMenu={onLinkContextMenu} />)}
               </div>
             </div>
           ))}

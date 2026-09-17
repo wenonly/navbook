@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react';
 import type { NavLink } from '@navbook/shared';
 import type { ToneName } from '../lib/tone';
 import { toneOf } from '../lib/tone';
@@ -8,14 +9,17 @@ interface Props {
   link: NavLink;
   /** 由分类区块按序轮换指定，保持相邻卡片错色 */
   tone?: ToneName;
+  /** 登录态右键菜单(由 App 注入;缺省走浏览器原生菜单) */
+  onContextMenu?: (e: MouseEvent, link: NavLink) => void;
 }
 
-export default function LinkCard({ link, tone = toneOf(link.title) }: Props) {
+export default function LinkCard({ link, tone = toneOf(link.title), onContextMenu }: Props) {
   return (
     <a
       href={link.url}
       target="_blank"
       rel="noopener noreferrer"
+      onContextMenu={e => { if (onContextMenu) { e.preventDefault(); onContextMenu(e, link); } }}
       title={link.description ? `${link.title} · ${link.description}` : link.title}
       className={`group flex items-center gap-3 rounded-card border border-border bg-card p-3 shadow-card transition
         hover:border-accent hover:shadow-hover ${link.private ? 'opacity-80' : ''}`}

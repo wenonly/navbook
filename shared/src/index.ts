@@ -134,6 +134,10 @@ export function createApiClient(_opts: ApiClientOptions = {}) {
     aiMessages: (cid: number) => get<{ code: 0; data: ChatMessageDto[] }>(`/api/ai_messages?cid=${cid}`),
     delAiConversation: (id: number) => post('/api/ai_del_conversation', { id }),
     stopAiConversation: (cid: number) => post('/api/ai_stop', { cid }),
+    // 链接快捷管理(主题右键菜单用;edit 需登录)
+    getLink: (id: number) => get('/api/get_a_link?id=' + id),
+    editLink: (data: Record<string, unknown>) => post('/api/edit_link', data),
+    delLink: (id: number) => post('/api/del_link', { id }),
     streamChat,
     // 重挂:running 会话的事件流(hello→回放本回合→实时续流)
     attachEvents: async function* (cid: number, signal?: AbortSignal): AsyncGenerator<ChatSseEvent> {
