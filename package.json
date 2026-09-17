@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@9.7.0",
   "scripts": {
-    "build": "pnpm --filter @navbook/theme-compass --filter @navbook/theme-minima --filter web run build && node scripts/aggregate.mjs",
+    "build": "pnpm --filter @navbook/theme-compass --filter @navbook/theme-gazette --filter web run build && node scripts/aggregate.mjs",
     "dev": "pnpm -C workers dev & pnpm -C web dev",
     "test": "pnpm -C workers test",
     "deploy": "pnpm run build && wrangler deploy"

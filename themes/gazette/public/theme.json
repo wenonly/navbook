@@ -1,0 +1,8 @@
+{
+  "id": "gazette",
+  "name": "Gazette · 公报",
+  "version": "1.0.0",
+  "author": "taowen",
+  "description": "期刊目录风:衬线排印、引导点条目、纸感配色(设计稿见 design.pen,界面按稿重构中)",
+  "minAppVersion": "1.0.0"
+}
