@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import {
   Bookmark, Folder, Link as LinkIcon, ArrowLeftRight,
-  KeyRound, Palette, Settings2, LogOut, Bot, Sparkles,
+  KeyRound, Palette, Settings2, LogOut, Bot, Sparkles, Home,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/stores/auth';
@@ -68,14 +68,28 @@ export function AdminLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-page">
       <aside className="flex w-60 shrink-0 flex-col bg-sidebar p-4">
-        <div className="mb-6 flex items-center gap-3 px-1">
+        <div className="group mb-6 flex items-center gap-3 px-1">
           <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-primary">
             <Bookmark size={18} className="text-white" />
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="text-[15px] font-bold leading-tight text-white">NavBook</div>
             <div className="text-[11px] text-sidebar-muted">书签导航管理后台</div>
           </div>
+          {/* 回首页:整页跳转(SPA 的 * 兜底会把路由 / 弹回后台);幽灵态与品牌块同规格,悬停点亮 */}
+          <a
+            href="/"
+            title="回到首页"
+            aria-label="回到首页"
+            className="relative flex h-9 w-9 items-center justify-center rounded-[10px]
+                       border border-sidebar-divider text-sidebar-muted
+                       transition-all duration-200
+                       hover:-translate-y-px hover:border-primary hover:bg-primary hover:text-white
+                       hover:shadow-[0_4px_12px_rgb(59_130_246_/_0.35)]
+                       active:translate-y-0 active:scale-95"
+          >
+            <Home size={16} strokeWidth={2} className="transition-transform duration-200 group-hover:-translate-y-px" />
+          </a>
         </div>
 
         <nav className="flex-1 space-y-5">
