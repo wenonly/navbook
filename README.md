@@ -65,7 +65,7 @@ deploy 时 Cloudflare 会自动为该域名签发证书。
 ### 5. 构建并部署
 
 ```bash
-pnpm deploy     # 构建三端(compass/minima/web)→ 聚合 → wrangler deploy
+pnpm deploy     # 构建三端(compass/gazette/web)→ 聚合 → wrangler deploy
 ```
 
 首次部署会自动创建 Durable Object(SQLite-backed,免费计划支持,无需手动操作)。
