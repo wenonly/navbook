@@ -3,7 +3,22 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "scripts": { "test": "vitest run" },
-  "devDependencies": { "vitest": "^4.1.11" }
+  "exports": {
+    ".": "./src/index.ts",
+    "./assistant": "./src/assistant/index.ts",
+    "./assistant.css": "./src/assistant/assistant.css"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.11"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "dependencies": {
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  }
 }

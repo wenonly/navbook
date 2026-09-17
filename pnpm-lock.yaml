@@ -13,6 +13,16 @@ importers:
         version: 4.130.0(@cloudflare/workers-types@5.20260911.1)
 
   shared:
+    dependencies:
+      react:
+        specifier: ^19.0.0
+        version: 19.3.0
+      react-markdown:
+        specifier: ^10.1.0
+        version: 10.1.0(@types/react@19.3.0)(react@19.3.0)
+      remark-gfm:
+        specifier: ^4.0.1
+        version: 4.0.1
     devDependencies:
       vitest:
         specifier: ^4.1.11
@@ -29,12 +39,6 @@ importers:
       react-dom:
         specifier: ^19.2.8
         version: 19.3.0(react@19.3.0)
-      react-markdown:
-        specifier: ^10.1.0
-        version: 10.1.0(@types/react@19.3.0)(react@19.3.0)
-      remark-gfm:
-        specifier: ^4.0.1
-        version: 4.0.1
     devDependencies:
       '@types/react':
         specifier: ^19.2.18

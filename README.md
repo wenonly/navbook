@@ -103,7 +103,7 @@ workers/  API + DO(Hono + D1/Drizzle + AgentTurnDO),并把首页路由到当前�
           └ src/ai/:agent(编排)/provider(厂商流式)/tools(注册表)/batch(批量+策略)
              /context(上下文组装)/mcp/conversations/memory/fetcher
 web/      管理后台 SPA(/admin):分类/链接/导入导出/Token/主题/站点设置/模型配置/AI 助手
-themes/   独立主题项目(compass/minima),产物即分发单元
+themes/   独立主题项目(compass/gazette),产物即分发单元;AI 气泡为统一组件(@navbook/shared/assistant,主题化注入)
 shared/   契约包(@navbook/shared):API client + SSE 解析 + 聊天状态机(两端共用)
 ```
 
