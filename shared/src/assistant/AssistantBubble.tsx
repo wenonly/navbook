@@ -141,7 +141,11 @@ function ChatPanel({ onClose, storageKey, title, placeholder }: {
           className="nba-input" rows={1} value={input}
           placeholder={blocked ?? placeholder ?? '输入消息…'}
           onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }}
+          onKeyDown={e => {
+            // IME 组合态(拼音选词回车)不触发发送:isComposing/keyCode 229 双保险
+            if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); }
+          }}
         />
         {snap.streaming
           ? <button className="nba-stop" onClick={() => {

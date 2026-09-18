@@ -36,6 +36,7 @@ export default function SearchBox({ index, className = '' }: Props) {
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;   // IME 拼音回车不当确认
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (results.length) setHi(i => (i + 1) % results.length);

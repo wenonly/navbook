@@ -84,7 +84,7 @@ export function AdminLinks() {
           <Input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') commitSearch(); }}
+            onKeyDown={e => { if (e.nativeEvent.isComposing || e.keyCode === 229) return; if (e.key === 'Enter') commitSearch(); }}
             placeholder="搜索标题 / URL / 描述"
             aria-label="搜索链接"
             className="pl-8 pr-8"

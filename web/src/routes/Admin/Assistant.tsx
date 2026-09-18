@@ -139,6 +139,7 @@ export function AdminAssistant() {
               ?? (snap.conversationId == null ? '开始新对话…' : '输入消息,Enter 发送 / Shift+Enter 换行')}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => {
+              if (e.nativeEvent.isComposing || e.keyCode === 229) return;   // IME 拼音回车不发送
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void onSend(); }
             }}
           />
