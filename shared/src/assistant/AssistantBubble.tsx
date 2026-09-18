@@ -42,8 +42,8 @@ function themeVars(t: AssistantTheme): CSSProperties {
     '--nba-radius-btn': t.radiusBtn != null ? `${t.radiusBtn}px` : '8px',
     '--nba-shadow': t.shadow ?? '0 8px 24px rgb(16 24 40 / 0.12)',
     '--nba-bubble': t.bubbleSize != null ? `${t.bubbleSize}px` : '3rem',
-    '--nba-w': t.panelWidth != null ? `${t.panelWidth}px` : '380px',
-    '--nba-h': t.panelHeight != null ? `${t.panelHeight}px` : '560px',
+    '--nba-w': t.panelWidth != null ? `${t.panelWidth}px` : '440px',
+    '--nba-h': t.panelHeight != null ? `${t.panelHeight}px` : 'min(680px, calc(100dvh - 3rem))',
   } as CSSProperties;
 }
 
@@ -82,6 +82,7 @@ function ChatPanel({ onClose, storageKey, title, placeholder }: {
   const machine = getMachine();
   const snap = useSyncExternalStore(machine.subscribe, machine.snapshot);
   const [input, setInput] = useState('');
+  const [maximized, setMaximized] = useState(false);
   const [tick, setTick] = useState(0);   // running 卡计时(1s)
   const bottomRef = useRef<HTMLDivElement>(null);
   const blocked = blockedReason(snap);
@@ -115,10 +116,24 @@ function ChatPanel({ onClose, storageKey, title, placeholder }: {
   };
 
   return (
-    <div className="nba-panel">
+    <div className={`nba-panel${maximized ? ' nba-max' : ''}`}>
       <div className="nba-head">
         <span className="nba-title">{title}</span>
-        <button className="nba-close" onClick={onClose} aria-label="关闭">✕</button>
+        <span className="nba-head-actions">
+          <button className="nba-expand" onClick={() => setMaximized(v => !v)}
+            aria-label={maximized ? '收起面板' : '放大面板'} title={maximized ? '收起面板' : '放大面板'}>
+            {maximized ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M9 4H4v5M15 20h5v-5M20 9V4h-5M4 15v5h5" />
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+              </svg>
+            )}
+          </button>
+          <button className="nba-close" onClick={onClose} aria-label="关闭">✕</button>
+        </span>
       </div>
       <div className="nba-body">
         {!snap.items.length && (

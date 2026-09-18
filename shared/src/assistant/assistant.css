@@ -15,18 +15,27 @@
 
 .nba-panel {
   position: absolute; bottom: 0; right: 0;
-  width: var(--nba-w, 380px); max-width: calc(100vw - 2rem);
-  height: var(--nba-h, 560px); max-height: calc(100vh - 3rem);
+  width: var(--nba-w, 440px); max-width: calc(100vw - 2rem);
+  height: var(--nba-h, min(680px, calc(100dvh - 3rem))); max-height: calc(100dvh - 1.5rem);
   display: flex; flex-direction: column; overflow: hidden;
   background: var(--nba-bg); color: var(--nba-fg);
   border: 1px solid var(--nba-border);
   border-radius: var(--nba-radius, 12px);
   box-shadow: var(--nba-shadow, 0 8px 24px rgb(16 24 40 / 0.12));
+  transition: width .18s ease, height .18s ease;
+}
+.nba-panel.nba-max {
+  width: min(56rem, calc(100vw - 2rem));
+  height: calc(100dvh - 1.5rem);
 }
 
 .nba-head { display: flex; align-items: center; justify-content: space-between;
   padding: .6rem 1rem; border-bottom: 1px solid var(--nba-border); }
 .nba-title { font-size: .875rem; font-weight: 500; }
+.nba-expand { background: none; border: none; cursor: pointer; color: var(--nba-faint);
+  padding: .15rem .3rem; display: flex; align-items: center; }
+.nba-expand:hover { color: var(--nba-fg); }
+.nba-head-actions { display: flex; align-items: center; gap: .15rem; }
 .nba-close { background: none; border: none; cursor: pointer; color: var(--nba-faint);
   font-size: .875rem; padding: .15rem .3rem; }
 .nba-close:hover { color: var(--nba-fg); }
@@ -38,14 +47,15 @@
 .nba-user { display: flex; justify-content: flex-end; }
 .nba-user-bubble { max-width: 80%; border-radius: 1rem; padding: .5rem .875rem;
   background: var(--nba-accent); color: var(--nba-accent-fg, #fff);
-  font-size: .875rem; white-space: pre-wrap; }
+  font-size: .875rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .nba-assistant { display: flex; flex-direction: column; gap: .4rem; }
 .nba-thinking { border: 1px dashed var(--nba-border); border-radius: .5rem; }
 .nba-thinking summary { cursor: pointer; padding: .35rem .7rem; font-size: .75rem; color: var(--nba-muted); list-style: none; }
 .nba-thinking pre { margin: 0 0 .5rem; padding: 0 .7rem; max-height: 10rem; overflow-y: auto;
   white-space: pre-wrap; font-size: .75rem; color: var(--nba-faint); }
-.nba-answer { max-width: 85%; border-radius: 1rem; background: var(--nba-field); padding: .5rem .875rem; font-size: .875rem; }
+.nba-answer { max-width: 85%; border-radius: 1rem; background: var(--nba-field); padding: .5rem .875rem; font-size: .875rem;
+  min-width: 0; overflow-wrap: anywhere; }
 .nba-answer .nba-md { font-size: .875rem; line-height: 1.65; }
 .nba-answer .nba-md > :first-child { margin-top: 0; } .nba-answer .nba-md > :last-child { margin-bottom: 0; }
 .nba-answer .nba-md p { margin: 0 0 .5rem; } .nba-answer .nba-md ul,.nba-answer .nba-md ol { margin: 0 0 .5rem; padding-left: 1.25rem; }
@@ -53,7 +63,7 @@
 .nba-answer .nba-md li { margin: .125rem 0; }
 .nba-answer .nba-md h1,.nba-answer .nba-md h2,.nba-answer .nba-md h3 { font-weight: 600; margin: .5rem 0 .35rem; font-size: .9rem; }
 .nba-answer .nba-md a { color: var(--nba-accent); }
-.nba-answer .nba-md code { font-family: ui-monospace, monospace; font-size: .8rem; }
+.nba-answer .nba-md code { font-family: ui-monospace, monospace; font-size: .8rem; overflow-wrap: anywhere; }
 .nba-answer .nba-md pre { background: var(--nba-bg); border: 1px solid var(--nba-border); border-radius: .4rem;
   padding: .5rem; overflow-x: auto; margin: 0 0 .5rem; }
 .nba-answer .nba-md blockquote { margin: 0 0 .5rem; padding-left: .75rem; border-left: 2px solid var(--nba-border); color: var(--nba-muted); }
@@ -62,13 +72,13 @@
 
 .nba-tool { max-width: 85%; border: 1px solid var(--nba-border); border-radius: .6rem; padding: .5rem .75rem; font-size: .75rem; }
 .nba-tool.nba-pending { border-color: color-mix(in srgb, #d97706 55%, transparent); background: color-mix(in srgb, #d97706 6%, transparent); }
-.nba-tool-head { display: flex; align-items: center; gap: .5rem; }
-.nba-tool-name { font-weight: 500; }
+.nba-tool-head { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.nba-tool-name { font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
 .nba-tool-state { color: var(--nba-faint); }
 .nba-tool-state.nba-ok { color: #059669; } .nba-tool-state.nba-err { color: #dc2626; } .nba-tool-state.nba-wait { color: #b45309; }
 .nba-spin { animation: nba-rotate 1s linear infinite; }
 @keyframes nba-rotate { to { transform: rotate(360deg); } }
-.nba-tool-summary { margin-top: .25rem; color: var(--nba-muted); white-space: pre-line; }
+.nba-tool-summary { margin-top: .25rem; color: var(--nba-muted); white-space: pre-wrap; overflow-wrap: anywhere; }
 .nba-tool-raw { margin-top: .5rem; max-height: 12rem; overflow: auto; background: var(--nba-field);
   border-radius: .4rem; padding: .5rem; font-size: .7rem; line-height: 1.5; white-space: pre-wrap; }
 .nba-confirm-row { margin-top: .6rem; display: flex; gap: .5rem; }
