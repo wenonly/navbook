@@ -7,6 +7,7 @@ export const DEFAULT_THEME = 'compass';
 export interface ThemeManifestEntry {
   id: string; name: string; version: string;
   author: string; description: string; minAppVersion: string;
+  preview?: string;   // 预览图路径(themes/<id>/preview.png,由 aggregate 注入)
 }
 
 /** s_themes.active：缺省 compass（代码常量，无需部署时写库） */

@@ -6,6 +6,21 @@ import { cn } from '@/lib/utils';
 import { ThemePreview } from './ThemePreview';
 import { paletteFor } from './themePalettes';
 
+/** 预览图位:主题带真实截图(preview.png)则用图,否则回退配色 mockup */
+function PreviewSlot({ theme }: { theme: ThemeEntry }) {
+  if (theme.preview) {
+    return (
+      <img
+        src={theme.preview}
+        alt={`${theme.name} 预览`}
+        loading="lazy"
+        className="h-[168px] w-[270px] shrink-0 rounded-lg border border-line object-cover object-top"
+      />
+    );
+  }
+  return <ThemePreview palette={paletteFor(theme.id)} />;
+}
+
 interface Props {
   theme: ThemeEntry;
   active: boolean;
@@ -21,7 +36,7 @@ export function ThemeCard({ theme, active, switching, onSwitch }: Props) {
         active ? 'border-primary' : 'border-line',
       )}
     >
-      <ThemePreview palette={paletteFor(theme.id)} />
+      <PreviewSlot theme={theme} />
       <div className="flex min-w-0 flex-1 flex-col gap-[7px] py-0.5">
         <div className="flex items-center gap-2">
           <span className="text-[15px] font-semibold text-ink">{theme.name}</span>

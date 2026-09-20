@@ -49,6 +49,7 @@ export interface ThemeEntry {
   version: string;
   author: string;
   description: string;
+  preview?: string;
 }
 
 export function useThemes() {

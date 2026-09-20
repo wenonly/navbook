@@ -35,7 +35,14 @@ for (const entry of readdirSync(themesDir, { withFileTypes: true })) {
     continue;
   }
   cpSync(dist, join(out, 'themes', entry.name), { recursive: true });
-  manifest.push(JSON.parse(readFileSync(themeJson, 'utf8')));
+  const meta = JSON.parse(readFileSync(themeJson, 'utf8'));
+  // 主题预览图(可选):themes/<id>/preview.png → dist/themes/<id>/preview.png,manifest 声明路径
+  const preview = join(themesDir, entry.name, 'preview.png');
+  if (existsSync(preview)) {
+    cpSync(preview, join(out, 'themes', entry.name, 'preview.png'));
+    meta.preview = `/themes/${entry.name}/preview.png`;
+  }
+  manifest.push(meta);
 }
 writeFileSync(join(out, 'themes', 'manifest.json'), JSON.stringify(manifest, null, 2));
 

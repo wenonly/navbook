@@ -505,7 +505,7 @@ describe('中断自愈与渐进落库(DO 后台回合)', () => {
         yield { type: 'text', delta: '写到一半' };
         throw new Error('厂商连接断了');
       }
-    })([]);
+    })();
     const { createConversation } = await import('../../src/ai/conversations');
     const conv = await createConversation(db(), 't');
     const events = await collectEvents(provider, { message: 'hi', conversationId: conv.id });
@@ -525,7 +525,7 @@ describe('中断自愈与渐进落库(DO 后台回合)', () => {
         ctl.abort();
         throw Object.assign(new Error('aborted'), { name: 'AbortError' });
       }
-    })([]);
+    })();
     const { createConversation, listMessages } = await import('../../src/ai/conversations');
     const conv = await createConversation(db(), 't');
     const events: ChatSseEvent[] = [];
