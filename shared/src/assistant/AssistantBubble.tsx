@@ -4,7 +4,7 @@
 // 图标经 icon prop 替换;面板尺寸/圆角/阴影可调。样式见 ./assistant.css(.nba-*)。
 import { useEffect, useRef, useState, useSyncExternalStore, lazy, Suspense, type CSSProperties, type ReactNode } from 'react';
 import { ChatMachine, createApiClient, activityLabel, blockedReason } from '../index';
-import type { ChatMessageDto, ChatSseEvent, SessionInfo, UiItem } from '../chat/types';
+import type { ChatMessageDto, ChatSseEvent, ConversationDto, SessionInfo, UiItem } from '../chat/types';
 import './assistant.css';
 
 // markdown 库较重,懒加载分包
@@ -83,6 +83,8 @@ function ChatPanel({ onClose, storageKey, title, placeholder }: {
   const snap = useSyncExternalStore(machine.subscribe, machine.snapshot);
   const [input, setInput] = useState('');
   const [maximized, setMaximized] = useState(false);
+  const [convs, setConvs] = useState<ConversationDto[] | null>(null);
+  const [convOpen, setConvOpen] = useState(false);
   const [tick, setTick] = useState(0);   // running 卡计时(1s)
   const bottomRef = useRef<HTMLDivElement>(null);
   const blocked = blockedReason(snap);
@@ -115,10 +117,45 @@ function ChatPanel({ onClose, storageKey, title, placeholder }: {
     await machine.send(text);
   };
 
+  // 会话切换:开下拉时拉列表(running 绿点随拉取快照);选中 open(cid) 自带重挂,
+  // 生成中切走 DO 照跑、切回续流;open(null) 开新会话(下一条消息创建)
+  const toggleConvList = async () => {
+    setConvOpen(v => !v);
+    if (!convOpen) {
+      try { const res = await api.aiConversations(); setConvs(res.data); } catch { /* 保底旧列表 */ }
+    }
+  };
+  const pickConv = async (cid: number | null) => {
+    setConvOpen(false);
+    if (cid !== snap.conversationId) await machine.open(cid);
+  };
+
   return (
     <div className={`nba-panel${maximized ? ' nba-max' : ''}`}>
       <div className="nba-head">
-        <span className="nba-title">{title}</span>
+        <button className="nba-conv-toggle" onClick={() => void toggleConvList()}
+          title="切换会话" aria-label="切换会话" aria-expanded={convOpen}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          <span className="nba-conv-cur">{convs?.find(c => c.id === snap.conversationId)?.title || title}</span>
+          <svg className={`nba-conv-chev${convOpen ? ' nba-open' : ''}`} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        {convOpen && (
+          <div className="nba-conv-list">
+            <button className="nba-conv-new" onClick={() => void pickConv(null)}>＋ 新会话</button>
+            {(convs ?? []).map(c => (
+              <button key={c.id} onClick={() => void pickConv(c.id)}
+                className={`nba-conv-item${c.id === snap.conversationId ? ' nba-cur' : ''}`}>
+                {c.running && <span className="nba-conv-dot" aria-label="生成中" />}
+                <span className="nba-conv-title">{c.title || '(未命名)'}</span>
+              </button>
+            ))}
+            {convs != null && !convs.length && <p className="nba-conv-empty">还没有会话,发送第一条消息即创建</p>}
+          </div>
+        )}
         <span className="nba-head-actions">
           <button className="nba-expand" onClick={() => setMaximized(v => !v)}
             aria-label={maximized ? '收起面板' : '放大面板'} title={maximized ? '收起面板' : '放大面板'}>
