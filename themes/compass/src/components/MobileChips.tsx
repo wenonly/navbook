@@ -2,7 +2,9 @@ import type { NavCategory } from '@navbook/shared';
 import { toneFg, toneOf } from '../lib/tone';
 
 /** 移动端分类 chips：横向滚动，点击锚点跳转；激活分类含子分类时，下方展开二级 chips */
-export default function MobileChips({ categories, activeId }: { categories: NavCategory[]; activeId: string | null }) {
+export default function MobileChips({ categories, activeId, onNavigate }: {
+  categories: NavCategory[]; activeId: string | null; onNavigate: (id: string) => void;
+}) {
   const activeCat = categories.find(
     c => `cat-${c.id}` === activeId || c.children.some(s => `cat-${s.id}` === activeId),
   );
@@ -13,9 +15,10 @@ export default function MobileChips({ categories, activeId }: { categories: NavC
           const active = `cat-${cat.id}` === activeId;
           const inGroup = cat.id === activeCat?.id;
           return (
-            <a
+            <button
               key={cat.id}
-              href={`#cat-${cat.id}`}
+              type="button"
+              onClick={() => onNavigate(`cat-${cat.id}`)}
               className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition
                 ${active || inGroup
                   ? 'bg-accent font-medium text-white'
@@ -25,32 +28,34 @@ export default function MobileChips({ categories, activeId }: { categories: NavC
                 <i className={`${cat.font_icon} ${active || inGroup ? 'text-white' : toneFg(toneOf(cat.name))}`} aria-hidden />
               ) : null}
               {cat.name}
-            </a>
+            </button>
           );
         })}
       </div>
       {activeCat && activeCat.children.length > 0 && (
         <div className="chips-scroll mt-2 flex gap-1.5">
-          <a
-            href={`#cat-${activeCat.id}`}
+          <button
+            type="button"
+            onClick={() => onNavigate(`cat-${activeCat.id}`)}
             className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] transition
               ${`cat-${activeCat.id}` === activeId
                 ? 'bg-accent-soft font-medium text-accent'
                 : 'bg-field text-muted'}`}
           >
             全部
-          </a>
+          </button>
           {activeCat.children.map(sub => (
-            <a
+            <button
               key={sub.id}
-              href={`#cat-${sub.id}`}
+              type="button"
+              onClick={() => onNavigate(`cat-${sub.id}`)}
               className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] transition
                 ${`cat-${sub.id}` === activeId
                   ? 'bg-accent-soft font-medium text-accent'
                   : 'bg-field text-muted'}`}
             >
               {sub.name}
-            </a>
+            </button>
           ))}
         </div>
       )}

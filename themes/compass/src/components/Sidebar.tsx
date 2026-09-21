@@ -6,11 +6,12 @@ interface Props {
   categories: NavCategory[];
   activeId: string | null;
   session: SessionInfo | null;
+  onNavigate: (id: string) => void;
 }
 
 const countOf = (c: NavCategory) => c.links.length + c.children.reduce((n, s) => n + s.links.length, 0);
 
-export default function Sidebar({ categories, activeId, session }: Props) {
+export default function Sidebar({ categories, activeId, session, onNavigate }: Props) {
   const logged = !!session?.username;
   return (
     <aside className="sticky top-15 hidden h-[calc(100vh_-_60px)] w-60 shrink-0 flex-col border-r border-border bg-surface lg:flex">
@@ -21,10 +22,11 @@ export default function Sidebar({ categories, activeId, session }: Props) {
           const tone = toneOf(cat.name);
           return (
             <div key={cat.id} className="mb-0.5">
-              <a
-                href={`#cat-${cat.id}`}
+              <button
+                type="button"
+                onClick={() => onNavigate(`cat-${cat.id}`)}
                 aria-current={active ? 'true' : undefined}
-                className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition
+                className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition
                   ${active
                     ? 'bg-accent-soft font-semibold text-accent'
                     : 'text-fg hover:bg-field'}`}
@@ -40,22 +42,23 @@ export default function Sidebar({ categories, activeId, session }: Props) {
                 {cat.private && <IconLock size={10} className="shrink-0 text-faint" />}
                 <span className={`shrink-0 text-xs ${active ? 'text-accent' : 'text-faint'}`}>{countOf(cat)}</span>
                 {cat.children.length > 0 && <IconChevron size={14} className={`shrink-0 ${active ? 'text-accent' : 'text-faint'}`} />}
-              </a>
+              </button>
               {cat.children.map(sub => {
                 const subActive = `cat-${sub.id}` === activeId;
                 return (
-                  <a
+                  <button
                     key={sub.id}
-                    href={`#cat-${sub.id}`}
+                    type="button"
+                    onClick={() => onNavigate(`cat-${sub.id}`)}
                     aria-current={subActive ? 'true' : undefined}
-                    className={`flex items-center gap-1.5 rounded-md py-[5px] pl-9 pr-2.5 text-[13px] transition
+                    className={`flex w-full items-center gap-1.5 rounded-md py-[5px] pl-9 pr-2.5 text-left text-[13px] transition
                       ${subActive
                         ? 'bg-accent-soft font-medium text-accent'
                         : 'text-muted hover:bg-field hover:text-fg'}`}
                   >
                     <span className="min-w-0 flex-1 truncate">{sub.name}</span>
                     <span className={`shrink-0 text-[11px] ${subActive ? 'text-accent' : 'text-faint'}`}>{sub.links.length}</span>
-                  </a>
+                  </button>
                 );
               })}
             </div>

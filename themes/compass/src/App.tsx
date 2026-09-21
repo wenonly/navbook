@@ -3,7 +3,7 @@ import type { MouseEvent } from 'react';
 import type { NavData, NavLink } from '@navbook/shared';
 import { useTheme } from './hooks/useTheme';
 import { useSession } from './hooks/useSession';
-import { useScrollSpy } from './hooks/useScrollSpy';
+import { useSectionNav } from './hooks/useScrollSpy';
 import { buildIndex } from './lib/search';
 import Topbar from './components/Topbar';
 import Sidebar from './components/Sidebar';
@@ -22,7 +22,7 @@ export default function App({ data, onRefresh }: { data: NavData; onRefresh?: ()
     () => data.categories.flatMap(c => [`cat-${c.id}`, ...c.children.map(s => `cat-${s.id}`)]),
     [data],
   );
-  const activeId = useScrollSpy(sectionIds);
+  const { activeId, navigate } = useSectionNav(sectionIds);
   const [menu, setMenu] = useState<LinkMenuState | null>(null);
   const logged = !!session?.username;
   const openLinkMenu = logged
@@ -47,9 +47,9 @@ export default function App({ data, onRefresh }: { data: NavData; onRefresh?: ()
       <div className="px-4 pt-3 md:hidden">
         <SearchBox index={searchIndex} />
       </div>
-      <MobileChips categories={data.categories} activeId={activeId} />
+      <MobileChips categories={data.categories} activeId={activeId} onNavigate={navigate} />
       <div className="flex items-start">
-        <Sidebar categories={data.categories} activeId={activeId} session={session} />
+        <Sidebar categories={data.categories} activeId={activeId} session={session} onNavigate={navigate} />
         <main className="min-w-0 flex-1 p-4 md:p-7">
           {data.categories.length === 0 ? (
             <div className="rounded-card border border-dashed border-border px-4 py-16 text-center">
