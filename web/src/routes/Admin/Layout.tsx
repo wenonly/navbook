@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import {
   Bookmark, Folder, Link as LinkIcon, ArrowLeftRight,
-  KeyRound, Palette, Settings2, LogOut, Bot, Sparkles, Home,
+  KeyRound, Palette, Settings2, LogOut, Bot, Sparkles, ScrollText, Home,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/stores/auth';
@@ -24,6 +24,7 @@ const NAV_SECTIONS: Array<{ label: string; items: Array<{ to: string; label: str
       { to: '/admin/token', label: 'Token 管理', icon: KeyRound },
       { to: '/admin/theme', label: '主题管理', icon: Palette },
       { to: '/admin/settings', label: '站点设置', icon: Settings2 },
+      { to: '/admin/op-logs', label: '操作日志', icon: ScrollText },
     ],
   },
   {

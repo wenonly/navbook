@@ -32,6 +32,7 @@ import {
   listAiConversationsHandler, deleteAiConversationHandler, listAiMessagesHandler,
 } from './handlers/ai';
 import { createConversation } from './ai/conversations';
+import { pagedOpLogs } from './handlers/oplog';
 
 /** body 解析统一入口：非法/缺失 body 一律落空对象，交给 Zod 报具体字段错误 */
 async function parseBody(c: Context<AppEnv>): Promise<Record<string, unknown>> {
@@ -298,6 +299,15 @@ export function createApp() {
     if (!known.has(theme)) return c.json({ code: -2000, msg: `未知主题：${theme}` });
     await setActiveTheme(c.get('db'), theme);
     return c.json({ code: 0, data: { active: theme } });
+  });
+
+  // ---------- 操作日志（仅管理员） ----------
+
+  app.get('/api/op_logs', authMiddleware, async c => {
+    const q = c.req.query();
+    const page = Math.max(1, parseInt(q.page ?? '1', 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(q.limit ?? '30', 10) || 30));
+    return c.json(await pagedOpLogs(c.get('db'), page, limit));
   });
 
   // ---------- AI 助手（仅管理员） ----------

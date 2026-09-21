@@ -11,6 +11,7 @@ import { AdminImportExport } from './routes/Admin/ImportExport';
 import { AdminTheme } from './routes/Admin/Theme';
 import { AdminSettings } from './routes/Admin/Settings';
 import { AdminAiConfig } from './routes/Admin/AiConfig';
+import { AdminOpLogs } from './routes/Admin/OpLogs';
 import { AdminAssistant } from './routes/Admin/Assistant';
 
 const qc = new QueryClient();
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="import-export" element={<AdminImportExport />} />
             <Route path="theme" element={<AdminTheme />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="op-logs" element={<AdminOpLogs />} />
             <Route path="ai-config" element={<AdminAiConfig />} />
             <Route path="assistant" element={<AdminAssistant />} />
           </Route>

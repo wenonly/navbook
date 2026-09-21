@@ -1,7 +1,7 @@
 // 操作日志:全量留痕的记录侧(读取侧是 AI 工具 op_log_list)。
 // 在写 handler 成功后调用 insertOpLog;快照存整行业务字段(排除 icon_blob——
 // Buffer 体积大且现有工具不还原图标),AI 读快照即可组合现有工具自行还原。
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import type { DB } from '../db/client';
 
@@ -69,4 +69,26 @@ export async function listOpLogs(db: DB, limit: number): Promise<OpLogEntry[]> {
     after: r.afterJson ? JSON.parse(r.afterJson) : null,
     createdAt: r.createdAt,
   }));
+}
+
+/** 分页列表(管理端页面用):倒序 + 总数 */
+export async function pagedOpLogs(
+  db: DB, page: number, limit: number,
+): Promise<{ code: 0; count: number; data: OpLogEntry[] }> {
+  const offset = (page - 1) * limit;
+  const countRow = await db.select({ c: sql<number>`count(*)` }).from(schema.opLogs).get();
+  const rows = await db.select().from(schema.opLogs)
+    .orderBy(desc(schema.opLogs.id))
+    .limit(limit).offset(offset).all();
+  return {
+    code: 0,
+    count: countRow?.c ?? 0,
+    data: rows.map(r => ({
+      id: r.id, action: r.action, source: r.source,
+      conversationId: r.conversationId, targetId: r.targetId, summary: r.summary,
+      before: r.beforeJson ? JSON.parse(r.beforeJson) : null,
+      after: r.afterJson ? JSON.parse(r.afterJson) : null,
+      createdAt: r.createdAt,
+    })),
+  };
 }

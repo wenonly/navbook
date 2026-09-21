@@ -95,3 +95,29 @@ describe('操作日志留痕', () => {
     expect(capped.data.length).toBeLessThanOrEqual(20);
   });
 });
+
+describe('GET /api/op_logs 端点', () => {
+  it('未登录 401;登录返回分页列表(倒序含快照)', async () => {
+    const { createApp } = await import('../../src/router');
+    const { resetTables, seedUser, validCookie } = await import('../helpers');
+    await resetTables(); await seedUser();
+    const cat = await addCategoryHandler(db(), { name: '工具', property: 0, weight: 0, description: '', font_icon: '', fid: 0 });
+    await addLinkHandler(db(), linkInput(cat.id), AI);
+
+    const UA = 'oplog-agent';
+    const noauth = await createApp().request(new Request('http://x/api/op_logs'), undefined, env as any);
+    expect(noauth.status).toBe(401);
+
+    const authed = (p: string) => createApp().request(new Request(`http://x${p}`, {
+      headers: { cookie: `key=${validCookie(UA)}`, 'user-agent': UA },
+    }), undefined, env as any);
+    const res = await authed('/api/op_logs?page=1&limit=10');
+    const json: any = await res.json();
+    expect(json.code).toBe(0);
+    expect(json.count).toBe(2);                       // category.create + link.create
+    expect(json.data[0].action).toBe('link.create');  // 倒序(最新在前)
+    expect(json.data[0].after).toMatchObject({ title: 'GitHub' });
+    expect(json.data[0].source).toBe('ai');
+    expect(json.data[0].conversationId).toBe(42);
+  });
+});

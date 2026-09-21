@@ -75,4 +75,5 @@ export const api = {
   delAiConversation: (id: number) => post('ai_del_conversation', { id }),
   aiMessages: (cid: number) => get(`/api/ai_messages?cid=${cid}`),
   aiStop: (cid: number) => post('ai_stop', { cid }),
+  opLogs: (page = 1, limit = 30) => get(`/api/op_logs?page=${page}&limit=${limit}`),
 };
