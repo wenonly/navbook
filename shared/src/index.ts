@@ -37,6 +37,7 @@ export interface ThemeManifestEntry {
   author: string;
   description: string;
   minAppVersion: string;
+  preview?: string;
 }
 
 // ---- 错误 ----
