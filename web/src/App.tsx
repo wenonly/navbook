@@ -14,7 +14,12 @@ import { AdminAiConfig } from './routes/Admin/AiConfig';
 import { AdminOpLogs } from './routes/Admin/OpLogs';
 import { AdminAssistant } from './routes/Admin/Assistant';
 
-const qc = new QueryClient();
+// 默认值:30s 内不重拉(切页/聚焦不重复请求);写操作经 useInvalidatingMutation 手动失效,不依赖焦点重拉
+const qc = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 30_000, refetchOnWindowFocus: false, retry: 1 },
+  },
+});
 
 export default function App() {
   return (

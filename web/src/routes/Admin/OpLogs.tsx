@@ -64,11 +64,16 @@ export function AdminOpLogs() {
             </tr>
           </thead>
           <tbody>
-            {logs.isLoading && (
-              <tr><td colSpan={5} className="space-y-2 px-3 py-6">
-                <Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-2/3" />
-              </td></tr>
-            )}
+            {logs.isLoading &&
+              Array.from({ length: 8 }, (_, i) => (
+                <tr key={`sk-${i}`} className="border-b border-border/60">
+                  <td className="px-3 py-2.5"><Skeleton className="h-3.5 w-3.5" /></td>
+                  <td className="px-3 py-2.5"><Skeleton className="h-3.5 w-28" /></td>
+                  <td className="px-3 py-2.5"><Skeleton className="h-3.5 w-12" /></td>
+                  <td className="px-3 py-2.5"><Skeleton className="h-4 w-12 rounded-full" /></td>
+                  <td className="px-3 py-2.5"><Skeleton className={`h-3.5 ${i % 3 === 0 ? 'w-2/3' : 'w-1/2'}`} /></td>
+                </tr>
+              ))}
             {logs.data?.data.map(l => {
               const meta = actionMeta(l.action);
               const open = openId === l.id;
