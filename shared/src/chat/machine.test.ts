@@ -285,3 +285,61 @@ describe('重挂续流(DO 后台回合)', () => {
     expect(m.snapshot().items[1]).toEqual({ kind: 'error', text: '厂商接口错误' });
   });
 });
+
+describe('确认卡 loading 与防重复点击(confirmingToolId)', () => {
+  /** 第一轮(send)即出确认卡;第二轮(confirm)被门控直到 release */
+  function gatedConfirmTransport(gate: Promise<void>, log: ChatStreamBody[]) {
+    let call = 0;
+    return {
+      log,
+      async *stream(body: ChatStreamBody): AsyncGenerator<ChatSseEvent> {
+        log.push(body);
+        if (call++ === 0) {
+          yield { type: 'tool_call', id: 'c1', name: 'delete_link', args: {}, danger: 'write' } as ChatSseEvent;
+          yield { type: 'confirm_required', messageId: 9, id: 'c1', name: 'delete_link', args: {}, summary: 's' } as ChatSseEvent;
+          yield { type: 'done', messageIds: [] } as ChatSseEvent;
+        } else {
+          await gate;
+          yield { type: 'tool_result', id: 'c1', name: 'delete_link', ok: true, summary: 'done', data: null } as ChatSseEvent;
+          yield { type: 'done', messageIds: [] } as ChatSseEvent;
+        }
+      },
+      async history(_cid: number): Promise<ChatMessageDto[]> { return []; },
+    };
+  }
+
+  it('confirm 期间 confirmingToolId=该卡;二次点击被吞;done 后清零', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>(r => { release = r; });
+    const log: ChatStreamBody[] = [];
+    const m = new ChatMachine(gatedConfirmTransport(gate, log) as any);
+    await m.send('删'); await flush();
+    expect(m.snapshot().confirmingToolId).toBeNull();
+
+    const p = m.confirm(9, 'approve', 'c1');
+    await flush();
+    expect(m.snapshot().confirmingToolId).toBe('c1');     // 卡级 loading 可见
+    // 期间重复点击(确认/取消)全部被吞
+    await m.confirm(9, 'approve', 'c1');
+    await m.confirm(9, 'reject', 'c1');
+    expect(log.length).toBe(2);                            // 只有 send + 第一次 confirm
+    release();
+    await p; await flush();
+    expect(m.snapshot().confirmingToolId).toBeNull();      // done 后清零
+    expect(m.snapshot().streaming).toBe(false);
+  });
+
+  it('abort 清 confirmingToolId(停止按钮)', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>(r => { release = r; });
+    const m = new ChatMachine(gatedConfirmTransport(gate, []) as any);
+    await m.send('删'); await flush();
+    void m.confirm(2, 'approve', 'c1');
+    await flush();
+    expect(m.snapshot().confirmingToolId).toBe('c1');
+    m.abort();
+    expect(m.snapshot().confirmingToolId).toBeNull();
+    release();
+    await flush();
+  });
+});

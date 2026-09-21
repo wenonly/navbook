@@ -26,12 +26,14 @@ export interface ChatSnapshot {
   items: UiItem[];
   streaming: boolean;
   error: string | null;
+  /** 正在确认的工具卡 id(确认请求已发出、结果未回):UI 据此 disable+loading,防重复点击 */
+  confirmingToolId: string | null;
 }
 
 export class ChatMachine {
   private listeners = new Set<() => void>();
   private controller: AbortController | null = null;
-  private state: ChatSnapshot = { conversationId: null, items: [], streaming: false, error: null };
+  private state: ChatSnapshot = { conversationId: null, items: [], streaming: false, error: null, confirmingToolId: null };
   private transport: ChatTransport;
 
   constructor(transport: ChatTransport) {
@@ -94,15 +96,17 @@ export class ChatMachine {
     ]);
   }
 
-  /** 确认/拒绝写操作(对话里不再插用户消息) */
-  async confirm(messageId: number, action: 'approve' | 'reject') {
-    if (this.state.streaming) return;
+  /** 确认/拒绝写操作(对话里不再插用户消息);toolId 用于卡级 loading 反馈 */
+  async confirm(messageId: number, action: 'approve' | 'reject', toolId?: string) {
+    if (this.state.streaming || this.state.confirmingToolId) return;
+    this.set({ confirmingToolId: toolId ?? null });
     await this.streamOnce({ confirm: { message_id: messageId, action } }, item => [item]);
   }
 
   abort() {
     this.controller?.abort();
     this.controller = null;
+    if (this.state.confirmingToolId != null) this.set({ confirmingToolId: null });
   }
 
   private async streamOnce(
@@ -136,10 +140,10 @@ export class ChatMachine {
   }
 
   private finishStreaming() {
-    if (!this.state.streaming) return;
+    if (!this.state.streaming && this.state.confirmingToolId == null) return;
     const items = this.state.items.map(i =>
       i.kind === 'assistant' && i.streaming ? { ...i, streaming: false } : i);
-    this.set({ items, streaming: false });
+    this.set({ items, streaming: false, confirmingToolId: null });
   }
 
   /** 追加到"当前 streaming 的 assistant 气泡";若已被工具卡关闭/不存在,则开新气泡(ReAct 多步交错的关键) */

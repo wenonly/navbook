@@ -68,8 +68,8 @@ export function AdminAssistant() {
     void qc.invalidateQueries({ queryKey: ['ai-conversations'] });
   };
 
-  const onConfirm = async (messageId: number, action: 'approve' | 'reject') => {
-    await machine.confirm(messageId, action);
+  const onConfirm = async (messageId: number, action: 'approve' | 'reject', toolId?: string) => {
+    await machine.confirm(messageId, action, toolId);
     void qc.invalidateQueries({ queryKey: ['ai-conversations'] });
   };
 
@@ -121,7 +121,7 @@ export function AdminAssistant() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
-          <ChatMessages items={snap.items} streaming={snap.streaming} onConfirm={onConfirm} />
+          <ChatMessages items={snap.items} streaming={snap.streaming} confirmingToolId={snap.confirmingToolId} onConfirm={onConfirm} />
           {snap.error && (
             <div className="mt-3 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
               {snap.error}

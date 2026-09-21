@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export function ChatMessages({
-  items, streaming, onConfirm,
+  items, streaming, confirmingToolId, onConfirm,
 }: {
-  items: UiItem[]; streaming: boolean;
-  onConfirm: (messageId: number, action: 'approve' | 'reject') => void;
+  items: UiItem[]; streaming: boolean; confirmingToolId: string | null;
+  onConfirm: (messageId: number, action: 'approve' | 'reject', toolId?: string) => void;
 }) {
   return (
     <div className="space-y-4">
@@ -34,7 +34,7 @@ export function ChatMessages({
           );
         }
         if (item.kind === 'assistant') return <AssistantBubble key={i} item={item} />;
-        return <ToolCard key={i} item={item} onConfirm={onConfirm} />;
+        return <ToolCard key={i} item={item} confirmingToolId={confirmingToolId} onConfirm={onConfirm} />;
       })}
       {streaming && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -122,10 +122,11 @@ function Elapsed({ startedAt }: { startedAt?: number }) {
 }
 
 function ToolCard({
-  item, onConfirm,
+  item, confirmingToolId, onConfirm,
 }: {
   item: Extract<UiItem, { kind: 'tool' }>;
-  onConfirm: (messageId: number, action: 'approve' | 'reject') => void;
+  confirmingToolId: string | null;
+  onConfirm: (messageId: number, action: 'approve' | 'reject', toolId?: string) => void;
 }) {
   const [showRaw, setShowRaw] = useState(false);
   const st = TOOL_STATUS[item.status];
@@ -153,8 +154,15 @@ function ToolCard({
       )}
       {item.status === 'pending' && item.messageId != null && (
         <div className="mt-2.5 flex gap-2">
-          <Button size="sm" onClick={() => onConfirm(item.messageId!, 'approve')}>确认执行</Button>
-          <Button size="sm" variant="outline" onClick={() => onConfirm(item.messageId!, 'reject')}>取消</Button>
+          <Button size="sm" disabled={confirmingToolId != null}
+            onClick={() => onConfirm(item.messageId!, 'approve', item.id)}>
+            {confirmingToolId === item.id && <Loader2 size={13} className="animate-spin" />}
+            确认执行
+          </Button>
+          <Button size="sm" variant="outline" disabled={confirmingToolId != null}
+            onClick={() => onConfirm(item.messageId!, 'reject', item.id)}>
+            {confirmingToolId === item.id ? '取消中…' : '取消'}
+          </Button>
         </div>
       )}
     </div>

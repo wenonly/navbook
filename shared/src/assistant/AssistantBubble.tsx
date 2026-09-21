@@ -176,7 +176,7 @@ function ChatPanel({ onClose, storageKey, title, placeholder }: {
         {!snap.items.length && (
           <p className="nba-empty">可以问我站内有什么、帮我搜链接、增删改书签(写操作会请你确认)。</p>
         )}
-        {snap.items.map((item, i) => <Item key={i} item={item} />)}
+        {snap.items.map((item, i) => <Item key={i} item={item} confirmingToolId={snap.confirmingToolId} />)}
         {snap.streaming && (
           <div className="nba-status">
             <svg className="nba-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
@@ -210,7 +210,7 @@ function ChatPanel({ onClose, storageKey, title, placeholder }: {
   );
 }
 
-function Item({ item }: { item: UiItem }) {
+function Item({ item, confirmingToolId }: { item: UiItem; confirmingToolId: string | null }) {
   const machine = getMachine();
   if (item.kind === 'error') return <p className="nba-error">{item.text}</p>;
   if (item.kind === 'user') {
@@ -255,8 +255,19 @@ function Item({ item }: { item: UiItem }) {
       {item.summary && <div className="nba-tool-summary">{item.summary}</div>}
       {item.status === 'pending' && item.messageId != null && (
         <div className="nba-confirm-row">
-          <button className="nba-btn nba-btn-ok" onClick={() => void machine.confirm(item.messageId!, 'approve')}>确认执行</button>
-          <button className="nba-btn nba-btn-plain" onClick={() => void machine.confirm(item.messageId!, 'reject')}>取消</button>
+          <button className="nba-btn nba-btn-ok" disabled={confirmingToolId != null}
+            onClick={() => void machine.confirm(item.messageId!, 'approve', item.id)}>
+            {confirmingToolId === item.id && (
+              <svg className="nba-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <circle cx="12" cy="12" r="9" opacity=".25" /><path d="M4 12a8 8 0 018-8" />
+              </svg>
+            )}
+            确认执行
+          </button>
+          <button className="nba-btn nba-btn-plain" disabled={confirmingToolId != null}
+            onClick={() => void machine.confirm(item.messageId!, 'reject', item.id)}>
+            {confirmingToolId === item.id ? '取消中…' : '取消'}
+          </button>
         </div>
       )}
     </div>
