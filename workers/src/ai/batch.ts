@@ -4,6 +4,7 @@
 // resolveExecPolicy:确认行为的唯一决策点(toolPolicy 配置 > MCP trust 已映射的 danger > 工具默认)。
 import type { AiTool } from './tools';
 import type { ToolPolicy, WorkerDB } from './types';
+import type { OpMeta } from '../handlers/oplog';
 
 const BATCH_WRITE_MAX = 20;
 const BATCH_READ_MAX = 10;
@@ -51,7 +52,7 @@ export function buildBatchTools(available: AiTool[], policy: ToolPolicy): AiTool
     },
   });
 
-  async function runOps(db: WorkerDB, ops: any[], want: 'auto' | 'confirm', concurrent: boolean) {
+  async function runOps(db: WorkerDB, ops: any[], want: 'auto' | 'confirm', concurrent: boolean, meta?: OpMeta) {
     const results: any[] = [];
     let okCount = 0;
     const execOne = async (op: any, i: number) => {
@@ -62,7 +63,7 @@ export function buildBatchTools(available: AiTool[], policy: ToolPolicy): AiTool
         return;
       }
       try {
-        const res = await tool.execute(db, (op.args ?? {}) as Record<string, any>);
+        const res = await tool.execute(db, (op.args ?? {}) as Record<string, any>, { ...meta, source: 'ai' });
         const ok = !(res && typeof res === 'object' && 'code' in res && (res as any).code !== 0);
         if (ok) okCount++;
         results[i] = { index: i, action: op.action, ok, result: res };
@@ -100,11 +101,11 @@ export function buildBatchTools(available: AiTool[], policy: ToolPolicy): AiTool
       parameters: { type: 'object', properties: { operations: opSchema(autoActions, BATCH_READ_MAX) }, required: ['operations'] },
       danger: 'read',
       summarize: (a, r) => summarizeBatch('读操作', a, r, autoActions),
-      execute: async (db, a) => {
+      execute: async (db, a, meta) => {
         const ops = a.operations;
         if (!Array.isArray(ops) || ops.length === 0) throw new Error('operations 不能为空');
         if (ops.length > BATCH_READ_MAX) throw new Error(`单次最多 ${BATCH_READ_MAX} 个操作,请拆分提交`);
-        return runOps(db, ops, 'auto', true);
+        return runOps(db, ops, 'auto', true, meta);
       },
     },
     {
@@ -113,11 +114,11 @@ export function buildBatchTools(available: AiTool[], policy: ToolPolicy): AiTool
       parameters: { type: 'object', properties: { operations: opSchema(confirmActions, BATCH_WRITE_MAX) }, required: ['operations'] },
       danger: 'write',
       summarize: (a, r) => summarizeBatch('写操作', a, r, confirmActions),
-      execute: async (db, a) => {
+      execute: async (db, a, meta) => {
         const ops = a.operations;
         if (!Array.isArray(ops) || ops.length === 0) throw new Error('operations 不能为空');
         if (ops.length > BATCH_WRITE_MAX) throw new Error(`单次最多 ${BATCH_WRITE_MAX} 个操作,请拆分提交`);
-        return runOps(db, ops, 'confirm', false);
+        return runOps(db, ops, 'confirm', false, meta);
       },
     },
   ];

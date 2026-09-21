@@ -61,7 +61,7 @@ describe('read tools', () => {
   });
 
   it('注册表形态:danger 标注 + OpenAI tools 规格 + summarize 中文文案', () => {
-    expect(AI_TOOLS.filter(t => t.danger === 'read')).toHaveLength(6);   // +fetch_url
+    expect(AI_TOOLS.filter(t => t.danger === 'read')).toHaveLength(7);   // +fetch_url +op_log_list
     const spec = toolSpecs() as any[];
     expect(spec.every(s => s.type === 'function' && s.function.name && s.function.parameters)).toBe(true);
     expect(findTool('search_links')!.summarize({ keyword: 'git' }, null)).toContain('git');

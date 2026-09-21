@@ -29,6 +29,7 @@ export const DEFAULT_SYSTEM_PROMPT = [
   '写操作(新增/修改/删除)会请求用户确认,被拒绝时如实告知,不要重复发起同一被拒操作;',
   '同一回合有 2 项及以上独立读操作(如抓取/搜索多个目标)优先用 batch_read 一次并发提交,2 项及以上写操作优先用 batch_write 一次提交(共享一张确认卡);单项操作用对应单工具;',
   '跨会话记忆:用户的稳定偏好与重要事实主动用 memory_write 记入(整体替换,过期信息及时清理合并,保持精简);',
+  '操作可追溯:所有数据增删改都有日志(op_log_list 含前后快照);用户要求撤销/还原时,查日志拿快照后用对应工具改回,必要时说明冲突(如 URL 已被占用);',
   '回答用简体中文,简洁直接。',
 ].join('\n');
 
@@ -98,7 +99,7 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
     }
     const tool = resolveTool(c.name);
     if (opts.confirm.action === 'approve' && tool) {
-      const { content } = await execTool(db, tool, { id: c.toolCallId, name: c.name, args: c.args });
+      const { content } = await execTool(db, tool, { id: c.toolCallId, name: c.name, args: c.args }, { source: 'ai', conversationId: cid });
       await updateMessageContent(db, msg.id, content);
       await emit({
         type: 'tool_result', id: content.toolCallId, name: content.name,
@@ -207,7 +208,7 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
         continue;
       }
       autoTasks.push((async () => {
-        const { content } = await execTool(db, tool, call);
+        const { content } = await execTool(db, tool, call, { source: 'ai', conversationId: cid });
         await persistToolResult(db, cid, emit, messageIds, content, false);
       })());
     }
@@ -226,10 +227,11 @@ export async function runAgentTurn(deps: AgentDeps, cfg: AiConfig, opts: AgentTu
 async function execTool(
   db: WorkerDB, tool: AiTool,
   call: { id: string; name: string; args: unknown },
+  meta: { source: 'ai'; conversationId: number },
 ): Promise<{ content: ToolMsgContent; ok: boolean }> {
   const args = (call.args ?? {}) as Record<string, any>;
   try {
-    const result = await tool.execute(db, args);
+    const result = await tool.execute(db, args, meta);
     const ok = !(result && typeof result === 'object' && 'code' in result && (result as any).code !== 0);
     const content: ToolMsgContent = {
       toolCallId: call.id, name: call.name, args,

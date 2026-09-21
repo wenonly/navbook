@@ -367,9 +367,9 @@ describe('runAgentTurn(MCP 集成)', () => {
     ]);
     const { events } = await turnWithMcp(provider, fakeRegistry([]), { message: 'hi' });
     expect(events.some(e => e.type === 'error')).toBe(false);
-    // 静态 13(含 memory_write)+ 工厂生成的 batch_read/batch_write = 15,无 mcp_ 前缀
+    // 静态 14(含 memory_write/op_log_list)+ 工厂 batch 两件 = 16,无 mcp_ 前缀
     expect(provider.toolsCalls[0].every(t => !t.name.startsWith('mcp_'))).toBe(true);
-    expect(provider.toolsCalls[0]).toHaveLength(15);
+    expect(provider.toolsCalls[0]).toHaveLength(16);
     expect(provider.toolsCalls[0].some(t => t.name === 'batch_read')).toBe(true);
     // system 无 MCP 提示行
     expect(provider.calls[0][0].content).not.toContain('另有外部工具');

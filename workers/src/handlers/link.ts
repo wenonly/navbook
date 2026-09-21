@@ -4,6 +4,7 @@ import type { DB } from '../db/client';
 import * as schema from '../db/schema';
 import { escapeHtml, decodeEntities } from '../lib/escape';
 import { isUniqueViolation } from '../lib/d1-errors';
+import { insertOpLog, snapshotLink, type OpMeta } from './oplog';
 
 export interface LinkInput {
   fid: number;
@@ -33,7 +34,7 @@ function guestLinkWhere(db: DB) {
   return and(eq(schema.links.property, 0), inArray(schema.links.fid, publicCatIds));
 }
 
-export async function addLinkHandler(db: DB, input: LinkInput): Promise<{ code: 0; id: number }> {
+export async function addLinkHandler(db: DB, input: LinkInput, meta?: OpMeta): Promise<{ code: 0; id: number }> {
   const cat = await db.select().from(schema.categorys).where(eq(schema.categorys.id, input.fid)).get();
   if (!cat) throw new Error('分类ID不存在！');
 
@@ -50,6 +51,11 @@ export async function addLinkHandler(db: DB, input: LinkInput): Promise<{ code: 
       // font_icon 刻意不转义（PHP 原版裸存，前台直接拼 class）
       ...(input.font_icon ? { fontIcon: input.font_icon } : {}),
     }).returning({ id: schema.links.id }).get();
+    await insertOpLog(db, {
+      action: 'link.create', targetId: row.id,
+      summary: `新增链接「${input.title}」→ ${input.url}`,
+      after: await snapshotLink(db, row.id),
+    }, meta);
     return { code: 0, id: row.id };
   } catch (e) {
     if (isUniqueViolation(e)) throw new Error('The URL already exists!');
@@ -57,9 +63,10 @@ export async function addLinkHandler(db: DB, input: LinkInput): Promise<{ code: 
   }
 }
 
-export async function editLinkHandler(db: DB, id: number, input: LinkInput): Promise<{ code: 0; msg: string }> {
+export async function editLinkHandler(db: DB, id: number, input: LinkInput, meta?: OpMeta): Promise<{ code: 0; msg: string }> {
   const cat = await db.select().from(schema.categorys).where(eq(schema.categorys.id, input.fid)).get();
   if (!cat) throw new Error('分类ID不存在！');
+  const before = await snapshotLink(db, id);
   try {
     await db.update(schema.links).set({
       fid: input.fid,
@@ -76,11 +83,22 @@ export async function editLinkHandler(db: DB, id: number, input: LinkInput): Pro
     if (isUniqueViolation(e)) throw new Error('The URL already exists!');
     throw e;
   }
+  await insertOpLog(db, {
+    action: 'link.update', targetId: id,
+    summary: `修改链接「${input.title}」(#${id})`,
+    before, after: await snapshotLink(db, id),
+  }, meta);
   return { code: 0, msg: 'successful' };
 }
 
-export async function delLinkHandler(db: DB, id: number): Promise<{ code: 0; msg: string }> {
+export async function delLinkHandler(db: DB, id: number, meta?: OpMeta): Promise<{ code: 0; msg: string }> {
+  const before = await snapshotLink(db, id);
   await db.delete(schema.links).where(eq(schema.links.id, id));
+  await insertOpLog(db, {
+    action: 'link.delete', targetId: id,
+    summary: `删除链接「${before?.title ?? '#' + id}」(${before?.url ?? ''})`,
+    before,
+  }, meta);
   return { code: 0, msg: 'successful' };
 }
 

@@ -3,6 +3,7 @@
 import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import type { WorkerDB } from './types';
+import { insertOpLog, type OpMeta } from '../handlers/oplog';
 
 const KEY = 's_ai_memory';
 
@@ -13,7 +14,15 @@ export async function loadMemory(db: WorkerDB): Promise<string> {
   return typeof row?.value === 'string' ? row.value : '';
 }
 
-export async function saveMemory(db: WorkerDB, content: string): Promise<void> {
+export async function saveMemory(db: WorkerDB, content: string, meta?: OpMeta): Promise<void> {
+  const before = await loadMemory(db);
   await db.insert(schema.options).values({ key: KEY, value: content })
     .onConflictDoUpdate({ target: schema.options.key, set: { value: content } });
+  if (before !== content) {
+    await insertOpLog(db, {
+      action: 'memory.update',
+      summary: `更新长期记忆(${content.length} 字)`,
+      before: { content: before }, after: { content },
+    }, meta);
+  }
 }

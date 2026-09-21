@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import type { DB } from '../db/client';
 import * as schema from '../db/schema';
+import { insertOpLog, type OpMeta } from './oplog';
 
 export interface SiteConfig {
   sitePrivate: boolean;
@@ -29,7 +30,9 @@ export function siteConfigData(s: SiteConfig) {
 export async function setSiteConfig(
   db: DB,
   patch: { sitePrivate?: boolean; siteTitle?: string; siteSubtitle?: string },
+  meta?: OpMeta,
 ): Promise<void> {
+  const before = await getSiteConfig(db);
   const upserts: Array<[string, string]> = [];
   if (patch.sitePrivate !== undefined) upserts.push(['site_private', patch.sitePrivate ? '1' : '0']);
   if (patch.siteTitle !== undefined) upserts.push(['site_title', patch.siteTitle.slice(0, 64)]);
@@ -37,6 +40,14 @@ export async function setSiteConfig(
   for (const [key, value] of upserts) {
     await db.insert(schema.options).values({ key, value })
       .onConflictDoUpdate({ target: schema.options.key, set: { value } });
+  }
+  if (upserts.length) {
+    const after = await getSiteConfig(db);
+    await insertOpLog(db, {
+      action: 'site.update',
+      summary: `修改站点设置(${upserts.map(([k]) => k).join('/')})`,
+      before, after,
+    }, meta);
   }
 }
 

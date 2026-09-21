@@ -4,6 +4,7 @@ import type { DB } from '../db/client';
 import * as schema from '../db/schema';
 import { escapeHtml, decodeEntities } from '../lib/escape';
 import { isUniqueViolation } from '../lib/d1-errors';
+import { insertOpLog, snapshotCategory, type OpMeta } from './oplog';
 
 export interface CategoryInput {
   name: string;
@@ -20,7 +21,7 @@ export interface CategoryRow {
   fontIcon: string | null; fid: number;
 }
 
-export async function addCategoryHandler(db: DB, input: CategoryInput): Promise<{ code: 0; id: number }> {
+export async function addCategoryHandler(db: DB, input: CategoryInput, meta?: OpMeta): Promise<{ code: 0; id: number }> {
   if (!input.name.trim()) throw new Error('分类名称不能为空！');
   try {
     const row = await db.insert(schema.categorys).values({
@@ -33,6 +34,11 @@ export async function addCategoryHandler(db: DB, input: CategoryInput): Promise<
       fontIcon: input.font_icon || null,
       fid: input.fid,
     }).returning({ id: schema.categorys.id }).get();
+    await insertOpLog(db, {
+      action: 'category.create', targetId: row.id,
+      summary: `新增分类「${input.name}」`,
+      after: await snapshotCategory(db, row.id),
+    }, meta);
     return { code: 0, id: row.id };
   } catch (e) {
     if (isUniqueViolation(e)) throw new Error('Categorie already exist!');
@@ -40,7 +46,7 @@ export async function addCategoryHandler(db: DB, input: CategoryInput): Promise<
   }
 }
 
-export async function editCategoryHandler(db: DB, id: number, input: CategoryInput): Promise<{ code: 0; msg: string }> {
+export async function editCategoryHandler(db: DB, id: number, input: CategoryInput, meta?: OpMeta): Promise<{ code: 0; msg: string }> {
   if (!input.name.trim()) throw new Error('The category name cannot be empty!');
 
   if (input.fid !== 0) {
@@ -56,6 +62,7 @@ export async function editCategoryHandler(db: DB, id: number, input: CategoryInp
     throw new Error('修改失败，该分类下已存在子分类！');
   }
 
+  const before = await snapshotCategory(db, id);
   try {
     await db.update(schema.categorys).set({
       name: escapeHtml(input.name),
@@ -70,12 +77,18 @@ export async function editCategoryHandler(db: DB, id: number, input: CategoryInp
     if (isUniqueViolation(e)) throw new Error('The category name already exists!');  // PHP -1005 原文
     throw e;
   }
+  await insertOpLog(db, {
+    action: 'category.update', targetId: id,
+    summary: `修改分类「${input.name}」(#${id})`,
+    before, after: await snapshotCategory(db, id),
+  }, meta);
   return { code: 0, msg: 'successful' };
 }
 
-export async function delCategoryHandler(db: DB, id: number): Promise<{ code: 0; msg: string }> {
+export async function delCategoryHandler(db: DB, id: number, meta?: OpMeta): Promise<{ code: 0; msg: string }> {
   const cat = await db.select().from(schema.categorys).where(eq(schema.categorys.id, id)).get();
   if (!cat) throw new Error('The category does not exist!');
+  const before = await snapshotCategory(db, id);
 
   const subCount = await db.select({ c: sql<number>`count(*)` }).from(schema.categorys)
     .where(eq(schema.categorys.fid, id)).get();
@@ -86,6 +99,11 @@ export async function delCategoryHandler(db: DB, id: number): Promise<{ code: 0;
   if ((linkCount?.c ?? 0) > 0) throw new Error('此分类下存在链接，不允许删除！');
 
   await db.delete(schema.categorys).where(eq(schema.categorys.id, id));
+  await insertOpLog(db, {
+    action: 'category.delete', targetId: id,
+    summary: `删除分类「${cat.name}」`,
+    before,
+  }, meta);
   return { code: 0, msg: 'successful' };
 }
 

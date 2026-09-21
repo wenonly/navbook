@@ -99,6 +99,20 @@ export const aiConversations = sqliteTable('on_ai_conversations', {
   index('on_ai_conversations_updated_at_idx').on(t.updatedAt),
 ]);
 
+export const opLogs = sqliteTable('on_op_logs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  action: text('action').notNull(),
+  source: text('source').notNull().default('manual'),
+  conversationId: integer('conversation_id'),
+  targetId: integer('target_id'),
+  summary: text('summary').notNull().default(''),
+  beforeJson: text('before_json'),
+  afterJson: text('after_json'),
+  createdAt: integer('created_at').notNull(),
+}, (t) => [
+  index('on_op_logs_id_idx').on(t.id),
+]);
+
 export const aiMessages = sqliteTable('on_ai_messages', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   conversationId: integer('conversation_id').notNull(),

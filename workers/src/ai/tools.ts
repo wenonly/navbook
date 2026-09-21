@@ -13,6 +13,7 @@ import {
 import { getSiteConfig, siteConfigData } from '../handlers/site';
 import { fetchAndExtract } from './fetcher';
 import { saveMemory, MEMORY_MAX_CHARS } from './memory';
+import { listOpLogs, type OpMeta } from '../handlers/oplog';
 
 export interface AiTool {
   name: string;
@@ -23,7 +24,7 @@ export interface AiTool {
   defaultPolicy?: 'auto' | 'confirm';
   /** 确认卡(执行前 result=null)与结果卡(执行后)的中文文案,后端生成前端照渲染 */
   summarize(args: Record<string, any>, result: unknown): string;
-  execute(db: WorkerDB, args: Record<string, any>): Promise<unknown>;
+  execute(db: WorkerDB, args: Record<string, any>, meta?: OpMeta): Promise<unknown>;
 }
 
 const int = (v: unknown, dflt = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : dflt);
@@ -134,6 +135,22 @@ export const AI_TOOLS: AiTool[] = [
   },
 
   {
+    name: 'op_log_list',
+    description: `查看最近的数据操作日志(手动后台与 AI 的增删改均有留痕,含操作前/后完整快照)。用户要求"撤销/还原刚才的操作"时:先查本工具拿到快照,再用对应工具组合还原(如还原误删链接=按 before 快照 create_link,还原误改=按 before 用 update_link 改回)。默认返回最近 10 条,最多 20 条。`,
+    parameters: {
+      type: 'object',
+      properties: {
+        limit: { type: 'number', description: '返回条数,默认 10,最多 20' },
+      },
+    },
+    danger: 'read',
+    summarize: (a, r) => `查看操作日志${r && typeof r === 'object' && Array.isArray((r as any).data) ? `:${(r as any).data.length} 条` : ''}`,
+    execute: async (db, a) => {
+      const limit = Math.min(20, Math.max(1, a.limit ?? 10));
+      return { code: 0, data: await listOpLogs(db, limit) };
+    },
+  },
+  {
     name: 'memory_write',
     description: `整体替换长期记忆(跨会话持久,当前内容已在系统提示「长期记忆」段展示)。用于记住用户稳定偏好/重要事实,或清理合并过期内容。上限 ${MEMORY_MAX_CHARS} 字符,保持精简;空串=清空。`,
     parameters: {
@@ -150,12 +167,12 @@ export const AI_TOOLS: AiTool[] = [
       if (r && typeof r === 'object' && (r as any).code !== 0) return `更新长期记忆失败(${n} 字)`;
       return r == null ? `更新长期记忆(${n} 字)` : `已更新长期记忆(${(r as any).data?.length ?? n} 字)`;
     },
-    execute: async (db, a) => {
+    execute: async (db, a, meta) => {
       const content = String(a.content ?? '');
       if (content.length > MEMORY_MAX_CHARS) {
         return { code: -2000, msg: `记忆 ${content.length} 字符超过上限 ${MEMORY_MAX_CHARS},请压缩合并(剔除过期与冗余)后重写` };
       }
-      await saveMemory(db, content);
+      await saveMemory(db, content, meta);
       return { code: 0, data: { length: content.length } };
     },
   },
@@ -179,7 +196,7 @@ export const AI_TOOLS: AiTool[] = [
     summarize: (a, r) => r && typeof r === 'object' && 'id' in r
       ? `已新增链接「${a.title}」(#${(r as any).id})`
       : `新增链接「${a.title}」→ ${a.url}${a.property === 1 ? '(私密)' : ''}`,
-    execute: (db, a) => addLinkHandler(db, {
+    execute: (db, a, meta) => addLinkHandler(db, {
       fid: int(a.category_id, 1), title: String(a.title ?? ''), url: String(a.url ?? ''),
       description: String(a.description ?? ''), weight: 0, property: int(a.property),
       url_standby: '', font_icon: '',
@@ -200,7 +217,7 @@ export const AI_TOOLS: AiTool[] = [
     },
     danger: 'write',
     summarize: (a) => `修改链接 #${a.id}:${[a.title && '标题', a.url && 'URL', a.category_id && '分类', a.description && '描述', a.property !== undefined && '属性'].filter(Boolean).join('/') || '(无变更)'}`,
-    execute: async (db, a) => {
+    execute: async (db, a, meta) => {
       const cur: any = await getALinkHandler(db, int(a.id), true);
       if (cur.code !== 0 || !cur.data) return cur;
       const r = cur.data;
@@ -212,7 +229,7 @@ export const AI_TOOLS: AiTool[] = [
         weight: r.weight ?? 0,
         property: a.property !== undefined ? int(a.property) : r.property,
         url_standby: r.urlStandby ?? '', font_icon: r.fontIcon ?? '',
-      });
+      }, meta);
     },
   },
   {
@@ -221,7 +238,7 @@ export const AI_TOOLS: AiTool[] = [
     parameters: { type: 'object', properties: { id: { type: 'number' } }, required: ['id'] },
     danger: 'write',
     summarize: (a) => `删除链接 #${a.id}`,
-    execute: (db, a) => delLinkHandler(db, int(a.id)),
+    execute: (db, a, meta) => delLinkHandler(db, int(a.id), meta),
   },
   {
     name: 'create_category',
@@ -238,10 +255,10 @@ export const AI_TOOLS: AiTool[] = [
     },
     danger: 'write',
     summarize: (a) => `新增分类「${a.name}」${a.parent_id ? `(父分类 #${a.parent_id})` : ''}${a.property === 1 ? '(私密)' : ''}`,
-    execute: (db, a) => addCategoryHandler(db, {
+    execute: (db, a, meta) => addCategoryHandler(db, {
       name: String(a.name ?? ''), property: int(a.property), weight: 0,
       description: String(a.description ?? ''), font_icon: '', fid: a.parent_id !== undefined ? int(a.parent_id) : 0,
-    }),
+    }, meta),
   },
   {
     name: 'update_category',
@@ -256,7 +273,7 @@ export const AI_TOOLS: AiTool[] = [
     },
     danger: 'write',
     summarize: (a) => `修改分类 #${a.id}:${a.name ? `改名为「${a.name}」` : '更新字段'}`,
-    execute: async (db, a) => {
+    execute: async (db, a, meta) => {
       const cur: any = await getACategoryHandler(db, int(a.id), true);
       if (cur.code !== 0 || !cur.data) return cur;
       const r = cur.data;
@@ -266,7 +283,7 @@ export const AI_TOOLS: AiTool[] = [
         weight: r.weight ?? 0,
         description: a.description !== undefined ? String(a.description) : (r.description ?? ''),
         font_icon: r.fontIcon ?? '', fid: r.fid ?? 0,
-      });
+      }, meta);
     },
   },
   {
@@ -275,7 +292,7 @@ export const AI_TOOLS: AiTool[] = [
     parameters: { type: 'object', properties: { id: { type: 'number' } }, required: ['id'] },
     danger: 'write',
     summarize: (a) => `删除分类 #${a.id}`,
-    execute: (db, a) => delCategoryHandler(db, int(a.id)),
+    execute: (db, a, meta) => delCategoryHandler(db, int(a.id), meta),
   },
 ];
 
